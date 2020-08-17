@@ -12,8 +12,8 @@ Windowed computations involve taking collections of datapoints and performing
 some aggregation on them. This includes averaging, finding the median, total
 harmonic distortion (THD), etc...
 
-The language consists of SignalExpressions, OperatorExpressions, and WindowExpressions.
-It is "compiled" into Python functions (represented by a Signal object). The purpose of the 
+The language consists of ValueExpressions, OperatorExpressions, and WindowExpressions.
+It is "compiled" into Python functions (represented by a Value object). The purpose of the 
 language is to determine which input signals are needed to perform the computation, and 
 provide a more compact implementation of data processing computations.
 
@@ -33,7 +33,7 @@ Any free variables are assumed to be signal names (for example "Va" in the windo
 Durations can be expressed as identifiers such as "1s", "10ms", "2m", "12h", etc...
 
 Computations can have either signals or constants. Constants are useful for systems which
-have some rated values that have to be compared against. Signals represent direct connections
+have some rated values that have to be compared against. Values represent direct connections
 to wires in the external system.
 
 The implementation uses Python's parser (found in the builtin ast module). It is a subset of
@@ -43,60 +43,64 @@ Python with different semantics. Computations can be made with normal operators 
 
 The language is case-insensitive to avoid issues with naming signals. This makes the difference
 between 'VA', 'Va', and 'va' irrelevant.
+
+Example usage:
+
+```
+program = parse('Va + Vb + Vc').compile()
+program.run({
+'Va': DataSeries(...),
+'Vb': DataSeries(...),
+})
+```
+
 '''
 
 import ast
 import re
 from datetime import timedelta
 
+import functions as funcs
+from main import DataSeries
+
 class Expression:
     def compile(self):
         '''
-        Compiles an AST of Signals, Operators, and Windows into a single Signal.
+        Compiles an AST of Values, Operators, and Windows into a single Value.
         '''
         raise Exception('compile() not implemented.')
 
     @staticmethod
     def compile(x):
+        '''
+        Compiles the given value x into a Python program.
+
+        If the value is a DPLang Expression, it compiles the expression to a Value.
+        Otherwise, just return the value as it is already compiled.
+        '''
         if isinstance(x, Expression):
             return x.compile()
         return x
 
-class SignalExpression(Expression):
-    '''
-    An input signal for the computation
-    '''
+class IdentifierExpression(Expression):
     def __init__(self, name):
         self.name = name
-        
+
     def compile(self):
         '''
-        Signal Expression -> Signal Value
+        Value Expression -> Value Value
         '''
-        return Signal(lambda dataset: dataset[self.name])
+        return Value(lambda env: env.get(self.name))
 
 class ConstantExpression(Expression):
     '''
-    Some constant that is defined in the environment
-    '''
-    def __init__(self, name):
-        self.name = name
-        
-    def compile(self):
-        '''
-        Signal Expression -> Signal Value
-        '''
-        return Signal(lambda dataset: dataset[self.name])
-
-class NumberExpression(Expression):
-    '''
     A constant number
     '''
-    def __init__(self, n):
-        self.n = n
+    def __init__(self, x):
+        self.x = x
 
     def compile(self):
-        return Signal(lambda dataset: self.n)
+        return Value(lambda env: self.x)
 
 class ApplicationExpression(Expression):
     '''
@@ -104,67 +108,65 @@ class ApplicationExpression(Expression):
     '''
 
     functions = {
-        '+': lambda signals: sum(signals),
-        'average': lambda args: 2
+        '+': funcs.add,
+        '-': funcs.sub,
+        '*': funcs.mul,
+        '/': funcs.div,
+        '//': funcs.floordiv,                                
+        'AVERAGE': funcs.average,
+        'WINDOW': funcs.window,
+        'THD': lambda args: 3,
     }
     
     def __init__(self, name, exprs):
-        self.name = name.lower()
+        print(name, exprs)
+        self.name = name.upper()
         self.exprs = exprs
 
     def is_supported(self):
-        return self.name in [
-            'average',
+        return self.name.upper() in [
+            'AVERAGE', 'WINDOW', 'THD',
             '+', '-', '*', '/', '//',
         ]
 
     def compile(self):
         '''
-        Operator -> Signal
+        Operator -> Value
         '''
         values = map(Expression.compile, self.exprs)
-        def do_signal(dataset):
-            f = functions[self.name]
-            return f(map(lambda value: Signal.eval(value, dataset), values))
+        def get_value(env):
+            f = self.functions[self.name]
+            return f(list(map(lambda value: value.run(env), values)))
             
-        return value.Signal(do_signal)
+        return Value(get_value)
 
-class WindowExpression(Expression):
-    '''
-    A windowed computation on signals
-
-    If window size is less than amount of data recieved, throw error.
-    The caller must check the window and ensure that the given data is a multiple of the window size.
-    '''
-    def __init__(self, expr, size=1, stride=1):
-        self.expr = expr
-        self.size = size
-        self.stride = stride
-        
-    def compile(self):
-        '''
-        Window -> Signal
-        '''
-        pass
-
-
-class Signal:
+class Value:
     def __init__(self, f):
         '''
-        f :: DataSet -> a
+        Wrapper for a function which takes an environment and returns a value.
         '''
         self.f = f
 
-    @staticmethod
-    def eval(x, dataset):
-        if isinstance(x, Signal):
-            return x.f(dataset)
-        return x
+    def run(self, env):
+        return self.f(Environment.lift(env))
 
-    def run(self, input):
-        def generator():
-            yield 1
-        return generator
+class Environment:
+    def __init__(self, env):
+        self.env = {}
+        for key, value in env.items():
+            self.env[key.upper()] = value
+
+    def get(self, name):
+        return self.env[name.upper()]
+
+    def set(self, name, value):
+        self.env[name.upper()] = value
+
+    @staticmethod
+    def lift(x):
+        if isinstance(x, Environment):
+            return x
+        return Environment(x)
 
 time_pattern = re.compile('(\d+)(ms|s|m|h)')
 '''
@@ -194,15 +196,10 @@ def parse_time(id):
     magnitude, units = result.groups()
     return timedelta(**{ unit_map[units]: int(magnitude) })
 
-class DPLCompiler(ast.NodeVisitor):
+class DPLVisitor(ast.NodeVisitor):
     '''
     Visits nodes in a Python AST, and builds a DPLang AST.
     '''
-    
-    def __init__(self, signal_names=[], constant_names=[]):
-        self.signal_names = map(lambda x: x.lower(), signal_names)
-        self.constant_names = map(lambda x: x.lower(), constant_names)
-        self.ast = None
 
     # Restrict certain statements which are not useful
     def visit_Import(self, node):
@@ -223,23 +220,17 @@ class DPLCompiler(ast.NodeVisitor):
         return self.visit(node.value)
 
     def visit_Name(self, node):
-        name = node.id.lower()
-        if name in self.signal_names:
-            return SignalExpression(node.id)
-        if name in self.constant_names:
-            return ConstantExpression(node.id)
-        # if node is a valid function name
-            # retunr the string
-        raise Exception('Invalid name "' + node.id +'"')
+        name = node.id.upper()
+        return IdentifierExpression(name)
 
     def visit_Str(self, node):
         time = parse_time(node.s)
         if time:
-            return time
+            return ConstantExpression(time)
         raise Exception('Unable to parse time sting "' + node.s + '". Must be of the form: (\d+)(ms|s|m|h)')
 
     def visit_Num(self, node):
-        return NumberExpression(node.n)
+        return ConstantExpression(node.n)
 
     def visit_BinOp(self, node):
         left = self.visit(node.left)
@@ -260,19 +251,41 @@ class DPLCompiler(ast.NodeVisitor):
         return ApplicationExpression(name, [left, right])
 
     def visit_Call(self, node):
-        return ApplicationExpression(node.func.id, list(map(lambda arg: self.visit(arg), node.args)))
+        return ApplicationExpression(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)))
 
-def parse(code, signal_names=[], constant_names=[]):
+def parse(code):
     '''
     Given some string containing DPL source code, a list of signal names, and a list of constant names,
     generates a DPL AST.
     '''
     node = ast.parse(code)
-    visitor = DPLCompiler(signal_names, constant_names)
+    visitor = DPLVisitor()
     dpl_node = visitor.visit(node)
     return dpl_node
 
 if __name__ == '__main__':
-    print(parse('''
-va
-''', ['Va', 'Vb', 'Vc']))
+    # Test point-wise computations (+ - * /)
+    ds = parse('''
+(va + vB + vc) / vb
+''').compile().run({
+    'VA': DataSeries.from_list([1, 2, 7]),
+    'VB': DataSeries.from_list([3, 4, 11]),
+    'VC': DataSeries.from_list([5, 6, 17]),
+})
+    assert ds.to_list() == [(1+3+5)/3, (2+4+6)/4, (7+11+17)/11]
+
+    ds = parse('''
+(va*vb*vc)-va
+''').compile().run({
+    'VA': DataSeries.from_list([1, 2, 7]),
+    'VB': DataSeries.from_list([3, 4, 11]),
+    'VC': DataSeries.from_list([5, 6, 17]),
+})
+    assert ds.to_list() == [(1*3*5)-1, (2*4*6)-2, (7*11*17)-7]
+
+    ds = parse('''
+average(window(Va, '2s'))
+''').compile().run({
+    'VA': DataSeries.from_list(range(10)),
+})
+    print(ds.to_list())
