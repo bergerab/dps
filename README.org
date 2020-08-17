@@ -2,7 +2,38 @@
 
 A system for doing point-wise and windowed calculations on data collected from external systems.
 
+** DPLang
+Data processing Language (DPLang) is a domain specific language (DSL)
+which is used to express point-wise and windowed computations for both
+streaming and batch processing.
 
+For example, a (point-wise) power computation could be expressed as:
+#+BEGIN_SRC python
+I * V
+#+END_SRC
+
+An averaging function (windowed) could be expressed as:
+#+BEGIN_SRC python
+average(window(V, '1s', '1s'))
+#+END_SRC
+That is, for every second of data, the average is computed over that
+second.
+
+There are a few builtin keywords for specific computations. Such as
+THD:
+#+BEGIN_SRC python
+thd(V, '2s')
+#+END_SRC
+Which computes the total harmonic distortion (THD) of a voltage signal
+V over a 2 second window.
+
+*** Case Insensitivity
+All identifiers in DPLang are insensitive to case. That means that ~Va~
+is the same as ~VA~ which is the same as ~va~. It was designed this way to
+avoid confusion caused by differing naming conventions between the
+programmers and electrical engineers. For example, it might
+be a convention in the electrical modeling software to have all
+uppercase names ~VA~, but in code to have title case ~Va~.
 
 * Generating the documentation
 ~pdoc~ is used to generate the documentation for the modules in this
