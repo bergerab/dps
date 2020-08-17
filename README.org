@@ -3,3 +3,19 @@
 A system for doing point-wise and windowed calculations on data collected from external systems.
 
 
+
+* Generating the documentation
+~pdoc~ is used to generate the documentation for the modules in this
+repo.
+
+To re-generate the documentation, first install ~pdoc3~:
+
+#+BEGIN_SRC shell
+pip3 install pdoc3
+#+END_SRC
+
+To generate the documentation, run:
+
+#+BEGIN_SRC shell
+pdoc --html <directory/module>
+#+END_SRC

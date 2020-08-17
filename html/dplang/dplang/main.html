@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.4" />
+<title>dplang.dplang.main API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dplang.dplang.main</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from datetime import datetime, timedelta
+
+class Datapoint:
+    &#39;&#39;&#39;
+    A value with an absolute time
+    &#39;&#39;&#39;
+    def __init__(self, value, time):
+        self.value = value
+        self.time = time
+
+class ListStream:
+    def __init__(self, xs):
+        self.xs = xs
+        self.i = 0
+
+    def get(self):
+        value = self.xs[self.i]
+        self.i += 1
+        return value
+        
+    def unget(self):
+        self.i -= 1
+
+    def has_values(self):
+        return self.i &lt; len(self.xs)
+        
+class DataSeries:
+    def __init__(self, datapoints=None):
+        self.datapoints = [] if not datapoints else datapoints
+
+    def add(self, value, time):
+        self.datapoints.append(Datapoint(value, time))
+
+    def map(self, f):
+        ds = DataSeries()
+        for datapoint in self.datapoints:
+            ds.add(f(datapoint.value), datapoint.time)
+        return ds
+
+    def to_list(self):
+        return list(map(lambda x: x.value, self.datapoints))
+
+    @staticmethod
+    def from_list(xs, start_time=datetime.now(), delta_time=timedelta(seconds=1)):
+        ds = DataSeries()
+        for i, x in enumerate(xs):
+            ds.add(x, start_time + (delta_time * i))
+        return ds
+
+    def add_datapoint(self, datapoint):
+        self.datapoints.append(datapoint)
+
+    def start_time(self):
+        return self.datapoints[0].time
+
+    def end_time(self):
+        return self.datapoints[-1].time
+
+    def time_window(self, duration, stride=timedelta(seconds=1)):
+        &#39;&#39;&#39;
+        Returns a DataSeries of DataSeries where each DataSeries is a window
+
+        duration is how long each window should represent (as a datetime.timedelta object)
+        stride is how long to skip between each window (datetime.timedelta object)
+        &#39;&#39;&#39;
+        windows = DataSeries()
+        stream = ListStream(self.datapoints)
+        
+        def add_window():
+            if not stream.has_values(): return
+            window = DataSeries()                        
+            window.add_datapoint(stream.get())
+            while stream.has_values():
+                datapoint = stream.get()
+                if datapoint.time - window.start_time() &gt; duration:
+                    stream.unget()
+                    break
+                else:
+                    window.add_datapoint(datapoint)
+            # windows their first value&#39;s time as their start_time
+            # this could be defined differently, but it doesn&#39;t matter
+            windows.add(window, window.start_time())
+        
+        while stream.has_values():
+            add_window()
+            
+        return windows
+
+    def __len__(self):
+        return len(self.datapoints)
+
+    def __iter__(self):
+        for datapoint in self.datapoints:
+            yield datapoint.value
+
+    def __add__(self, other):
+        return self.pointwise(other, lambda x, y: x + y)
+    def __sub__(self, other):
+        return self.pointwise(other, lambda x, y: x - y)
+    def __mul__(self, other):
+        return self.pointwise(other, lambda x, y: x * y)
+    def __truediv__(self, other):
+        return self.pointwise(other, lambda x, y: x / y)
+    def __floordiv__(self, other):
+        return self.pointwise(other, lambda x, y: x // y)
+
+    def pointwise(self, other, f):
+        ds = DataSeries()
+        for datapoint1, datapoint2 in zip(self.datapoints, other.datapoints):
+            ds.add(f(datapoint1.value, datapoint2.value), datapoint1.time)
+        return ds
+            
+    def average(self):
+        return self.aggregate(lambda ds: sum(ds)/len(ds))
+    def avg(self): return self.average()
+    def mean(self): return self.average()
+
+    def is_windowed(self):
+        &#39;&#39;&#39;
+        Is this series a nested DataSeries (some windowing has been applied)
+        &#39;&#39;&#39;
+        return not self.datapoints or isinstance(self.datapoints[0].value, DataSeries)
+
+    def aggregate(self, f):
+        if not self.is_windowed(): raise Exception(&#39;Aggregations can only be made on windowed DataSeries.&#39;)
+        agg = DataSeries()
+        for dp in self.datapoints:
+            agg.add(f(dp.value), dp.time)
+        return agg
+
+class DataSet:
+    def __init__(self, data_map):
+        self.data_map = data_map
+
+if __name__ == &#39;__main__&#39;:
+    # Test creating DataSeries from list
+    time = datetime.now()        
+    ds = DataSeries.from_list([1,2,3,4], start_time=time, delta_time=timedelta(seconds=2))
+    assert ds.start_time() == time
+    assert ds.end_time() == time + timedelta(seconds=2)*3
+    assert ds.to_list() == [1,2,3,4]
+
+    # Test point-wise computations
+    ds1 = DataSeries.from_list([1,2])
+    ds2 = DataSeries.from_list([3,4])
+    ds3 = ds1 + ds2
+    assert (ds1 + ds2).to_list() == [1+3, 2+4]
+    assert (ds1 - ds2).to_list() == [1-3, 2-4]
+    assert (ds1 * ds2).to_list() == [1*3, 2*4]
+    assert (ds1 / ds2).to_list() == [1/3, 2/4]
+    assert (ds1 // ds2).to_list() == [1//3, 2//4]
+    
+    # Test windowed computations
+    ds = DataSeries()
+    ds.add(1, time)
+    ds.add(1.3, time + timedelta(seconds=0.1))
+    ds.add(2, time + timedelta(seconds=1.1))
+    dss = ds.time_window(timedelta(seconds=1))
+    assert dss.average().to_list()[0] == sum([1, 1.3])/2
+    assert dss.average().to_list()[1] == 2
+    assert len(dss.average().to_list()) == 2
+
+&#39;&#39;&#39;
+average(window(Va, size=10))
+
+Va + Vb + Vc
+
+SignalExpr(&#39;Va&#39;) + SignalExpr(&#39;Vb&#39;) + SignalExpr(&#39;Vc&#39;)
+
+sig = (ast.Signal(&#39;Va&#39;) * ast.Signal(&#39;Vb&#39;)).compile()
+
+data = DataSet({
+    &#39;Voltage&#39;: DataSeries(...),
+    &#39;Current&#39;: DataSeries(...),
+})
+
+Voltage * Current
+
+power_sig = (ast.Signal(&#39;Voltage&#39;) * ast.Signal(&#39;Current&#39;)).compile()
+# Here is where the window could be checked more data could be pulled if window isn&#39;t enough
+for power in power_sig.run(data):
+    print(power)
+
+&#39;&#39;&#39;</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dplang.dplang.main.DataSeries"><code class="flex name class">
+<span>class <span class="ident">DataSeries</span></span>
+<span>(</span><span>datapoints=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataSeries:
+    def __init__(self, datapoints=None):
+        self.datapoints = [] if not datapoints else datapoints
+
+    def add(self, value, time):
+        self.datapoints.append(Datapoint(value, time))
+
+    def map(self, f):
+        ds = DataSeries()
+        for datapoint in self.datapoints:
+            ds.add(f(datapoint.value), datapoint.time)
+        return ds
+
+    def to_list(self):
+        return list(map(lambda x: x.value, self.datapoints))
+
+    @staticmethod
+    def from_list(xs, start_time=datetime.now(), delta_time=timedelta(seconds=1)):
+        ds = DataSeries()
+        for i, x in enumerate(xs):
+            ds.add(x, start_time + (delta_time * i))
+        return ds
+
+    def add_datapoint(self, datapoint):
+        self.datapoints.append(datapoint)
+
+    def start_time(self):
+        return self.datapoints[0].time
+
+    def end_time(self):
+        return self.datapoints[-1].time
+
+    def time_window(self, duration, stride=timedelta(seconds=1)):
+        &#39;&#39;&#39;
+        Returns a DataSeries of DataSeries where each DataSeries is a window
+
+        duration is how long each window should represent (as a datetime.timedelta object)
+        stride is how long to skip between each window (datetime.timedelta object)
+        &#39;&#39;&#39;
+        windows = DataSeries()
+        stream = ListStream(self.datapoints)
+        
+        def add_window():
+            if not stream.has_values(): return
+            window = DataSeries()                        
+            window.add_datapoint(stream.get())
+            while stream.has_values():
+                datapoint = stream.get()
+                if datapoint.time - window.start_time() &gt; duration:
+                    stream.unget()
+                    break
+                else:
+                    window.add_datapoint(datapoint)
+            # windows their first value&#39;s time as their start_time
+            # this could be defined differently, but it doesn&#39;t matter
+            windows.add(window, window.start_time())
+        
+        while stream.has_values():
+            add_window()
+            
+        return windows
+
+    def __len__(self):
+        return len(self.datapoints)
+
+    def __iter__(self):
+        for datapoint in self.datapoints:
+            yield datapoint.value
+
+    def __add__(self, other):
+        return self.pointwise(other, lambda x, y: x + y)
+    def __sub__(self, other):
+        return self.pointwise(other, lambda x, y: x - y)
+    def __mul__(self, other):
+        return self.pointwise(other, lambda x, y: x * y)
+    def __truediv__(self, other):
+        return self.pointwise(other, lambda x, y: x / y)
+    def __floordiv__(self, other):
+        return self.pointwise(other, lambda x, y: x // y)
+
+    def pointwise(self, other, f):
+        ds = DataSeries()
+        for datapoint1, datapoint2 in zip(self.datapoints, other.datapoints):
+            ds.add(f(datapoint1.value, datapoint2.value), datapoint1.time)
+        return ds
+            
+    def average(self):
+        return self.aggregate(lambda ds: sum(ds)/len(ds))
+    def avg(self): return self.average()
+    def mean(self): return self.average()
+
+    def is_windowed(self):
+        &#39;&#39;&#39;
+        Is this series a nested DataSeries (some windowing has been applied)
+        &#39;&#39;&#39;
+        return not self.datapoints or isinstance(self.datapoints[0].value, DataSeries)
+
+    def aggregate(self, f):
+        if not self.is_windowed(): raise Exception(&#39;Aggregations can only be made on windowed DataSeries.&#39;)
+        agg = DataSeries()
+        for dp in self.datapoints:
+            agg.add(f(dp.value), dp.time)
+        return agg</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="dplang.dplang.main.DataSeries.from_list"><code class="name flex">
+<span>def <span class="ident">from_list</span></span>(<span>xs, start_time=datetime.datetime(2020, 8, 17, 16, 10, 31, 40664), delta_time=datetime.timedelta(seconds=1))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def from_list(xs, start_time=datetime.now(), delta_time=timedelta(seconds=1)):
+    ds = DataSeries()
+    for i, x in enumerate(xs):
+        ds.add(x, start_time + (delta_time * i))
+    return ds</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dplang.dplang.main.DataSeries.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, value, time)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add(self, value, time):
+    self.datapoints.append(Datapoint(value, time))</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.add_datapoint"><code class="name flex">
+<span>def <span class="ident">add_datapoint</span></span>(<span>self, datapoint)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_datapoint(self, datapoint):
+    self.datapoints.append(datapoint)</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.aggregate"><code class="name flex">
+<span>def <span class="ident">aggregate</span></span>(<span>self, f)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def aggregate(self, f):
+    if not self.is_windowed(): raise Exception(&#39;Aggregations can only be made on windowed DataSeries.&#39;)
+    agg = DataSeries()
+    for dp in self.datapoints:
+        agg.add(f(dp.value), dp.time)
+    return agg</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.average"><code class="name flex">
+<span>def <span class="ident">average</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def average(self):
+    return self.aggregate(lambda ds: sum(ds)/len(ds))</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.avg"><code class="name flex">
+<span>def <span class="ident">avg</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def avg(self): return self.average()</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.end_time"><code class="name flex">
+<span>def <span class="ident">end_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def end_time(self):
+    return self.datapoints[-1].time</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.is_windowed"><code class="name flex">
+<span>def <span class="ident">is_windowed</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Is this series a nested DataSeries (some windowing has been applied)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_windowed(self):
+    &#39;&#39;&#39;
+    Is this series a nested DataSeries (some windowing has been applied)
+    &#39;&#39;&#39;
+    return not self.datapoints or isinstance(self.datapoints[0].value, DataSeries)</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.map"><code class="name flex">
+<span>def <span class="ident">map</span></span>(<span>self, f)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map(self, f):
+    ds = DataSeries()
+    for datapoint in self.datapoints:
+        ds.add(f(datapoint.value), datapoint.time)
+    return ds</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.mean"><code class="name flex">
+<span>def <span class="ident">mean</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mean(self): return self.average()</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.pointwise"><code class="name flex">
+<span>def <span class="ident">pointwise</span></span>(<span>self, other, f)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pointwise(self, other, f):
+    ds = DataSeries()
+    for datapoint1, datapoint2 in zip(self.datapoints, other.datapoints):
+        ds.add(f(datapoint1.value, datapoint2.value), datapoint1.time)
+    return ds</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.start_time"><code class="name flex">
+<span>def <span class="ident">start_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_time(self):
+    return self.datapoints[0].time</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.time_window"><code class="name flex">
+<span>def <span class="ident">time_window</span></span>(<span>self, duration, stride=datetime.timedelta(seconds=1))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a DataSeries of DataSeries where each DataSeries is a window</p>
+<p>duration is how long each window should represent (as a datetime.timedelta object)
+stride is how long to skip between each window (datetime.timedelta object)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def time_window(self, duration, stride=timedelta(seconds=1)):
+    &#39;&#39;&#39;
+    Returns a DataSeries of DataSeries where each DataSeries is a window
+
+    duration is how long each window should represent (as a datetime.timedelta object)
+    stride is how long to skip between each window (datetime.timedelta object)
+    &#39;&#39;&#39;
+    windows = DataSeries()
+    stream = ListStream(self.datapoints)
+    
+    def add_window():
+        if not stream.has_values(): return
+        window = DataSeries()                        
+        window.add_datapoint(stream.get())
+        while stream.has_values():
+            datapoint = stream.get()
+            if datapoint.time - window.start_time() &gt; duration:
+                stream.unget()
+                break
+            else:
+                window.add_datapoint(datapoint)
+        # windows their first value&#39;s time as their start_time
+        # this could be defined differently, but it doesn&#39;t matter
+        windows.add(window, window.start_time())
+    
+    while stream.has_values():
+        add_window()
+        
+    return windows</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.DataSeries.to_list"><code class="name flex">
+<span>def <span class="ident">to_list</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_list(self):
+    return list(map(lambda x: x.value, self.datapoints))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dplang.dplang.main.DataSet"><code class="flex name class">
+<span>class <span class="ident">DataSet</span></span>
+<span>(</span><span>data_map)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataSet:
+    def __init__(self, data_map):
+        self.data_map = data_map</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.Datapoint"><code class="flex name class">
+<span>class <span class="ident">Datapoint</span></span>
+<span>(</span><span>value, time)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A value with an absolute time</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Datapoint:
+    &#39;&#39;&#39;
+    A value with an absolute time
+    &#39;&#39;&#39;
+    def __init__(self, value, time):
+        self.value = value
+        self.time = time</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.ListStream"><code class="flex name class">
+<span>class <span class="ident">ListStream</span></span>
+<span>(</span><span>xs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ListStream:
+    def __init__(self, xs):
+        self.xs = xs
+        self.i = 0
+
+    def get(self):
+        value = self.xs[self.i]
+        self.i += 1
+        return value
+        
+    def unget(self):
+        self.i -= 1
+
+    def has_values(self):
+        return self.i &lt; len(self.xs)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="dplang.dplang.main.ListStream.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    value = self.xs[self.i]
+    self.i += 1
+    return value</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.ListStream.has_values"><code class="name flex">
+<span>def <span class="ident">has_values</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_values(self):
+    return self.i &lt; len(self.xs)</code></pre>
+</details>
+</dd>
+<dt id="dplang.dplang.main.ListStream.unget"><code class="name flex">
+<span>def <span class="ident">unget</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unget(self):
+    self.i -= 1</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dplang.dplang" href="index.html">dplang.dplang</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dplang.dplang.main.DataSeries" href="#dplang.dplang.main.DataSeries">DataSeries</a></code></h4>
+<ul class="two-column">
+<li><code><a title="dplang.dplang.main.DataSeries.add" href="#dplang.dplang.main.DataSeries.add">add</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.add_datapoint" href="#dplang.dplang.main.DataSeries.add_datapoint">add_datapoint</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.aggregate" href="#dplang.dplang.main.DataSeries.aggregate">aggregate</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.average" href="#dplang.dplang.main.DataSeries.average">average</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.avg" href="#dplang.dplang.main.DataSeries.avg">avg</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.end_time" href="#dplang.dplang.main.DataSeries.end_time">end_time</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.from_list" href="#dplang.dplang.main.DataSeries.from_list">from_list</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.is_windowed" href="#dplang.dplang.main.DataSeries.is_windowed">is_windowed</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.map" href="#dplang.dplang.main.DataSeries.map">map</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.mean" href="#dplang.dplang.main.DataSeries.mean">mean</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.pointwise" href="#dplang.dplang.main.DataSeries.pointwise">pointwise</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.start_time" href="#dplang.dplang.main.DataSeries.start_time">start_time</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.time_window" href="#dplang.dplang.main.DataSeries.time_window">time_window</a></code></li>
+<li><code><a title="dplang.dplang.main.DataSeries.to_list" href="#dplang.dplang.main.DataSeries.to_list">to_list</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dplang.dplang.main.DataSet" href="#dplang.dplang.main.DataSet">DataSet</a></code></h4>
+</li>
+<li>
+<h4><code><a title="dplang.dplang.main.Datapoint" href="#dplang.dplang.main.Datapoint">Datapoint</a></code></h4>
+</li>
+<li>
+<h4><code><a title="dplang.dplang.main.ListStream" href="#dplang.dplang.main.ListStream">ListStream</a></code></h4>
+<ul class="">
+<li><code><a title="dplang.dplang.main.ListStream.get" href="#dplang.dplang.main.ListStream.get">get</a></code></li>
+<li><code><a title="dplang.dplang.main.ListStream.has_values" href="#dplang.dplang.main.ListStream.has_values">has_values</a></code></li>
+<li><code><a title="dplang.dplang.main.ListStream.unget" href="#dplang.dplang.main.ListStream.unget">unget</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+</footer>
+</body>
+</html>
