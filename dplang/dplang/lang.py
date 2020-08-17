@@ -76,6 +76,9 @@ class SignalExpression(Expression):
         return Signal(lambda dataset: dataset[self.name])
 
 class ConstantExpression(Expression):
+    '''
+    Some constant that is defined in the environment
+    '''
     def __init__(self, name):
         self.name = name
         
@@ -86,6 +89,9 @@ class ConstantExpression(Expression):
         return Signal(lambda dataset: dataset[self.name])
 
 class NumberExpression(Expression):
+    '''
+    A constant number
+    '''
     def __init__(self, n):
         self.n = n
 
@@ -189,6 +195,10 @@ def parse_time(id):
     return timedelta(**{ unit_map[units]: int(magnitude) })
 
 class DPLCompiler(ast.NodeVisitor):
+    '''
+    Visits nodes in a Python AST, and builds a DPLang AST.
+    '''
+    
     def __init__(self, signal_names=[], constant_names=[]):
         self.signal_names = map(lambda x: x.lower(), signal_names)
         self.constant_names = map(lambda x: x.lower(), constant_names)
