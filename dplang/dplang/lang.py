@@ -35,6 +35,14 @@ Durations can be expressed as identifiers such as "1s", "10ms", "2m", "12h", etc
 Computations can have either signals or constants. Constants are useful for systems which
 have some rated values that have to be compared against. Signals represent direct connections
 to wires in the external system.
+
+The implementation uses Python's parser (found in the builtin ast module). It is a subset of
+Python with different semantics. Computations can be made with normal operators such as '+' or
+'-' for point-wise computations, and windowed computations can use the builtin functions for
+'window' and 'thd'.
+
+The language is case-insensitive to avoid issues with naming signals. This makes the difference
+between 'VA', 'Va', and 'va' irrelevant.
 '''
 
 import ast
@@ -65,7 +73,7 @@ class SignalExpression(Expression):
         '''
         Signal Expression -> Signal Value
         '''
-        return value.Signal(lambda dataset: dataset[self.name])
+        return Signal(lambda dataset: dataset[self.name])
 
 class ConstantExpression(Expression):
     def __init__(self, name):
@@ -75,7 +83,14 @@ class ConstantExpression(Expression):
         '''
         Signal Expression -> Signal Value
         '''
-        return value.Signal(lambda dataset: dataset[self.name])
+        return Signal(lambda dataset: dataset[self.name])
+
+class NumberExpression(Expression):
+    def __init__(self, n):
+        self.n = n
+
+    def compile(self):
+        return Signal(lambda dataset: self.n)
 
 class ApplicationExpression(Expression):
     '''
@@ -175,8 +190,8 @@ def parse_time(id):
 
 class DPLCompiler(ast.NodeVisitor):
     def __init__(self, signal_names=[], constant_names=[]):
-        self.signal_names = signal_names
-        self.constant_names = constant_names
+        self.signal_names = map(lambda x: x.lower(), signal_names)
+        self.constant_names = map(lambda x: x.lower(), constant_names)
         self.ast = None
 
     # Restrict certain statements which are not useful
@@ -190,36 +205,64 @@ class DPLCompiler(ast.NodeVisitor):
         raise Exception('While statements are not allowed')
     def visit_With(self, node):
         raise Exception('With statements are not allowed')
-    
+
+    def visit_Module(self, node):
+        return self.visit(node.body[0])
+
+    def visit_Expr(self, node):
+        return self.visit(node.value)
+
     def visit_Name(self, node):
-        if node.id in self.signal_names:
-            return ast.Call(
-                func=ast.Name(id='SignalExpression', ctx=ast.Load()),
-                args=[ast.Str(s=node.id)],
-                keywords=[])
-        if node.id in self.constant_names:
-            return ast.Call(
-                func=ast.Name(id='ConstantExpression', ctx=ast.Load()),
-                args=[ast.Str(s=node.id)],
-                keywords=[])
-        return node
+        name = node.id.lower()
+        if name in self.signal_names:
+            return SignalExpression(node.id)
+        if name in self.constant_names:
+            return ConstantExpression(node.id)
+        # if node is a valid function name
+            # retunr the string
+        raise Exception('Invalid name "' + node.id +'"')
 
     def visit_Str(self, node):
         time = parse_time(node.s)
         if time:
-            return ast.Call(
-                func=ast.Name(id='timedelta', ctx=ast.Load()),
-                args=[],
-                keywords=[ast.keyword(arg='seconds', value=ast.Num(n=time.total_seconds()))])
-        return node
+            return time
+        raise Exception('Unable to parse time sting "' + node.s + '". Must be of the form: (\d+)(ms|s|m|h)')
 
-def compile_dpl(code, signal_names=[], constant_names=[]):
+    def visit_Num(self, node):
+        return NumberExpression(node.n)
+
+    def visit_BinOp(self, node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        op = node.op
+        if isinstance(op, ast.Add):
+            name = '+'
+        elif isinstance(op, ast.Sub):
+            name = '-'
+        elif isinstance(op, ast.Mult):
+            name = '*'            
+        elif isinstance(op, ast.Div):
+            name = '/'
+        elif isinstance(op, ast.FloorDiv):
+            name = '//'            
+        else:
+            raise Exception('Unsupported BinOp')
+        return ApplicationExpression(name, [left, right])
+
+    def visit_Call(self, node):
+        return ApplicationExpression(node.func.id, list(map(lambda arg: self.visit(arg), node.args)))
+
+def parse(code, signal_names=[], constant_names=[]):
+    '''
+    Given some string containing DPL source code, a list of signal names, and a list of constant names,
+    generates a DPL AST.
+    '''
     node = ast.parse(code)
     visitor = DPLCompiler(signal_names, constant_names)
-    visitor.visit(node)
-    return visitor.ast
+    dpl_node = visitor.visit(node)
+    return dpl_node
 
 if __name__ == '__main__':
-    print(compile_dpl('''
-Va + Vb + Vc
-''', ['Va', 'Vb']))
+    print(parse('''
+va
+''', ['Va', 'Vb', 'Vc']))
