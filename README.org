@@ -1,0 +1,5 @@
+* Data Processing System (DPS)
+
+A system for doing point-wise and windowed calculations on data collected from external systems.
+
+

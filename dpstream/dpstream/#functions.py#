@@ -1,0 +1,3 @@
+def average():
+    signal = args[0]
+    
