@@ -146,22 +146,50 @@ class Signal:
         return generator
 
 time_pattern = re.compile('(\d+)(ms|s|m|h)')
+'''
+Times are represented as strings of the form:
+200ms -> 200 milliseconds
+10s   -> 10 seconds
+3m    -> 3 minutes
+4h    -> 4 hours
+'''
+
 unit_map = {
     'ms': 'milliseconds',
     's': 'seconds',
     'm': 'minutes',
     'h': 'hours',
 }
+'''
+A mapping from shorthand names to the names timedelta uses as keywords.
+'''
+
 def parse_time(id):
+    '''
+    Parses a string into a timedelta value
+    '''
     result = time_pattern.search(id)
     if not result: return None
     magnitude, units = result.groups()
     return timedelta(**{ unit_map[units]: int(magnitude) })
 
-class DPLCompiler(ast.NodeTransformer):
+class DPLCompiler(ast.NodeVisitor):
     def __init__(self, signal_names=[], constant_names=[]):
         self.signal_names = signal_names
         self.constant_names = constant_names
+        self.ast = None
+
+    # Restrict certain statements which are not useful
+    def visit_Import(self, node):
+        raise Exception('Import statements are not allowed')
+    def visit_Raise(self, node):
+        raise Exception('Raise statements are not allowed')
+    def visit_For(self, node):
+        raise Exception('For statements are not allowed')
+    def visit_While(self, node):
+        raise Exception('While statements are not allowed')
+    def visit_With(self, node):
+        raise Exception('With statements are not allowed')
     
     def visit_Name(self, node):
         if node.id in self.signal_names:
@@ -185,21 +213,13 @@ class DPLCompiler(ast.NodeTransformer):
                 keywords=[ast.keyword(arg='seconds', value=ast.Num(n=time.total_seconds()))])
         return node
 
-def bytecompile_dpl(code, signal_names=[], constant_names=[]):
-    code = 'global return_value;\nreturn_value = ' + code.strip('\n')
+def compile_dpl(code, signal_names=[], constant_names=[]):
     node = ast.parse(code)
-    node = DPLCompiler(signal_names, constant_names).visit(node)
-    ast.fix_missing_locations(node)
-    return compile(node, filename='<ast>', mode='exec')
-
-def exec_dpl_bytecode(bytecode):
-    exec(bytecode)
-    return return_value
-
-def exec_dpl(code, signal_names=[], constant_names=[]):
-    return exec_dpl_bytecode(bytecompile_dpl(code, signal_names, constant_names))
+    visitor = DPLCompiler(signal_names, constant_names)
+    visitor.visit(node)
+    return visitor.ast
 
 if __name__ == '__main__':
-    print(exec_dpl('''
+    print(compile_dpl('''
 Va + Vb + Vc
 ''', ['Va', 'Vb']))
