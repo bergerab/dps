@@ -1,0 +1,10 @@
+* MiniPy
+
+
+** Running the Tests
+To run the tests, run:
+
+#+BEGIN_SRC shell
+python3 setup.py test
+#+END_SRC
+

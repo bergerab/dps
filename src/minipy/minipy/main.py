@@ -84,7 +84,7 @@ class Identifier(Expression):
         self.name = name
 
     def compile(self):
-        return Reader(lambda env: env.get(self.name))
+        return Reader(lambda env: env.lookup(self.name))
 
 class Constant(Expression):
     '''
@@ -118,7 +118,7 @@ class Reader:
         self.f = f
 
     def run(self, env=None):
-        env = env if env else Environment()
+        env = Environment.lift(env) if env else Environment()
         return self.f(env)
 
 class Environment:
@@ -133,6 +133,12 @@ class Environment:
     def lookup(self, name):
         return self.environment[name.upper()]
 
+    @staticmethod
+    def lift(x):
+        if isinstance(x, Environment):
+            return x
+        return Environment(x)
+
 class MiniPyVisitor(ast.NodeVisitor):
     '''
     Visits nodes in a Python AST, and builds a MiniPy AST.
@@ -143,15 +149,15 @@ class MiniPyVisitor(ast.NodeVisitor):
 
     # Restrict certain statements which are not useful
     def visit_Import(self, node):
-        raise Exception('Import statements are not allowed')
+        raise InvalidOperationException('Import statements are not allowed')
     def visit_Raise(self, node):
-        raise Exception('Raise statements are not allowed')
+        raise InvalidOperationException('Raise statements are not allowed')
     def visit_For(self, node):
-        raise Exception('For statements are not allowed')
+        raise InvalidOperationException('For statements are not allowed')
     def visit_While(self, node):
-        raise Exception('While statements are not allowed')
+        raise InvalidOperationException('While statements are not allowed')
     def visit_With(self, node):
-        raise Exception('With statements are not allowed')
+        raise InvalidOperationException('With statements are not allowed')
 
     def visit_Module(self, node):
         return self.visit(node.body[0])
@@ -193,6 +199,9 @@ class MiniPyVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node):
         return Application(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.builtins)
+
+class InvalidOperationException(Exception):
+    pass
 
 if __name__ == '__main__':
     builtins = {
