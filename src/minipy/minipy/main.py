@@ -84,9 +84,6 @@ class Identifier(Expression):
         self.name = name
 
     def compile(self):
-        '''
-        Reader Expression -> Reader Reader
-        '''
         return Reader(lambda env: env.get(self.name))
 
 class Constant(Expression):
