@@ -4,7 +4,7 @@ A system for doing point-wise and windowed calculations on data
 collected from external systems.
 
 This repository includes several isolated modules. First there is
-~DPLang~ which implements a domain specific language (DSL) for
+~DPLang~ which implements a library and domain specific language (DSL) for
 expressing data processing computations. Then, there is ~HQ~ 
 which is the system's primary server. It holds configuration
 for the system such as inputs and constants, controls different
@@ -14,8 +14,8 @@ clusters, is the target for the ~DPS API~.
 ~DPQ~ is a message queue cluster for stream processing of signals.
 ~DPB~ is a historical computation cluster for mass processing of signals.
 
-** DPLang
-Data processing Language (DPLang) is a domain specific language (DSL)
+** DPL
+DPL is a library of data processing functions and a domain specific language (DSL)
 which is used to express point-wise and windowed computations for both
 streaming and batch processing.
 

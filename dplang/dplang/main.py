@@ -132,6 +132,41 @@ class DataSet:
     def __init__(self, data_map):
         self.data_map = data_map
 
+import re
+
+import functions as funcs
+from main import DataSeries
+
+
+time_pattern = re.compile('(\d+)(ms|s|m|h)')
+'''
+Times are represented as strings of the form:
+200ms -> 200 milliseconds
+10s   -> 10 seconds
+3m    -> 3 minutes
+4h    -> 4 hours
+'''
+
+unit_map = {
+    'ms': 'milliseconds',
+    's': 'seconds',
+    'm': 'minutes',
+    'h': 'hours',
+}
+'''
+A mapping from shorthand names to the names timedelta uses as keywords.
+'''
+
+def parse_time(id):
+    '''
+    Parses a string into a timedelta value
+    '''
+    result = time_pattern.search(id)
+    if not result: return None
+    magnitude, units = result.groups()
+    return timedelta(**{ unit_map[units]: int(magnitude) })
+        
+
 if __name__ == '__main__':
     # Test creating DataSeries from list
     time = datetime.now()        
@@ -160,25 +195,16 @@ if __name__ == '__main__':
     assert dss.average().to_list()[1] == 2
     assert len(dss.average().to_list()) == 2
 
+
 '''
-average(window(Va, size=10))
-
-Va + Vb + Vc
-
-SignalExpr('Va') + SignalExpr('Vb') + SignalExpr('Vc')
-
-sig = (ast.Signal('Va') * ast.Signal('Vb')).compile()
-
-data = DataSet({
-    'Voltage': DataSeries(...),
-    'Current': DataSeries(...),
-})
-
-Voltage * Current
-
-power_sig = (ast.Signal('Voltage') * ast.Signal('Current')).compile()
-# Here is where the window could be checked more data could be pulled if window isn't enough
-for power in power_sig.run(data):
-    print(power)
-
+    functions = { # TODO: pass this in
+        '+': funcs.add,
+        '-': funcs.sub,
+        '*': funcs.mul,
+        '/': funcs.div,
+        '//': funcs.floordiv,                                
+        'AVERAGE': funcs.average,
+        'WINDOW': funcs.window,
+        'THD': lambda args: 3,
+    }
 '''
