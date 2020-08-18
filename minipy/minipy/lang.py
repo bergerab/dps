@@ -34,7 +34,13 @@ import ast
 
 class MiniPy:
     def __init__(self, builtins={}):
-        self.builtins = {}
+        self.builtins = { # default builtins for common operators
+            '+': lambda xs: xs[0] + xs[1],
+            '-': lambda xs: xs[0] - xs[1],
+            '*': lambda xs: xs[0] * xs[1],
+            '/': lambda xs: xs[0] / xs[1],
+            '//': lambda xs: xs[0] // xs[1],                                
+        }
         for key, value in builtins.items():
             self.builtins[key.upper()] = value
         self.string_transformers = []
@@ -194,11 +200,6 @@ class MiniPyVisitor(ast.NodeVisitor):
 if __name__ == '__main__':
     builtins = {
         'sum': lambda xs: sum(xs[0]),
-        '+': lambda xs: xs[0] + xs[1],
-        '-': lambda xs: xs[0] - xs[1],
-        '*': lambda xs: xs[0] * xs[1],
-        '/': lambda xs: xs[0] / xs[1],
-        '//': lambda xs: xs[0] // xs[1],                                
     }
 
     mpy = MiniPy(builtins)
