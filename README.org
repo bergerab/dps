@@ -1,18 +1,57 @@
 * Data Processing System (DPS)
 
 A system for doing point-wise and windowed calculations on data
-collected from external systems.
+collected from external systems. The architecture includes a primary
+server called the ~DPS Manager~ where devices and signals are
+configured. The data processing computations are expressed in a custom
+language in the user interface of ~DPS Manager~. Devices send signal values into
+DPS via the API ~DPS Client~. Then, ~DPS Manager~ processes them via its
+~DPS Worker~ server cluster. The processed data is then visualized in
+the ~DPS UI~ (the user interface for the system).
 
-This repository includes several isolated modules. First there is
-~DPLang~ which implements a library and domain specific language (DSL) for
-expressing data processing computations. Then, there is ~HQ~ 
-which is the system's primary server. It holds configuration
+This repository includes several isolated modules.
+
+First there is ~dplib~ which implements a library for
+expressing data processing computations. Then, there is ~minipy~, a
+small domain specific language which can be intergrated with ~dplib~ to
+allow for administrators do express data processing computations in a
+safe way. This is the language exposed in the ~DPS Manager~ UI when
+specifying data processing computations.
+
+Then, there is ~dps_manager~ which is the system's primary server. It holds configuration
 for the system such as inputs and constants, controls different
-clusters, is the target for the ~DPS API~.
+clusters, is the target for the ~dps_client~. The ~dps_manager~ server
+uses worker servers found in ~dps_worker~ to perform data processing
+tasks. 
 
-~DAPI~ is a client API for sending signal data to the system.
-~DPQ~ is a message queue cluster for stream processing of signals.
-~DPB~ is a historical computation cluster for mass processing of signals.
+The ~dps_client~ is a client API for sending signal data to the system,
+which connects to the ~dps_manager~, and sends signal data to a
+~dps_worker~ where it is then processed and stored in a database
+(governed by the configuration some administator setup in the
+~dps_manager~).
+
+** DPS Client
+~DPS Client~ is a Python API for sending signal data to the data processing
+system. 
+
+** DPS Manager
+~DPS Manager~ is the primary server for the data processing system. It controls
+all metadata necessary for collecting signal data (system and device
+IDs), database connections, computations to perform, etc...
+
+** DPS Worker
+~DPS Worker~ is a clusterable server which actually performs the data
+processing computations. It is controlled by the primary ~DPS~
+server. For data collection and streaming processes, data is sent
+and processed directly by a ~DPS Worker~. 
+
+** DPS UI
+~DPS UI~ is the user interface for the data processing system. It
+provides two iterfaces. One interface is for administrators who
+configure which external systems and signals the DPS should collect from,
+which computations to perform, and for upkeeping the ~DPS Manager~. The
+other interface is for users who want to run historical data
+processing tasks.
 
 ** DPLib
 ~DPLib~ is a library of data processing functions which can compute

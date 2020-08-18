@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.4" />
+<title>minipy.minipy.lang API documentation</title>
+<meta name="description" content="MiniPy - A small feature-deprived Python style language embedded in Python …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>minipy.minipy.lang</code></h1>
+</header>
+<section id="section-intro">
+<p>MiniPy - A small feature-deprived Python style language embedded in Python</p>
+<p>MiniPy provides:
+- security
+- case insensitivity
+- better ergonomics</p>
+<p>Programs can have operators, functions, and a read-only environment. There is no branching,
+looping, importing, or anything else.</p>
+<p>It isn't much different than just using Python otherwise. It is created so that
+power-users can write small programs in Python via a web-server interface which
+express signal processing tasks. The definition in this file is rather generic
+(which is why it is called a "template"). On its own, It has nothing to do with
+data processing. But with the right identifiers in the environment,
+it does.</p>
+<p>The language provides security by being powerful enough to have arithmetic operators
+and builtin functions, but not too powerful that the user can <code>import os</code> and call <code>rm -rf /</code>.
+This is because the program uses its own AST and evaluation that is separate from Python.</p>
+<p>The language is case insensitive to avoid confusion caused by differing naming conventions between
+programmers and electrical engineers. For example, it might be a convention in the electrical modeling
+software to have all uppercase names ~VA~, but in code to have title case ~Va~.</p>
+<p>The language has better ergonomics by being able to define builtin identifiers. For example, you can
+define an identifier <code>Va</code> in the code directly, and it will refer to some object you have passed in
+the environment. This makes it look like <code>Va</code> is some builtin keyword, but it is really controled by
+Python.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#39;&#39;&#39;
+MiniPy - A small feature-deprived Python style language embedded in Python
+
+MiniPy provides:
+- security
+- case insensitivity
+- better ergonomics
+
+Programs can have operators, functions, and a read-only environment. There is no branching,
+looping, importing, or anything else.
+
+It isn&#39;t much different than just using Python otherwise. It is created so that
+power-users can write small programs in Python via a web-server interface which
+express signal processing tasks. The definition in this file is rather generic
+(which is why it is called a &#34;template&#34;). On its own, It has nothing to do with
+ data processing. But with the right identifiers in the environment,
+it does.
+
+The language provides security by being powerful enough to have arithmetic operators
+and builtin functions, but not too powerful that the user can `import os` and call `rm -rf /`.
+This is because the program uses its own AST and evaluation that is separate from Python.
+
+The language is case insensitive to avoid confusion caused by differing naming conventions between
+programmers and electrical engineers. For example, it might be a convention in the electrical modeling
+software to have all uppercase names ~VA~, but in code to have title case ~Va~.
+
+The language has better ergonomics by being able to define builtin identifiers. For example, you can
+define an identifier `Va` in the code directly, and it will refer to some object you have passed in
+the environment. This makes it look like `Va` is some builtin keyword, but it is really controled by
+Python.
+&#39;&#39;&#39;
+
+import ast
+
+class MiniPy:
+    def __init__(self, builtins={}):
+        self.builtins = { # default builtins for common operators
+            &#39;+&#39;: lambda xs: xs[0] + xs[1],
+            &#39;-&#39;: lambda xs: xs[0] - xs[1],
+            &#39;*&#39;: lambda xs: xs[0] * xs[1],
+            &#39;/&#39;: lambda xs: xs[0] / xs[1],
+            &#39;//&#39;: lambda xs: xs[0] // xs[1],                                
+        }
+        for key, value in builtins.items():
+            self.builtins[key.upper()] = value
+        self.string_transformers = []
+
+    def parse(self, text):
+        &#39;&#39;&#39;
+        Given some string containing MiniPy source code, generates a MiniPy AST.
+        &#39;&#39;&#39;
+        node = ast.parse(text)
+        visitor = MiniPyVisitor(self.builtins, self.string_transformers)
+        mpy_node = visitor.visit(node)
+        return mpy_node
+
+    def add_string_transformer(self, string_transformer):
+        &#39;&#39;&#39;
+        
+        &#39;&#39;&#39;
+        self.string_transformers.append(string_transformer)
+
+class Expression:
+    def compile(self):
+        &#39;&#39;&#39;
+        Compiles an AST of Readers, Operators, and Windows into a single Reader
+        &#39;&#39;&#39;
+        raise Exception(&#39;compile() not implemented.&#39;)
+
+    @staticmethod
+    def compile(x):
+        &#39;&#39;&#39;
+        Compiles the given value x into a Reader (a Python function)
+
+        If the value is a MiniPy Expression, it compiles the expression to a Reader.
+        Otherwise, just return the value as it is already compiled.
+        &#39;&#39;&#39;
+        if isinstance(x, Expression):
+            return x.compile()
+        return x
+
+class Identifier(Expression):
+    def __init__(self, name):
+        self.name = name
+
+    def compile(self):
+        &#39;&#39;&#39;
+        Reader Expression -&gt; Reader Reader
+        &#39;&#39;&#39;
+        return Reader(lambda env: env.get(self.name))
+
+class Constant(Expression):
+    &#39;&#39;&#39;
+    A constant number
+    &#39;&#39;&#39;
+    def __init__(self, x):
+        self.x = x
+
+    def compile(self):
+        return Reader(lambda env: self.x)
+
+class Application(Expression):
+    def __init__(self, name, exprs, builtins={}):
+        self.name = name.upper()
+        self.exprs = exprs
+        self.builtins = builtins
+
+    def compile(self):
+        values = map(Expression.compile, self.exprs)
+        def get_value(env):
+            f = self.builtins[self.name.upper()]
+            return f(list(map(lambda value: value.run(env), values)))
+            
+        return Reader(get_value)
+
+class Reader:
+    def __init__(self, f):
+        &#39;&#39;&#39;
+        Wrapper for a function which takes an environment and returns a value.
+        &#39;&#39;&#39;
+        self.f = f
+
+    def run(self, env=None):
+        env = env if env else Environment()
+        return self.f(env)
+
+class Environment:
+    &#39;&#39;&#39;
+    Computational context where there is an environment, and a set of builtins.
+    &#39;&#39;&#39;
+    def __init__(self, environment={}):
+        self.environment = {}
+        for key, value in environment.items():
+            self.environment[key.upper()] = value
+
+    def lookup(self, name):
+        return self.environment[name.upper()]
+
+class MiniPyVisitor(ast.NodeVisitor):
+    &#39;&#39;&#39;
+    Visits nodes in a Python AST, and builds a MiniPy AST.
+    &#39;&#39;&#39;
+    def __init__(self, builtins, string_transformers):
+        self.builtins = builtins
+        self.string_transformers = string_transformers
+
+    # Restrict certain statements which are not useful
+    def visit_Import(self, node):
+        raise Exception(&#39;Import statements are not allowed&#39;)
+    def visit_Raise(self, node):
+        raise Exception(&#39;Raise statements are not allowed&#39;)
+    def visit_For(self, node):
+        raise Exception(&#39;For statements are not allowed&#39;)
+    def visit_While(self, node):
+        raise Exception(&#39;While statements are not allowed&#39;)
+    def visit_With(self, node):
+        raise Exception(&#39;With statements are not allowed&#39;)
+
+    def visit_Module(self, node):
+        return self.visit(node.body[0])
+
+    def visit_Expr(self, node):
+        return self.visit(node.value)
+
+    def visit_Name(self, node):
+        name = node.id.upper()
+        return Identifier(name)
+
+    def visit_Str(self, node):
+        for string_transformer in self.string_transformers:
+            result = string_transformer(node.s)
+            if result is not None:
+                return Constant(result)
+        return Constant(node.s)
+
+    def visit_Num(self, node):
+        return Constant(node.n)
+
+    def visit_BinOp(self, node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        op = node.op
+        if isinstance(op, ast.Add):
+            name = &#39;+&#39;
+        elif isinstance(op, ast.Sub):
+            name = &#39;-&#39;
+        elif isinstance(op, ast.Mult):
+            name = &#39;*&#39;            
+        elif isinstance(op, ast.Div):
+            name = &#39;/&#39;
+        elif isinstance(op, ast.FloorDiv):
+            name = &#39;//&#39;            
+        else:
+            raise Exception(&#39;Unsupported BinOp&#39;)
+        return Application(name, [left, right], self.builtins)
+
+    def visit_Call(self, node):
+        return Application(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.builtins)
+
+if __name__ == &#39;__main__&#39;:
+    builtins = {
+        &#39;sum&#39;: lambda xs: sum(xs[0]),
+    }
+
+    mpy = MiniPy(builtins)
+    
+    # Test + - * /
+    x = mpy.parse(&#39;&#39;&#39;
+(va + vB + vc) / vb
+&#39;&#39;&#39;).compile().run({
+        &#39;VA&#39;: 7,
+        &#39;VB&#39;: 11,
+        &#39;VC&#39;: 17,
+    })
+    assert x == (7 + 11 + 17)/11
+
+    x = mpy.parse(&#39;&#39;&#39;
+(va*vb*vc)-va
+&#39;&#39;&#39;).compile().run({
+    &#39;VA&#39;: 8,
+    &#39;VB&#39;: 17,
+    &#39;VC&#39;: 68,
+})
+    assert x == (8*17*68)-8
+
+    # Test functions
+    x = mpy.parse(&#39;&#39;&#39;
+Sum(Va)
+&#39;&#39;&#39;).compile().run({
+    &#39;VA&#39;: range(10),
+})
+    assert x == sum(list(range(10)))
+
+    mpy.add_string_transformer(lambda x: 87 if x == &#39;a&#39; else None)
+    x = mpy.parse(&#39;&#39;&#39;
+&#39;a&#39;
+    &#39;&#39;&#39;).compile().run()
+    assert x == 87
+    x = mpy.parse(&#39;&#39;&#39;
+&#39;abc&#39;
+    &#39;&#39;&#39;).compile().run()
+    assert x == &#39;abc&#39;</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="minipy.minipy.lang.Application"><code class="flex name class">
+<span>class <span class="ident">Application</span></span>
+<span>(</span><span>name, exprs, builtins={})</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Application(Expression):
+    def __init__(self, name, exprs, builtins={}):
+        self.name = name.upper()
+        self.exprs = exprs
+        self.builtins = builtins
+
+    def compile(self):
+        values = map(Expression.compile, self.exprs)
+        def get_value(env):
+            f = self.builtins[self.name.upper()]
+            return f(list(map(lambda value: value.run(env), values)))
+            
+        return Reader(get_value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></b></code>:
+<ul class="hlist">
+<li><code><a title="minipy.minipy.lang.Expression.compile" href="#minipy.minipy.lang.Expression.compile">compile</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="minipy.minipy.lang.Constant"><code class="flex name class">
+<span>class <span class="ident">Constant</span></span>
+<span>(</span><span>x)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A constant number</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Constant(Expression):
+    &#39;&#39;&#39;
+    A constant number
+    &#39;&#39;&#39;
+    def __init__(self, x):
+        self.x = x
+
+    def compile(self):
+        return Reader(lambda env: self.x)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></b></code>:
+<ul class="hlist">
+<li><code><a title="minipy.minipy.lang.Expression.compile" href="#minipy.minipy.lang.Expression.compile">compile</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="minipy.minipy.lang.Environment"><code class="flex name class">
+<span>class <span class="ident">Environment</span></span>
+<span>(</span><span>environment={})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computational context where there is an environment, and a set of builtins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Environment:
+    &#39;&#39;&#39;
+    Computational context where there is an environment, and a set of builtins.
+    &#39;&#39;&#39;
+    def __init__(self, environment={}):
+        self.environment = {}
+        for key, value in environment.items():
+            self.environment[key.upper()] = value
+
+    def lookup(self, name):
+        return self.environment[name.upper()]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.Environment.lookup"><code class="name flex">
+<span>def <span class="ident">lookup</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lookup(self, name):
+    return self.environment[name.upper()]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="minipy.minipy.lang.Expression"><code class="flex name class">
+<span>class <span class="ident">Expression</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Expression:
+    def compile(self):
+        &#39;&#39;&#39;
+        Compiles an AST of Readers, Operators, and Windows into a single Reader
+        &#39;&#39;&#39;
+        raise Exception(&#39;compile() not implemented.&#39;)
+
+    @staticmethod
+    def compile(x):
+        &#39;&#39;&#39;
+        Compiles the given value x into a Reader (a Python function)
+
+        If the value is a MiniPy Expression, it compiles the expression to a Reader.
+        Otherwise, just return the value as it is already compiled.
+        &#39;&#39;&#39;
+        if isinstance(x, Expression):
+            return x.compile()
+        return x</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="minipy.minipy.lang.Application" href="#minipy.minipy.lang.Application">Application</a></li>
+<li><a title="minipy.minipy.lang.Constant" href="#minipy.minipy.lang.Constant">Constant</a></li>
+<li><a title="minipy.minipy.lang.Identifier" href="#minipy.minipy.lang.Identifier">Identifier</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.Expression.compile"><code class="name flex">
+<span>def <span class="ident">compile</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compiles the given value x into a Reader (a Python function)</p>
+<p>If the value is a MiniPy Expression, it compiles the expression to a Reader.
+Otherwise, just return the value as it is already compiled.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def compile(x):
+    &#39;&#39;&#39;
+    Compiles the given value x into a Reader (a Python function)
+
+    If the value is a MiniPy Expression, it compiles the expression to a Reader.
+    Otherwise, just return the value as it is already compiled.
+    &#39;&#39;&#39;
+    if isinstance(x, Expression):
+        return x.compile()
+    return x</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="minipy.minipy.lang.Identifier"><code class="flex name class">
+<span>class <span class="ident">Identifier</span></span>
+<span>(</span><span>name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Identifier(Expression):
+    def __init__(self, name):
+        self.name = name
+
+    def compile(self):
+        &#39;&#39;&#39;
+        Reader Expression -&gt; Reader Reader
+        &#39;&#39;&#39;
+        return Reader(lambda env: env.get(self.name))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.Identifier.compile"><code class="name flex">
+<span>def <span class="ident">compile</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reader Expression -&gt; Reader Reader</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compile(self):
+    &#39;&#39;&#39;
+    Reader Expression -&gt; Reader Reader
+    &#39;&#39;&#39;
+    return Reader(lambda env: env.get(self.name))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="minipy.minipy.lang.MiniPy"><code class="flex name class">
+<span>class <span class="ident">MiniPy</span></span>
+<span>(</span><span>builtins={})</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MiniPy:
+    def __init__(self, builtins={}):
+        self.builtins = { # default builtins for common operators
+            &#39;+&#39;: lambda xs: xs[0] + xs[1],
+            &#39;-&#39;: lambda xs: xs[0] - xs[1],
+            &#39;*&#39;: lambda xs: xs[0] * xs[1],
+            &#39;/&#39;: lambda xs: xs[0] / xs[1],
+            &#39;//&#39;: lambda xs: xs[0] // xs[1],                                
+        }
+        for key, value in builtins.items():
+            self.builtins[key.upper()] = value
+        self.string_transformers = []
+
+    def parse(self, text):
+        &#39;&#39;&#39;
+        Given some string containing MiniPy source code, generates a MiniPy AST.
+        &#39;&#39;&#39;
+        node = ast.parse(text)
+        visitor = MiniPyVisitor(self.builtins, self.string_transformers)
+        mpy_node = visitor.visit(node)
+        return mpy_node
+
+    def add_string_transformer(self, string_transformer):
+        &#39;&#39;&#39;
+        
+        &#39;&#39;&#39;
+        self.string_transformers.append(string_transformer)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.MiniPy.add_string_transformer"><code class="name flex">
+<span>def <span class="ident">add_string_transformer</span></span>(<span>self, string_transformer)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_string_transformer(self, string_transformer):
+    &#39;&#39;&#39;
+    
+    &#39;&#39;&#39;
+    self.string_transformers.append(string_transformer)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPy.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given some string containing MiniPy source code, generates a MiniPy AST.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(self, text):
+    &#39;&#39;&#39;
+    Given some string containing MiniPy source code, generates a MiniPy AST.
+    &#39;&#39;&#39;
+    node = ast.parse(text)
+    visitor = MiniPyVisitor(self.builtins, self.string_transformers)
+    mpy_node = visitor.visit(node)
+    return mpy_node</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor"><code class="flex name class">
+<span>class <span class="ident">MiniPyVisitor</span></span>
+<span>(</span><span>builtins, string_transformers)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Visits nodes in a Python AST, and builds a MiniPy AST.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MiniPyVisitor(ast.NodeVisitor):
+    &#39;&#39;&#39;
+    Visits nodes in a Python AST, and builds a MiniPy AST.
+    &#39;&#39;&#39;
+    def __init__(self, builtins, string_transformers):
+        self.builtins = builtins
+        self.string_transformers = string_transformers
+
+    # Restrict certain statements which are not useful
+    def visit_Import(self, node):
+        raise Exception(&#39;Import statements are not allowed&#39;)
+    def visit_Raise(self, node):
+        raise Exception(&#39;Raise statements are not allowed&#39;)
+    def visit_For(self, node):
+        raise Exception(&#39;For statements are not allowed&#39;)
+    def visit_While(self, node):
+        raise Exception(&#39;While statements are not allowed&#39;)
+    def visit_With(self, node):
+        raise Exception(&#39;With statements are not allowed&#39;)
+
+    def visit_Module(self, node):
+        return self.visit(node.body[0])
+
+    def visit_Expr(self, node):
+        return self.visit(node.value)
+
+    def visit_Name(self, node):
+        name = node.id.upper()
+        return Identifier(name)
+
+    def visit_Str(self, node):
+        for string_transformer in self.string_transformers:
+            result = string_transformer(node.s)
+            if result is not None:
+                return Constant(result)
+        return Constant(node.s)
+
+    def visit_Num(self, node):
+        return Constant(node.n)
+
+    def visit_BinOp(self, node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        op = node.op
+        if isinstance(op, ast.Add):
+            name = &#39;+&#39;
+        elif isinstance(op, ast.Sub):
+            name = &#39;-&#39;
+        elif isinstance(op, ast.Mult):
+            name = &#39;*&#39;            
+        elif isinstance(op, ast.Div):
+            name = &#39;/&#39;
+        elif isinstance(op, ast.FloorDiv):
+            name = &#39;//&#39;            
+        else:
+            raise Exception(&#39;Unsupported BinOp&#39;)
+        return Application(name, [left, right], self.builtins)
+
+    def visit_Call(self, node):
+        return Application(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.builtins)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>ast.NodeVisitor</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_BinOp"><code class="name flex">
+<span>def <span class="ident">visit_BinOp</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_BinOp(self, node):
+    left = self.visit(node.left)
+    right = self.visit(node.right)
+    op = node.op
+    if isinstance(op, ast.Add):
+        name = &#39;+&#39;
+    elif isinstance(op, ast.Sub):
+        name = &#39;-&#39;
+    elif isinstance(op, ast.Mult):
+        name = &#39;*&#39;            
+    elif isinstance(op, ast.Div):
+        name = &#39;/&#39;
+    elif isinstance(op, ast.FloorDiv):
+        name = &#39;//&#39;            
+    else:
+        raise Exception(&#39;Unsupported BinOp&#39;)
+    return Application(name, [left, right], self.builtins)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Call"><code class="name flex">
+<span>def <span class="ident">visit_Call</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Call(self, node):
+    return Application(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.builtins)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Expr"><code class="name flex">
+<span>def <span class="ident">visit_Expr</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Expr(self, node):
+    return self.visit(node.value)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_For"><code class="name flex">
+<span>def <span class="ident">visit_For</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_For(self, node):
+    raise Exception(&#39;For statements are not allowed&#39;)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Import"><code class="name flex">
+<span>def <span class="ident">visit_Import</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Import(self, node):
+    raise Exception(&#39;Import statements are not allowed&#39;)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Module"><code class="name flex">
+<span>def <span class="ident">visit_Module</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Module(self, node):
+    return self.visit(node.body[0])</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Name"><code class="name flex">
+<span>def <span class="ident">visit_Name</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Name(self, node):
+    name = node.id.upper()
+    return Identifier(name)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Num"><code class="name flex">
+<span>def <span class="ident">visit_Num</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Num(self, node):
+    return Constant(node.n)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Raise"><code class="name flex">
+<span>def <span class="ident">visit_Raise</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Raise(self, node):
+    raise Exception(&#39;Raise statements are not allowed&#39;)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_Str"><code class="name flex">
+<span>def <span class="ident">visit_Str</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_Str(self, node):
+    for string_transformer in self.string_transformers:
+        result = string_transformer(node.s)
+        if result is not None:
+            return Constant(result)
+    return Constant(node.s)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_While"><code class="name flex">
+<span>def <span class="ident">visit_While</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_While(self, node):
+    raise Exception(&#39;While statements are not allowed&#39;)</code></pre>
+</details>
+</dd>
+<dt id="minipy.minipy.lang.MiniPyVisitor.visit_With"><code class="name flex">
+<span>def <span class="ident">visit_With</span></span>(<span>self, node)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visit_With(self, node):
+    raise Exception(&#39;With statements are not allowed&#39;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="minipy.minipy.lang.Reader"><code class="flex name class">
+<span>class <span class="ident">Reader</span></span>
+<span>(</span><span>f)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wrapper for a function which takes an environment and returns a value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Reader:
+    def __init__(self, f):
+        &#39;&#39;&#39;
+        Wrapper for a function which takes an environment and returns a value.
+        &#39;&#39;&#39;
+        self.f = f
+
+    def run(self, env=None):
+        env = env if env else Environment()
+        return self.f(env)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="minipy.minipy.lang.Reader.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self, env=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self, env=None):
+    env = env if env else Environment()
+    return self.f(env)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="minipy.minipy" href="index.html">minipy.minipy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="minipy.minipy.lang.Application" href="#minipy.minipy.lang.Application">Application</a></code></h4>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.Constant" href="#minipy.minipy.lang.Constant">Constant</a></code></h4>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.Environment" href="#minipy.minipy.lang.Environment">Environment</a></code></h4>
+<ul class="">
+<li><code><a title="minipy.minipy.lang.Environment.lookup" href="#minipy.minipy.lang.Environment.lookup">lookup</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.Expression" href="#minipy.minipy.lang.Expression">Expression</a></code></h4>
+<ul class="">
+<li><code><a title="minipy.minipy.lang.Expression.compile" href="#minipy.minipy.lang.Expression.compile">compile</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.Identifier" href="#minipy.minipy.lang.Identifier">Identifier</a></code></h4>
+<ul class="">
+<li><code><a title="minipy.minipy.lang.Identifier.compile" href="#minipy.minipy.lang.Identifier.compile">compile</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.MiniPy" href="#minipy.minipy.lang.MiniPy">MiniPy</a></code></h4>
+<ul class="">
+<li><code><a title="minipy.minipy.lang.MiniPy.add_string_transformer" href="#minipy.minipy.lang.MiniPy.add_string_transformer">add_string_transformer</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPy.parse" href="#minipy.minipy.lang.MiniPy.parse">parse</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.MiniPyVisitor" href="#minipy.minipy.lang.MiniPyVisitor">MiniPyVisitor</a></code></h4>
+<ul class="two-column">
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_BinOp" href="#minipy.minipy.lang.MiniPyVisitor.visit_BinOp">visit_BinOp</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Call" href="#minipy.minipy.lang.MiniPyVisitor.visit_Call">visit_Call</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Expr" href="#minipy.minipy.lang.MiniPyVisitor.visit_Expr">visit_Expr</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_For" href="#minipy.minipy.lang.MiniPyVisitor.visit_For">visit_For</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Import" href="#minipy.minipy.lang.MiniPyVisitor.visit_Import">visit_Import</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Module" href="#minipy.minipy.lang.MiniPyVisitor.visit_Module">visit_Module</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Name" href="#minipy.minipy.lang.MiniPyVisitor.visit_Name">visit_Name</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Num" href="#minipy.minipy.lang.MiniPyVisitor.visit_Num">visit_Num</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Raise" href="#minipy.minipy.lang.MiniPyVisitor.visit_Raise">visit_Raise</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_Str" href="#minipy.minipy.lang.MiniPyVisitor.visit_Str">visit_Str</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_While" href="#minipy.minipy.lang.MiniPyVisitor.visit_While">visit_While</a></code></li>
+<li><code><a title="minipy.minipy.lang.MiniPyVisitor.visit_With" href="#minipy.minipy.lang.MiniPyVisitor.visit_With">visit_With</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="minipy.minipy.lang.Reader" href="#minipy.minipy.lang.Reader">Reader</a></code></h4>
+<ul class="">
+<li><code><a title="minipy.minipy.lang.Reader.run" href="#minipy.minipy.lang.Reader.run">run</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+</footer>
+</body>
+</html>
