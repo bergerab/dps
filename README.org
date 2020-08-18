@@ -1,7 +1,11 @@
 * Data Processing System (DPS)
 
 A system for doing point-wise and windowed calculations on data
-collected from external systems. The architecture includes a primary
+collected from external systems. 
+
+#+html: <p align="center"><img src="img/architecture.png" /></p>
+
+The architecture includes a primary
 server called the ~DPS Manager~ where devices and signals are
 configured. The data processing computations are expressed in a custom
 language in the user interface of ~DPS Manager~. Devices send signal values into
@@ -9,7 +13,10 @@ DPS via the API ~DPS Client~. Then, ~DPS Manager~ processes them via its
 ~DPS Worker~ server cluster. The processed data is then visualized in
 the ~DPS UI~ (the user interface for the system).
 
-This repository includes several isolated modules.
+This repository includes several isolated modules. All of the source
+code is found in the ~./src~ directory. Code documentation is found in
+~./html~. Images relevant to README files is found in ~./img~. Below is a
+overview of the various modules in the source code directory:
 
 First there is ~dplib~ which implements a library for
 expressing data processing computations. Then, there is ~minipy~, a
@@ -144,9 +151,9 @@ Python programming.
 A feature called "string transformers" lets you define a function which
 takes a string literal, and optionally transformers it to any
 value. If the value is not ~None~, it will replace the value. For
-example, this way you can define a string literal like ~'1s'~ or ~'2'~
+example, this way you can define a string literal like '1s' or '2'
 and a string transformer as ~lambda s: to_timedelta(s)~ which will
-convert ~'1s'~ to ~timedelta(seconds=1)~ and ~'2m'~ to
+convert '1s' to ~timedelta(seconds=1)~ and '2m' to
 ~timedelta(minutes=2)~. This is an optimization because then your
 runtime code doesn't need to perform the string parsing to convert
 from string to timedelta, because it was already done.
