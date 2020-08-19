@@ -1,0 +1,7 @@
+** DPS UI
+~DPS UI~ is the user interface for the data processing system. It
+provides two iterfaces. One interface is for administrators who
+configure which external systems and signals the DPS should collect from,
+which computations to perform, and for upkeeping the ~DPS Manager~. The
+other interface is for users who want to run historical data
+processing tasks.

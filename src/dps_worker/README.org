@@ -1,0 +1,5 @@
+** DPS Worker
+~DPS Worker~ is a clusterable server which actually performs the data
+processing computations. It is controlled by the primary ~DPS~
+server. For data collection and streaming processes, data is sent
+and processed directly by a ~DPS Worker~. 

@@ -1,0 +1,4 @@
+* DPS Manager
+~DPS Manager~ is the primary server for the data processing system. It controls
+all metadata necessary for collecting signal data (system and device
+IDs), database connections, computations to perform, etc...

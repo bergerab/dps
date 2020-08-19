@@ -1,2 +1,10 @@
 * DPS Client
+~DPS Client~ is a Python API for sending signal data to the data processing
+system. 
 
+* Running the Tests
+To run the tests, run:
+
+#+BEGIN_SRC shell
+python3 setup.py test
+#+END_SRC
