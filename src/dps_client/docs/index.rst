@@ -1,20 +1,22 @@
-.. DPS Client documentation master file, created by
-   sphinx-quickstart on Wed Aug 19 12:24:20 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to DPS Client's documentation!
 ======================================
 
+`DPS Client` is the gateway between devices and the data processing system (DPS). It is for sending signal data into the system, and for sending and receiving metadata between a `DPS Manager`.
+
+
+
+Documentation
+========
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   quickstart
 
+API Reference
+=============
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 2
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   api

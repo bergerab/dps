@@ -42,7 +42,7 @@ class DeviceClient:
         '''
         return BulkClient(time)
 
-    def send(self, value, time):
+    def send_sample(self, signal_uid, value, time):
         pass
 
 class BulkClient:
@@ -54,17 +54,22 @@ class BulkClient:
     def __init__(self, device_client, time):
         self.device_client = device_client
         self.time = time
-        self.values = []
+        self.samples = []
     
-    def add(self, value):
+    def add(self, signal_uid, value):
         '''
         Queue the value to be sent with the bulk request (where all values share the same time).
         '''
-        self.values.append(value)
+        self.samples.append(Sample(signal_uid, value, self.time))
 
-    def send(self):
+    def send_samples(self):
         pass
-        
+
+class Sample:
+    def __init__(self, signal_uid, value, time):
+        self.signal_uid = signal_uid
+        self.value = value
+        self.time = time
     
 def connect(url):
     '''
