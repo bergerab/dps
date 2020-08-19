@@ -15,7 +15,7 @@ the ~DPS UI~ (the user interface for the system).
 
 This repository includes several isolated modules. All of the source
 code is found in the ~./src~ directory. Code documentation is found in
-~./html~. Images relevant to README files is found in ~./img~. Below is a
+~./docs~. Images relevant to README files is found in ~./img~. Below is a
 overview of the various modules in the source code directory:
 
 First there is ~dplib~ which implements a library for
