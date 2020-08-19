@@ -11,9 +11,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../dps_client'))
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
@@ -28,10 +28,9 @@ author = 'Adam Berger'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
 ]
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
