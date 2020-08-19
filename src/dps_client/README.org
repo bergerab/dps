@@ -8,3 +8,21 @@ To run the tests, run:
 #+BEGIN_SRC shell
 python3 setup.py test
 #+END_SRC
+
+
+* Generating the Documentation
+~pdoc~ is used to generate the documentation for the ~DPS Client~ in this repo.
+
+To re-generate the documentation, first install ~pdoc3~:
+
+#+BEGIN_SRC shell
+pip3 install pdoc3
+#+END_SRC
+
+To generate the documentation, run:
+
+#+BEGIN_SRC shell
+pdoc --html --output-dir docs dps_client
+#+END_SRC
+
+While your current working directory is ~src/dps_client~.

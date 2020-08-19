@@ -3,16 +3,16 @@ DPS Client - A client for communicating with the DPS Manager, and sending signal
 
 The client is broken up into several sub-clients each for performing different tasks.
 
-First there is `DPSClient` which is for sending and receiving metadata directly to the DPS Manager.
+First there is `Client` which is for sending and receiving metadata directly to the DPS Manager.
 
-Then there is `DPSDeviceClient` (that can be created by calling `create_device_client` on a `DPSClient`) which is for sending signal data.
+Then there is `DeviceClient` (that can be created by calling `create_device_client` on a `Client`) which is for sending signal data.
 
-Finally there is `DPSBulkClient` (that can be created by calling `create_bulk_client` on a `DPSDeviceClient`) for sending many signal samples all collected at the same time. This improves performance, as multiple signal values can be sent in a signal web request.
+Finally there is `BulkClient` (that can be created by calling `create_bulk_client` on a `DeviceClient`) for sending many signal samples all collected at the same time. This improves performance, as multiple signal values can be sent in a signal web request.
 '''
 
 from datetime import datetime
 
-class DPSClient:
+class Client:
     '''
     A connection to the DPS Manager.
     '''
@@ -26,9 +26,9 @@ class DPSClient:
         if validate:
             # ask DPS if the device_uid is a valid one
             raise Exception('Unimplemented')
-        return DPSDeviceClient(self, device_uid)
+        return DeviceClient(self, device_uid)
     
-class DPSDeviceClient:
+class DeviceClient:
     '''
     A client for sending signal data to DPS using a device's unique identifier (UID)
     '''
@@ -45,7 +45,7 @@ class DPSDeviceClient:
     def send(self, value, time):
         pass
 
-class DPSBulkClient:
+class BulkClient:
     '''
     A client that accumulates many samples under a single time and sends them together to DPS.
 
@@ -70,4 +70,4 @@ def connect(url):
     '''
     Connects to a DPS server. Returns a client.
     '''
-    return DPSClient(url)
+    return Client(url)

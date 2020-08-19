@@ -1,1 +1,1 @@
-from .main import DPSClient, connect
+from .main import Client, connect
