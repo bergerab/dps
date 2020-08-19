@@ -1,7 +1,7 @@
-* MiniPy
+* DPLib
 
 
-** Running the Tests
+* Running the Tests
 To run the tests, run:
 
 #+BEGIN_SRC shell

@@ -133,12 +133,7 @@ class DataSet:
         self.data_map = data_map
 
 import re
-
-import functions as funcs
-from main import DataSeries
-
-
-time_pattern = re.compile('(\d+)(ms|s|m|h)')
+time_pattern = re.compile('(\\d+)(ms|s|m|h)')
 '''
 Times are represented as strings of the form:
 200ms -> 200 milliseconds
@@ -165,46 +160,15 @@ def parse_time(id):
     if not result: return None
     magnitude, units = result.groups()
     return timedelta(**{ unit_map[units]: int(magnitude) })
-        
 
-if __name__ == '__main__':
-    # Test creating DataSeries from list
-    time = datetime.now()        
-    ds = DataSeries.from_list([1,2,3,4], start_time=time, delta_time=timedelta(seconds=2))
-    assert ds.start_time() == time
-    assert ds.end_time() == time + timedelta(seconds=2)*3
-    assert ds.to_list() == [1,2,3,4]
+# TODO: hook these up
+def average(args):
+    data_series = args[0]
+    return data_series.average()
 
-    # Test point-wise computations
-    ds1 = DataSeries.from_list([1,2])
-    ds2 = DataSeries.from_list([3,4])
-    ds3 = ds1 + ds2
-    assert (ds1 + ds2).to_list() == [1+3, 2+4]
-    assert (ds1 - ds2).to_list() == [1-3, 2-4]
-    assert (ds1 * ds2).to_list() == [1*3, 2*4]
-    assert (ds1 / ds2).to_list() == [1/3, 2/4]
-    assert (ds1 // ds2).to_list() == [1//3, 2//4]
-    
-    # Test windowed computations
-    ds = DataSeries()
-    ds.add(1, time)
-    ds.add(1.3, time + timedelta(seconds=0.1))
-    ds.add(2, time + timedelta(seconds=1.1))
-    dss = ds.time_window(timedelta(seconds=1))
-    assert dss.average().to_list()[0] == sum([1, 1.3])/2
-    assert dss.average().to_list()[1] == 2
-    assert len(dss.average().to_list()) == 2
-
-
-'''
-    functions = { # TODO: pass this in
-        '+': funcs.add,
-        '-': funcs.sub,
-        '*': funcs.mul,
-        '/': funcs.div,
-        '//': funcs.floordiv,                                
-        'AVERAGE': funcs.average,
-        'WINDOW': funcs.window,
-        'THD': lambda args: 3,
-    }
-'''
+def window(args):
+    data_series, duration = args
+    if len(args) > 2:
+        return data_series.time_window(duration, args[2])        
+    else:
+        return data_series.time_window(duration)
