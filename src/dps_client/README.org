@@ -9,21 +9,27 @@ To run the tests, run:
 python3 setup.py test
 #+END_SRC
 
-
 * Generating the Documentation
-~pdoc~ is used to generate the documentation for the ~DPS Client~ in this repo.
+~sphinx~ is used to generate the documentation.
 
-To re-generate the documentation, first install ~pdoc3~:
+The documentation must be built before viewing it. To build the
+documentation, first install the package:
+
+#+BEGIN_SRC shell
+python3 setup.py install
+#+END_SRC
+
+Then install ~sphinx~:
 
 #+BEGIN_SRC shell
 pip3 install sphinx
 #+END_SRC
 
-To generate the documentation, run:
+Build the documentation into the ~docs/_build~ directory by running:
 
 #+BEGIN_SRC shell
 cd docs && make html
 #+END_SRC
 
-This will generate HTML documentation in ~docs/_build~. Click on
-~docs/_build/index.html~ to begin reading the documentation.
+To view the built documentation, open
+~docs/_build/index.html~.

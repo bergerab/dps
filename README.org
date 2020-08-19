@@ -40,18 +40,3 @@ which connects to the ~dps_manager~, and sends signal data to a
 Each module in this project has its own ~README.org~ file which serves
 as the documentation. The entire project will have a documentation
 page of its own in ~./docs~, when the project is complete.
-
-* Generating the Client Documentation
-~pdoc~ is used to generate the documentation for the ~DPS Client~ in this repo.
-
-To re-generate the documentation, first install ~pdoc3~:
-
-#+BEGIN_SRC shell
-pip3 install pdoc3
-#+END_SRC
-
-To generate the documentation, run:
-
-#+BEGIN_SRC shell
-pdoc --html src/dps_client
-#+END_SRC

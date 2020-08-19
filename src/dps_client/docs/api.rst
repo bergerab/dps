@@ -13,8 +13,11 @@ Functions
 Classes
 -------
 
-.. autofunction:: Client
+.. autoclass:: Client
+	       :members:
 
-.. autofunction:: DeviceClient
-
-.. autofunction:: BulkClient
+.. autoclass:: DeviceClient
+	       :members:
+		  
+.. autoclass:: BulkClient
+	       :members:

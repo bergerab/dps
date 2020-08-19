@@ -17,17 +17,15 @@ from datetime import datetime
 class Client:
     '''A connection to the DPS Manager.'''
     def __init__(self, url):
-        '''Connects to a DPS Manager.
-
-        :param url: the URL of the DPS Manager
-        '''
         self.url = url
 
     def create_device_client(self, device_uid, validate=False):
         '''Creates a new :class:`DeviceClient` to send signal data for a device.
 
         :param device_uid: the unique identifier of the device
-        :param validate: whether or not to validate that the :param:`device_uid` is registered on the DPS Manager
+        :param validate: whether or not to validate that the unique device identifier is registered on the DPS Manager
+
+        :returns: A :class:`DeviceClient`
         '''
         if validate:
             # ask DPS if the device_uid is a valid one
@@ -48,6 +46,12 @@ class DeviceClient:
         return BulkClient(time)
 
     def send_sample(self, signal_uid, value, time):
+        '''Sends a single sample (a value tagged with a time) for the a signal.
+
+        :param signal_uid: The unique identifier for the signal.
+        :param value: The value of the signal at one moment.
+        :param time: The moment that the value was sampled.
+        '''
         pass
 
 class BulkClient:
@@ -71,7 +75,8 @@ class BulkClient:
         '''
         self.samples.append(Sample(signal_uid, value, self.time))
 
-    def send_samples(self):
+    def send(self):
+        '''Sends the bulk request (a collection of samples with the same time).'''
         pass
 
 class Sample:
@@ -83,8 +88,9 @@ class Sample:
         self.time = time
     
 def connect(url):
-    '''Connects to a DPS server. Returns a :class:`Client`.
+    '''Connects to a DPS Manager.
 
-    
+    :param url: The URL of the DPS Manager
+    :returns: A :class:`Client`
     '''
     return Client(url)
