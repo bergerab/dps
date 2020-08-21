@@ -1,7 +1,62 @@
-** DPS UI
+* DPS UI
 ~DPS UI~ is the user interface for the data processing system. It
 provides two iterfaces. One interface is for administrators who
 configure which external systems and signals the DPS should collect from,
 which computations to perform, and for upkeeping the ~DPS Manager~. The
 other interface is for users who want to run historical data
 processing tasks.
+
+* Overview
+** Home Page
+- Check list of items to do to complete the setup of the server.
+- System health warnings (such as if all DPS workers are down, if the
+  database connection is down, etc...).
+- Graph of samples consumed over time.
+
+** Data Connector Page
+Specify databases that data is stored and loaded from.
+
+** Stream Processors Page
+- Add input signal names
+- Add constant names
+- Add DPLang code to express mapping
+
+#+BEGIN_SRC python
+Va * Ia
+#+END_SRC
+
+The mapper must take a DataSeries and return another DataSeries.
+
+** Aggregators Page
+- Add input signal names
+- Add DPLang code to express reduction
+
+For example an "average" aggregator:
+#+BEGIN_SRC 
+average(x)
+#+END_SRC
+
+Weighted efficiency aggregator:
+
+#+BEGIN_SRC python
+when(LOAD < 10, X * 0.1) +
+when(LOAD < 20, X * 0.2) +
+when(LOAD < 30, X * 0.3)
+#+END_SRC
+
+The aggregator must take a DataSeries and return a single value.
+
+** Devices Page
+  - Define a device which has a name, a unique identifier, a set of signal identifiers, constant mappings  (name to number), and KPI mappings.
+    - KPI mappings are a little complicated. You have to map device
+      signal identifiers to the KPI's signal identifiers, and constant
+      identifiers to the KPI's constant identifiers.
+
+** Stream Processor Page
+Choose a device, and a data connector. Choose from a checklist of
+mappers to use, and signals to include in the output. 
+
+** Batch Visualization Page
+An administrator page which takes a stream process, and assigns
+aggregator to each (assign reducer input names to mapper output
+names). Once all mappers have completed for a batch process, the reducers are applied to get the final value.

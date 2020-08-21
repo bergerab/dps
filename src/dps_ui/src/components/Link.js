@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 
@@ -10,17 +10,10 @@ const styles = theme => ({
 });
 
 class MyLink extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
-    render() {
-        const { classes } = this.props;        
-        return (
-            <Link className={classes.link} {...this.props} />
-        );
-    }
+  render() {
+    const { classes } = this.props;        
+    return (<Link className={classes.link} {...this.props} />);
+  }
 }
 
 export default withStyles(styles, { withTheme: true })(MyLink);
-

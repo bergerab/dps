@@ -1,0 +1,65 @@
+* DPS Job Manager
+Accepts input from either from ~dps_client~ or ~DPS Manager~ to run either
+stream processes or batch processes.
+
+It accepts either stream jobs or batch jobs.
+
+** Stream Jobs
+
+Data is received from clients with this data (at one endpoint):
+
+#+BEGIN_SRC javascript
+{
+    "data": [[[1.2, 3.4, 5.6], time1], [[6.5, 4.3, 2.1], time2]],
+    "map": ["Va", "Vb", "Vc"]
+}
+#+END_SRC
+
+The ~DPS Job Manager~ looks at which streaming computations need to be
+done, and creates a job for each. Those jobs look like:
+
+#+BEGIN_SRC javascript
+  {
+      "compute": <qualified_computation_id>,
+      "data": [[[1.23, 4.35, 58.43], time1], [[2, 4, 6], time2]],
+      "map": ["Va", "Vb", "Vc"]
+  }
+#+END_SRC
+
+This results in some redundantly stored data, but it doesn't matter as
+you can scale the number of workers accordingly.
+
+(Qualified computation identifiers are computations for a specific
+device -- not a generic computation).
+
+** Batch Jobs
+For historical analysis, batch jobs can be created by the ~DPS Manager~
+by sending ~DPS Job Manager~ a batch process.
+
+#+BEGIN_SRC javascript
+  {
+      "batch_process": <batch_process_id>
+  }
+#+END_SRC
+
+Then the ~DPS Job Manager~ will break the batch process into many
+computations (one for each computation in the batch process).
+
+#+BEGIN_SRC javascript
+{
+    "compute": <qualified_computation_id>,
+    "batch_process": <batch_process_id>
+}
+#+END_SRC 
+
+These are distributed to all of the ~DPS Workers~.
+
+** Dependent jobs
+
+Some computations reference other computations. For example, THD at
+50% load references both THD of some signal and load percent. For now,
+it will require code duplication (disallowing this case).
+
+#+BEGIN_SRC python
+
+#+END_SRC
