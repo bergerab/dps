@@ -2,6 +2,7 @@ import re
 from datetime import timedelta
 
 from .minipy import MiniPy
+from .dataseries import DataSeries
 
 class DPL:
     def __init__(self):
@@ -9,9 +10,19 @@ class DPL:
             return series.time_window(duration)
         def average(series):
             return series.average()
+        def if_exp(test, body, orelse, env):
+            test_value = test.compile().run(env)
+            if isinstance(test_value, DataSeries):
+                return test_value.when(body.compile().run(env), orelse.compile().run(env))
+            # Otherwise, continue with normal IF behavior:
+            if test_value:
+                return body.compile().run(env)
+            return orelse.compile().run(env)
+            
         self.mpy = MiniPy(builtins={
             'window': window,
             'average': average,
+            'if': if_exp,
         })
         self.mpy.add_string_transformer(parse_time)        
         self.ast = None

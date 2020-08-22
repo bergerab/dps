@@ -65,6 +65,20 @@ class TestDPL(TestCase):
         self.assertEqual(list(DPL.eval('average(window(a, "2s"))', { 'a': ds })),
                          [(1+2)/2, (3+4)/2, (5+6)/2, 7/1])
 
+    def test_if_exp(self):
+        '''If expressions should call DataSeries.when'''
+        test = DataSeries.from_list([True, False, False, True])
+        A = DataSeries.from_list(['a', 'b', 'c', 'd'])
+        B = DataSeries.from_list([9, 8, 7, 6])
+        self.assertEqual(list(DPL.eval('A if test else B', { 'test': test, 'A': A, 'B': B })),
+                         ['a', 8, 7, 'd'])
+
+        # Normal if expressions should work, if the test is not a dataseries
+        self.assertEqual(list(DPL.eval('A if 1 else B', { 'A': A, 'B': B })),
+                         ['a', 'b', 'c', 'd'])
+        self.assertEqual(list(DPL.eval('A if 0 else B', { 'A': A, 'B': B })),
+                         [9, 8, 7, 6])
+
     def test_time_parsing(self):
         '''Should be able to parse time strings for milliseconds, seconds, minutes, hours, and days.'''
         self.assertEqual(DPL.eval('"2ms"'), timedelta(milliseconds=2))
