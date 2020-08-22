@@ -46,11 +46,11 @@ export default class EntityPage extends React.Component {
           <Box header={props.entityName + 's'}>
             {table}
             <Row>
-              <Button variant="contained" color="primary">
-                <Link to={props.entityUrl + 'add'} style={{ color: 'white' }}>
+              <Link to={props.entityUrl + 'add'} style={{ color: 'white' }}>              
+                <Button variant="contained" color="primary">
                   Add {props.entityName}
-                </Link>
-              </Button>
+                </Button>
+              </Link>          
 
               <Button variant="contained" color="primary" onClick={deleteAll} style={{ marginLeft: '20px' }}>
                 Delete All {props.entityName}s

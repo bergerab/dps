@@ -33,25 +33,25 @@ function getSteps() {
 export default function HorizontalLabelPositionBelowStepper() {
   const classes = useStyles();
   const [activeStep, setActiveStep] = React.useState(0);
-    const steps = getSteps();
+  const steps = getSteps();
 
-    useEffect(() => {
-	list('/data-connector/').then(r => r.json()).then(jo => {
-	    if (jo.length > 0) {
-		setActiveStep(1);
-		list('/system/').then(r => r.json()).then(jo => {
-		    if (jo.length > 0) {
-			setActiveStep(2);
-			list('/data-set/').then(r => r.json()).then(jo => {
-			    if (jo.length > 0) {
-				setActiveStep(3);
-			    }
-			});
-		    }
-		});
-	    }
+  useEffect(() => {
+    list('/data-connector/').then(r => r.json()).then(jo => {
+      if (jo.length > 0) {
+	setActiveStep(1);
+	list('/system/').then(r => r.json()).then(jo => {
+	  if (jo.length > 0) {
+	    setActiveStep(2);
+	    list('/data-set/').then(r => r.json()).then(jo => {
+	      if (jo.length > 0) {
+		setActiveStep(3);
+	      }
+	    });
+	  }
 	});
-    }, []);
+      }
+    });
+  }, []);
 
   const handleReset = () => {
     setActiveStep(0);

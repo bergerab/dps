@@ -28,6 +28,14 @@ class TestMiniPy(TestCase):
         self.assertEqual(run('9 - 3 * 2'), 9 - 3 * 2)
         self.assertEqual(run('(2 + 11) * (8 / 2)'), (2 + 11) * (8 / 2))
 
+    def test_IfExp(self):
+        # True case
+        self.assertEqual(run('3 if 1 else 2'), 3)
+        # False case
+        self.assertEqual(run('3 if 0 else 2'), 2)
+        # Nested false case
+        self.assertEqual(run('3 if (1 if 0 else 0) else 2'), 2)
+
     def test_environment(self):
         '''
         Variables should be able to be bound via Python and properly looked up during runtime.
@@ -90,7 +98,6 @@ class TestMiniPy(TestCase):
         self.assertEqual(run('testmod(11, 3)', {}, { 'testmod': lambda xs: xs[0] % xs[1] }), 11 % 3)
         self.assertEqual(run('TestMod(93, 12)', {}, { 'testmod': lambda xs: xs[0] % xs[1] }), 93 % 12)
         self.assertEqual(run('testMOD(80, 20)', {}, { 'TEsTMod': lambda xs: xs[0] % xs[1] }), 80 % 20)                                                                        
-
     def test_security(self):
         '''
         Normal Python functionality is disallowed.
@@ -110,3 +117,30 @@ class TestMiniPy(TestCase):
             run('with x as y: pass')
         with self.assertRaises(InvalidOperationException):
             run('raise Exception("test")')
+
+    def test_get_identifiers(self):
+        ids_to_list = lambda xs: list(map(lambda x: x.name, xs))
+        
+        mpy = MiniPy()
+        
+        ids = mpy.parse('VA + VB').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['VA', 'VB'])
+
+        # Resulting identifiers should be case insensitive (always uppercased)
+        ids = mpy.parse('vA + VB').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['VA', 'VB'])
+
+        ids = mpy.parse('((vA + VB)+ neww)').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['VA', 'VB', 'NEWW'])
+
+        # Applications should extract identifiers
+        ids = mpy.parse('((fcall(vA) + vcc)+ call2(neww))').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['VA', 'VCC', 'NEWW'])
+
+        # Nested applications should extract identifiers
+        ids = mpy.parse('((fcall(arg1, arg2, ie(arg3, wo(arg4))) + vcc)+ call2(neww))').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['ARG1', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'])
+
+        # If expressions should extract identifiers
+        ids = mpy.parse('((fcall(arg1 if unicorn else donkey, arg2, ie(arg3, wo(arg4))) + vcc)+ call2(neww))').get_identifiers()
+        self.assertEqual(ids_to_list(ids), ['ARG1', 'UNICORN', 'DONKEY', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'])

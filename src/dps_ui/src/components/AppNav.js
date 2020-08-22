@@ -35,6 +35,7 @@ import DataConnectionEdit from './DataConnectionEdit';
 import KPIEdit from './KPIEdit';
 import SystemEdit from './SystemEdit';
 import DataSetEdit from './DataSetEdit';
+import BatchProcessPage from './BatchProcessPage';
 import Home from './Home';
 
 import EntitySelect from './EntitySelect';
@@ -119,174 +120,167 @@ export default function MiniDrawer(props) {
     setOpen(false);
   };
 
-    const linkStyle = { textDecoration: 'none', color: 'initial' };
+  const linkStyle = { textDecoration: 'none', color: 'initial' };
 
-    return (
-	<Router>
-    <div className={classes.root}>
-      <CssBaseline />
-      <AppBar
-	position="fixed"
-	className={clsx(classes.appBar, {
-	  [classes.appBarShift]: open,
-	})}
-      >
-	<Toolbar>
-	  <IconButton
-	    color="inherit"
-	    aria-label="open drawer"
-	    onClick={handleDrawerOpen}
-	    edge="start"
-	    className={clsx(classes.menuButton, {
-	      [classes.hide]: open,
-	    })}>
-	    <MenuIcon />
-	  </IconButton>
-	  <Typography variant="h6" noWrap>
-	    KPI Dashboard
-	  </Typography>
-	</Toolbar>
-      </AppBar>
-      <Drawer
-	variant="permanent"
-	className={clsx(classes.drawer, {
-	  [classes.drawerOpen]: open,
-	  [classes.drawerClose]: !open,
-	})}
-	classes={{
-	  paper: clsx({
+  return (
+    <Router>
+      <div className={classes.root}>
+	<CssBaseline />
+	<AppBar
+	  position="fixed"
+	  className={clsx(classes.appBar, {
+	    [classes.appBarShift]: open,
+	  })}
+	>
+	  <Toolbar>
+	    <IconButton
+	      color="inherit"
+	      aria-label="open drawer"
+	      onClick={handleDrawerOpen}
+	      edge="start"
+	      className={clsx(classes.menuButton, {
+		[classes.hide]: open,
+	      })}>
+	      <MenuIcon />
+	    </IconButton>
+	    <Typography variant="h6" noWrap>
+	      Data Processing System
+	    </Typography>
+	  </Toolbar>
+	</AppBar>
+	<Drawer
+	  variant="permanent"
+	  className={clsx(classes.drawer, {
 	    [classes.drawerOpen]: open,
 	    [classes.drawerClose]: !open,
-	  }),
-	}}>
-	<div className={classes.toolbar}>
-	  <IconButton onClick={handleDrawerClose}>
-	    {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-	  </IconButton>
-	</div>
-	<Divider />
-	<List>
-	  <Link to="/home" style={linkStyle}>
-	    <ListItem button key="Home">
-	      <ListItemIcon><HomeIcon/></ListItemIcon>
-	      <ListItemText primary="Home" />
-	    </ListItem>
-	  </Link>
-	</List>
-	<Divider />
-	<List>
-	  <Link to="/data-connector" style={linkStyle}>
-	    <ListItem button key="Data Connectors">
-	      <ListItemIcon><InputIcon/></ListItemIcon>
-	      <ListItemText primary="Data Connectors" />
-	    </ListItem>
-	  </Link>
-	  <Link to="/system" style={linkStyle}>
-	    <ListItem button key="Systems">
-	      <ListItemIcon><MemoryIcon/></ListItemIcon>
-	      <ListItemText primary="Systems" />
-	    </ListItem>
-	  </Link>
-	  <Link to="/data-set" style={linkStyle}>
-	    <ListItem button key="Data Sets">
-	      <ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
-	      <ListItemText primary="Data Sets" />
-	    </ListItem>
-	  </Link>
-	  <Link to="/kpi" style={linkStyle}>
-	    <ListItem button key="KPIs">
-	      <ListItemIcon><FunctionsIcon/></ListItemIcon>
-	      <ListItemText primary="KPIs" />
-	    </ListItem>
-	  </Link>
-	</List>
-	<Divider />
-	<List>
-	  <Link to="batch-process" style={linkStyle}>
-	    <ListItem button key="Batch Process">
-	      <ListItemIcon><TableChartIcon /></ListItemIcon>
-	      <ListItemText primary="Batch Process" />
-	    </ListItem>
-	  </Link>
-	</List>
-      </Drawer>
-      <main className={classes.content}>
-	<div className={classes.toolbar} />
-	<Switch>
-	  <Route path="/home">
-	    <Home />
-	  </Route>
-	  <Route path="/data-connector/:action?/:id?"
-		 component={props =>
-			    (<EntityPage
-			       {...props}
-			       fields={[['Name', 'displayName'],
-                                        ['URL', 'url']]}
-			       entityUrl="/data-connector/"
-			       entityName="Data Connector"
-			       editComponent={DataConnectionEdit}
-			     />
-			    )}
-          />
-	  <Route path="/system/:action?/:id?"
-		 component={props =>
-			    (<EntityPage {...props}
-					 fields={[['Name', 'displayName'],
-                                                  ['Signals', 'signals'],
-                                                  ['Constants', 'constants']]}
-					 entityUrl="/system/"
-					 entityName="System"
-					 editComponent={SystemEdit}/>
-			    )}
-          />
-	  <Route path="/data-set/:action?/:id?"
-		 component={props =>
-			    (<EntityPage {...props}
-					 fields={[
-					   ['Name', 'displayName'],
-					   ['Table', 'table'],
-					   ['Mappings', 'mappings'],
-					 ]}
-					 entityUrl="/data-set/"
+	  })}
+	  classes={{
+	    paper: clsx({
+	      [classes.drawerOpen]: open,
+	      [classes.drawerClose]: !open,
+	    }),
+	  }}>
+	  <div className={classes.toolbar}>
+	    <IconButton onClick={handleDrawerClose}>
+	      {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+	    </IconButton>
+	  </div>
+	  <Divider />
+	  <List>
+	    <Link to="/home" style={linkStyle}>
+	      <ListItem button key="Home">
+		<ListItemIcon><HomeIcon/></ListItemIcon>
+		<ListItemText primary="Home" />
+	      </ListItem>
+	    </Link>
+	  </List>
+	  <Divider />
+	  <List>
+	    <Link to="/data-connector" style={linkStyle}>
+	      <ListItem button key="Data Connectors">
+		<ListItemIcon><InputIcon/></ListItemIcon>
+		<ListItemText primary="Data Connectors" />
+	      </ListItem>
+	    </Link>
+	    <Link to="/system" style={linkStyle}>
+	      <ListItem button key="Systems">
+		<ListItemIcon><MemoryIcon/></ListItemIcon>
+		<ListItemText primary="Systems" />
+	      </ListItem>
+	    </Link>
+	    <Link to="/data-set" style={linkStyle}>
+	      <ListItem button key="Data Sets">
+		<ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
+		<ListItemText primary="Data Sets" />
+	      </ListItem>
+	    </Link>
+	    <Link to="/kpi" style={linkStyle}>
+	      <ListItem button key="Compute">
+		<ListItemIcon><FunctionsIcon/></ListItemIcon>
+		<ListItemText primary="Compute" />
+	      </ListItem>
+	    </Link>
+	  </List>
+	  <Divider />
+	  <List>
+	    <Link to="batch-process" style={linkStyle}>
+	      <ListItem button key="Batch Process">
+		<ListItemIcon><TableChartIcon /></ListItemIcon>
+		<ListItemText primary="Batch Process" />
+	      </ListItem>
+	    </Link>
+	  </List>
+	</Drawer>
+	<main className={classes.content}>
+	  <div className={classes.toolbar} />
+	  <Switch>
+	    <Route path="/home">
+	      <Home />
+	    </Route>
+	    <Route
+	      path="/data-connector/:action?/:id?"
+	      component={props =>
+			 (<EntityPage
+			    {...props}
+			    fields={[['Name', 'displayName'],
+				     ['URL', 'url']]}
+			    entityUrl="/data-connector/"
+			    entityName="Data Connector"
+			    editComponent={DataConnectionEdit}
+			  />)}
+	    />
+	    <Route
+	      path="/system/:action?/:id?"
+	      component={props =>
+			 (<EntityPage
+			    {...props}
+			    fields={[['Name', 'displayName'],
+				     ['Signals', 'signals'],
+				     ['Constants', 'constants']]}
+			    entityUrl="/system/"
+			    entityName="System"
+			    editComponent={SystemEdit}
+			  />)}
+	    />
+	    <Route
+	      path="/data-set/:action?/:id?"
+	      component={props =>
+			 (<EntityPage
+			    {...props}
+			    fields={[
+			      ['Name', 'displayName'],
+			      ['Table', 'table'],
+			      ['Mappings', 'mappings'],
+			    ]}
+			    entityUrl="/data-set/"
 
-					 entityName="Data Set"
-					 editComponent={DataSetEdit}/>
-				  )}/>
-	  <Route path="/kpi/:action?/:id?"
-		 component={props =>
-			    (<EntityPage {...props}
-					 fields={[
-					   ['Name', 'displayName'],
-                                           ['Input Signals', 'signals'],
-					   ['Input Constants', 'constants'],
-					 ]}
-					 entityUrl="/kpi/"
-					 entityName="KPI"
-					 editComponent={KPIEdit}
-                             />
-			    )}
-          />
+			    entityName="Data Set"
+			    editComponent={DataSetEdit}
+			  />)}
+	    />
+	    <Route
+	      path="/kpi/:action?/:id?"
+	      component={props =>
+			 (<EntityPage
+			    {...props}
+			    fields={[
+			      ['Name', 'displayName'],
+			      ['Input Signals', 'signals'],
+			      ['Input Constants', 'constants'],
+			    ]}
+			    entityUrl="/kpi/"
+			    entityName="KPI"
+			    editComponent={KPIEdit}
+			  />)}
+	    />
 
-	  <Route path="/batch-process">
-	    <Grid item xs={12} s={6}>
-	      <Grid item xs={12} s={6}>
-		<EntitySelect header="System"
-			      fullWidth={true}
-			      name="system"
-			      entityUrl={'/system/'}/>
-	      </Grid>
-	      <Grid item xs={12}>
-		<EntityMultiSelect header="KPIs"
-				   fullWidth={true}
-				   name="kpi"
-				   value={[]}
-				   entityUrl={'/kpi/'}/>
-	    </Grid>
-	  </Grid>
-	  </Route>
-	</Switch>
-      </main>
-	</div>
-	</Router>
-    );
+	    <Route
+	      path="/batch-process"
+	      component={BatchProcessPage}
+	    />
+	  </Switch>
+	</main>
+      </div>
+    </Router>
+  );
 }

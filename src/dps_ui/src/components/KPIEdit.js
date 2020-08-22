@@ -1,19 +1,14 @@
 import React from 'react';
-import Grid from '@material-ui/core/Grid';
 
+import Grid from '@material-ui/core/Grid';
 import ChipInput from 'material-ui-chip-input';
 
-import TextField from './TextField';
-
-// Import themeing files for codemirror
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material.css';
-
-// Import language syntax highlighting.
 import 'codemirror/mode/python/python.js';
-
 import { Controlled as CodeMirror } from "react-codemirror2";
 
+import TextField from './TextField';
 import EntityEdit from './EntityEdit';
 
 export default class KPIEdit extends React.Component {
@@ -67,7 +62,7 @@ export default class KPIEdit extends React.Component {
 	      }}
 	      fullWidth={true}
 	      name="displayName"
-	      value={this.state.displayName} // apparently this is wrong to do something about controlled vs uncontrolled
+	      value={this.state.displayName}
 	      onChange={e => this.setState({ displayName: e.value })}
 	      label="Name"
             />
@@ -77,7 +72,7 @@ export default class KPIEdit extends React.Component {
 	    <ChipInput
 	      fullWidth={true}
 	      label="Input Signals"
-	      value={this.state.signals} // apparently this is wrong to do something about controlled vs uncontrolled
+	      value={this.state.signals}
 	      onAdd={(e, b) => {
 		this.setState({
 		  signals: this.state.signals.concat([e]),
@@ -90,14 +85,13 @@ export default class KPIEdit extends React.Component {
 	      }}
 	    />
 	    {signalsInput}
-
 	  </Grid>
 
 	  <Grid item xs={12} sm={6}>
 	    <ChipInput
 	      fullWidth={true}
 	      label="Input Constants"
-	      value={this.state.constants} // apparently this is wrong to do something about controlled vs uncontrolled
+	      value={this.state.constants}
 	      onAdd={(e, b) => {
 		this.setState({
 		  constants: this.state.constants.concat([e]),
@@ -124,7 +118,6 @@ export default class KPIEdit extends React.Component {
 	</Grid>
       </EntityEdit>
     );
-
   }
 }
 

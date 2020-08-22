@@ -15,33 +15,33 @@ const useStyles = makeStyles({
   },
 });
 
-export default function ActionsTable() {
+export default function PrettyTable(props) {
   const classes = useStyles();
-  const rows = [
-    ['Data Connection Added', 'TimescaleDB Data Connection was added.', new Date().toString()]
-  ];
-
+  
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="simple table">
-	<TableHead>
-	  <TableRow>
-	    <TableCell>Name</TableCell>
-	    <TableCell>Details</TableCell>
-	    <TableCell>Time</TableCell>
-	  </TableRow>
-	</TableHead>
-	<TableBody>
-	  {rows.map((row) => (
-	    <TableRow key={row[0]}>
-	      <TableCell component="th" scope="row">
-		{row[0]}
-	      </TableCell>
-	      <TableCell>{row[1]}</TableCell>
-	      <TableCell>{row[2]}</TableCell>
-	    </TableRow>
-	  ))}
-	</TableBody>
+        <TableHead>
+          <TableRow>
+            {props.header.map(header => (
+              <TableCell>{header}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {props.rows.map((row, i) => (
+            <TableRow key={i}>
+              {row.map(item => (
+                <TableCell
+                  component="th"
+                  scope="row"
+                >
+                  {item}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
       </Table>
     </TableContainer>
   );

@@ -31,6 +31,7 @@ Python.
 '''
 
 import ast
+import functools
 
 class MiniPy:
     def __init__(self, builtins={}):
@@ -79,12 +80,22 @@ class Expression:
             return x.compile()
         return x
 
+    def get_identifiers(self):
+        '''
+        Retrieves all identifiers in the expression (and all sub expressions)
+        :returns: a list of :class:`Identifier`
+        '''
+        return []
+
 class Identifier(Expression):
     def __init__(self, name):
         self.name = name
 
     def compile(self):
         return Reader(lambda env: env.lookup(self.name))
+
+    def get_identifiers(self):
+        return [self]
 
 class Constant(Expression):
     '''
@@ -95,6 +106,28 @@ class Constant(Expression):
 
     def compile(self):
         return Reader(lambda env: self.x)
+
+class If(Expression):
+    '''
+    A conditional statement
+    '''
+    def __init__(self, test, body, orelse):
+        self.test = test
+        self.body = body
+        self.orelse = orelse
+
+    def compile(self):
+        def eval(env):
+            if Expression.compile(self.test).run(env):
+                return Expression.compile(self.body).run(env)
+            else:
+                return Expression.compile(self.orelse).run(env)
+        return Reader(eval)
+
+    def get_identifiers(self):
+        return self.body.get_identifiers() + \
+               self.test.get_identifiers() + \
+               self.orelse.get_identifiers()
 
 class Application(Expression):
     def __init__(self, name, exprs, builtins={}):
@@ -109,6 +142,11 @@ class Application(Expression):
             return f(list(map(lambda value: value.run(env), values)))
             
         return Reader(get_value)
+
+    def get_identifiers(self):
+        return functools.reduce(
+            lambda a, b: a + b,
+            map(lambda x: x.get_identifiers(), self.exprs))
 
 class Reader:
     def __init__(self, f):
@@ -178,6 +216,12 @@ class MiniPyVisitor(ast.NodeVisitor):
 
     def visit_Num(self, node):
         return Constant(node.n)
+
+    def visit_IfExp(self, node):
+        test = self.visit(node.test)
+        body = self.visit(node.body)
+        orelse = self.visit(node.orelse)
+        return If(test, body, orelse)
 
     def visit_BinOp(self, node):
         left = self.visit(node.left)

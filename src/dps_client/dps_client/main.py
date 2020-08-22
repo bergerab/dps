@@ -31,7 +31,18 @@ class Client:
             # ask DPS if the device_uid is a valid one
             raise Exception('Unimplemented')
         return DeviceClient(self, device_uid)
-    
+
+client = Client('https://dps-manager-url/')
+device_client = client.create_device_client('inverter-a')
+
+device_client.send_sample('va', 2.4324817)
+
+bc = device_client.create_bulk_client()
+bc.add('va', 2.4358237)
+bc.add('vb', 4.5327239)
+bc.add('vc', 8.5938727)
+bc.send()
+
 class DeviceClient:
     '''A client for sending signal data to DPS using a device's unique identifier (UID)
     '''

@@ -32,13 +32,37 @@ export default class extends React.Component {
 
   render () {
     const props = this.props;
+    const rows = this.state.rows.map(row => (
+      <TableRow key={row.id}>
+	{props.header.map(h =>
+	                  <TableCell
+                            key={row[h[1]]}
+                          >
+                            {row[h[1]]}
+                          </TableCell>
+			 )}
+	<TableCell align="right">
+	  <EditAndDelete {...props}
+			 entity={row}
+			 entityName={props.entityName}
+			 entityUrl={props.entityUrl}
+	  />
+	</TableCell>
+      </TableRow>));
+
+    const empty = (<TableRow>
+                     <TableCell>
+                       <i style={{whiteSpace: 'pre'}}>No data to display.</i>
+                     </TableCell>
+                   </TableRow>);
+                                     
     return (
       <TableContainer component={Paper}>
-	<Table aria-label="simple table">
+        <Table aria-label="simple table">
 	  <TableHead>
 	    <TableRow>
 	      {props.header.map(data => (
-		<TableCell
+	        <TableCell
                   key={data[0]}
                 >
                   {data[0]}
@@ -48,26 +72,9 @@ export default class extends React.Component {
 	    </TableRow>
 	  </TableHead>
 	  <TableBody>
-	    {this.state.rows.map((row) => (
-	      <TableRow key={row.id}>
-		{props.header.map(h =>
-				  <TableCell
-                                    key={row[h[1]]}
-                                  >
-                                    {row[h[1]]}
-                                  </TableCell>
-				 )}
-		<TableCell align="right">
-		  <EditAndDelete {...props}
-				 entity={row}
-				 entityName={props.entityName}
-				 entityUrl={props.entityUrl}
-		  />
-		</TableCell>
-	      </TableRow>
-	    ))}
-	  </TableBody>
-	</Table>
+            {this.state.rows.length > 0 ? rows : empty}
+          </TableBody>
+        </Table>
       </TableContainer>
     );
   }
