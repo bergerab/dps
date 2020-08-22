@@ -34,10 +34,7 @@ import ast
 import functools
 
 class MiniPy:
-    def __init__(self, builtins={}, if_exp_as_builtin=False):
-        '''
-        :params if_exp_as_builtin: converts if expressions to builtin function calls to 'if'
-        '''
+    def __init__(self, builtins={}):
         self.builtins = { # default builtins for common operators
             '+': lambda x, y: x + y,
             '-': lambda x, y: x - y,
@@ -98,6 +95,9 @@ class Expression:
         '''
         return []
 
+    def get_sexprs(self):
+        return []
+
 class Identifier(Expression):
     def __init__(self, name):
         self.name = name
@@ -136,9 +136,10 @@ class SExpr(Expression):
         return Reader(get_value)
 
     def get_identifiers(self):
-        return functools.reduce(
-            lambda a, b: a + b,
-            map(lambda x: x.get_identifiers(), self.exprs))
+        return flatten(map(lambda x: x.get_identifiers(), self.exprs))
+
+    def get_sexprs(self):
+        return [self] + flatten(map(lambda expr: expr.get_sexprs(), self.exprs))
 
 class FExpr(SExpr):
     '''
@@ -281,3 +282,7 @@ class MiniPyVisitor(ast.NodeVisitor):
 
 class InvalidOperationException(Exception):
     pass
+
+def flatten(xs):
+    return functools.reduce(
+        lambda a, b: a + b, xs)

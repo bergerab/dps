@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from minipy import MiniPy, InvalidOperationException
+from dplib.minipy import MiniPy, InvalidOperationException
 
 def run(text, env={}, builtins={}, modify=lambda x:x):
     mpy = MiniPy(builtins)
@@ -163,7 +163,7 @@ class TestMiniPy(TestCase):
 
         # No identifiers
         ids = mpy.parse('2').get_identifiers()
-#        self.assertEqual(ids_to_set(ids), {})
+        self.assertEqual(len(ids_to_set(ids)), 0)
 
         # One identifier
         ids = mpy.parse('de').get_identifiers()

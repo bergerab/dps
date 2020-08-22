@@ -1,1 +1,2 @@
-from .main import DataSeries
+from .dataseries import DataSeries
+from .dpl import DPL

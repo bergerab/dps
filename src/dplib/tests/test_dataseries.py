@@ -31,4 +31,16 @@ class TestDataSeries(TestCase):
         self.assertEqual(dss.average().to_list()[0], sum([1, 1.3])/2)
         self.assertEqual(dss.average().to_list()[1], 2)
         self.assertEqual(len(dss.average().to_list()), 2)
+
+    def test_pointwise_computations_with_constants(self):
+        ds = DataSeries.from_list([1,2])
+#        self.assertEqual(list(ds*2), [2, 4])
     
+    def test_when(self):
+        '''`when` should take from A when T has a 1 (truthy value) and take from B when T has a 0 (non-truthy value).
+        '''
+        time = datetime.now()
+        T = DataSeries.from_list([0, 0, 1, 1, 0, 1, 0, 0], time)
+        A = DataSeries.from_list(['a', 'b', 'c', 'd', 'e', 'f', 'g'], time)
+        B = DataSeries.from_list([11, 12, 13, 14, 15, 16, 17, 18, 19, 20], time)
+        self.assertEqual(list(T.when(A, B)), [11, 12, 'c', 'd', 15, 'f', 17, 18])
