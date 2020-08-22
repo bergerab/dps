@@ -34,13 +34,24 @@ import ast
 import functools
 
 class MiniPy:
-    def __init__(self, builtins={}):
+    def __init__(self, builtins={}, if_exp_as_builtin=False):
+        '''
+        :params if_exp_as_builtin: converts if expressions to builtin function calls to 'if'
+        '''
         self.builtins = { # default builtins for common operators
-            '+': lambda xs: xs[0] + xs[1],
-            '-': lambda xs: xs[0] - xs[1],
-            '*': lambda xs: xs[0] * xs[1],
-            '/': lambda xs: xs[0] / xs[1],
-            '//': lambda xs: xs[0] // xs[1],                                
+            '+': lambda x, y: x + y,
+            '-': lambda x, y: x - y,
+            '*': lambda x, y: x * y,
+            '/': lambda x, y: x / y,
+            '//': lambda x, y: x // y,
+            '>': lambda x, y: x > y,
+            '<': lambda x, y: x < y,
+            '>=': lambda x, y: x >= y,
+            '<=': lambda x, y: x <= y,
+            '==': lambda x, y: x == y,
+            '!=': lambda x, y: x != y,
+            'IF': lambda test, body, orelse, env: body.compile().run(env) if test.compile().run(env) else orelse.compile().run(env),
+            'USUB': lambda x: -x,
         }
         for key, value in builtins.items():
             self.builtins[key.upper()] = value
@@ -51,13 +62,13 @@ class MiniPy:
         Given some string containing MiniPy source code, generates a MiniPy AST.
         '''
         node = ast.parse(text)
-        visitor = MiniPyVisitor(self.builtins, self.string_transformers)
+        visitor = MiniPyVisitor(self, self.string_transformers)
         mpy_node = visitor.visit(node)
         return mpy_node
 
     def add_string_transformer(self, string_transformer):
         '''
-        
+
         '''
         self.string_transformers.append(string_transformer)
 
@@ -107,29 +118,10 @@ class Constant(Expression):
     def compile(self):
         return Reader(lambda env: self.x)
 
-class If(Expression):
+class SExpr(Expression):
     '''
-    A conditional statement
+    Function application (eager left to right evaluation)
     '''
-    def __init__(self, test, body, orelse):
-        self.test = test
-        self.body = body
-        self.orelse = orelse
-
-    def compile(self):
-        def eval(env):
-            if Expression.compile(self.test).run(env):
-                return Expression.compile(self.body).run(env)
-            else:
-                return Expression.compile(self.orelse).run(env)
-        return Reader(eval)
-
-    def get_identifiers(self):
-        return self.body.get_identifiers() + \
-               self.test.get_identifiers() + \
-               self.orelse.get_identifiers()
-
-class Application(Expression):
     def __init__(self, name, exprs, builtins={}):
         self.name = name.upper()
         self.exprs = exprs
@@ -139,14 +131,25 @@ class Application(Expression):
         values = map(Expression.compile, self.exprs)
         def get_value(env):
             f = self.builtins[self.name.upper()]
-            return f(list(map(lambda value: value.run(env), values)))
-            
+            return f(*list(map(lambda value: value.run(env), values)))
+
         return Reader(get_value)
 
     def get_identifiers(self):
         return functools.reduce(
             lambda a, b: a + b,
             map(lambda x: x.get_identifiers(), self.exprs))
+
+class FExpr(SExpr):
+    '''
+    Function application without evaluating arguments first.
+    Passes in environment and unevaluated arguments.
+    '''
+    def compile(self):
+        def get_value(env):
+            f = self.builtins[self.name.upper()]
+            return f(*self.exprs, env)
+        return Reader(get_value)
 
 class Reader:
     def __init__(self, f):
@@ -181,8 +184,8 @@ class MiniPyVisitor(ast.NodeVisitor):
     '''
     Visits nodes in a Python AST, and builds a MiniPy AST.
     '''
-    def __init__(self, builtins, string_transformers):
-        self.builtins = builtins
+    def __init__(self, mpy, string_transformers):
+        self.mpy = mpy
         self.string_transformers = string_transformers
 
     # Restrict certain statements which are not useful
@@ -207,6 +210,14 @@ class MiniPyVisitor(ast.NodeVisitor):
         name = node.id.upper()
         return Identifier(name)
 
+    def visit_UnaryOp(self, node):
+        op = node.op
+        operand = node.operand
+        if isinstance(op, ast.USub):
+            return SExpr('USUB', [self.visit(operand)], self.mpy.builtins)
+        else:
+            raise Exception('Unsupported BinOp')
+
     def visit_Str(self, node):
         for string_transformer in self.string_transformers:
             result = string_transformer(node.s)
@@ -221,7 +232,31 @@ class MiniPyVisitor(ast.NodeVisitor):
         test = self.visit(node.test)
         body = self.visit(node.body)
         orelse = self.visit(node.orelse)
-        return If(test, body, orelse)
+        return FExpr('IF', [test, body, orelse], self.mpy.builtins)
+
+    def visit_Compare(self, node):
+        if len(node.ops) > 1:
+            raise Exception('MiniPy does not support multiple comparisons in one expression')
+        if len(node.comparators) > 1:
+            raise Exception('MiniPy does not support multiple comparators in one comparison expression')
+        left = self.visit(node.left)
+        comparator = self.visit(node.comparators[0])
+        op = node.ops[0]
+        if isinstance(op, ast.Gt):
+            name = '>'
+        elif isinstance(op, ast.Lt):
+            name = '<'
+        elif isinstance(op, ast.GtE):
+            name = '>='
+        elif isinstance(op, ast.LtE):
+            name = '<='
+        elif isinstance(op, ast.Eq):
+            name = '=='
+        elif isinstance(op, ast.NotEq):
+            name = '!='
+        else:
+            raise Exception('Unsupported comparison')
+        return SExpr(name, [left, comparator], self.mpy.builtins)        
 
     def visit_BinOp(self, node):
         left = self.visit(node.left)
@@ -232,17 +267,17 @@ class MiniPyVisitor(ast.NodeVisitor):
         elif isinstance(op, ast.Sub):
             name = '-'
         elif isinstance(op, ast.Mult):
-            name = '*'            
+            name = '*'
         elif isinstance(op, ast.Div):
             name = '/'
         elif isinstance(op, ast.FloorDiv):
-            name = '//'            
+            name = '//'
         else:
             raise Exception('Unsupported BinOp')
-        return Application(name, [left, right], self.builtins)
+        return SExpr(name, [left, right], self.mpy.builtins)
 
     def visit_Call(self, node):
-        return Application(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.builtins)
+        return SExpr(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.mpy.builtins)
 
 class InvalidOperationException(Exception):
     pass

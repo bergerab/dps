@@ -8,18 +8,43 @@ def run(text, env={}, builtins={}, modify=lambda x:x):
     return mpy.parse(text).compile().run(env)
 
 class TestMiniPy(TestCase):
+    def test_basic(self):
+        '''
+        Basic evaluation
+        '''
+        self.assertEqual(run('1'), 1)
+        self.assertEqual(run('-1'), -1)
+        self.assertEqual(run('"a"'), "a")
+    
     def test_operators(self):
         '''
-        The operators + - * / and // should be supported, and should call
+        The arithmetic operators + - * / and // should be supported, and should call
         the object's dunder methods (__add__, __sub__, etc...)
+
+        Same with the comparison operators < > <= >= == !=
 
         Order of operations should be preserved, and parenthesis should be supported.
         '''
+        # Arithmetic operators
         self.assertEqual(run('9 + 2'), 9 + 2)
         self.assertEqual(run('11 - 6'), 11 - 6)
         self.assertEqual(run('7 * 13'), 7 * 13)
         self.assertEqual(run('7 / 17'), 7 / 17)
         self.assertEqual(run('70 // 27'), 70 // 27)
+
+        # Comparison operators
+        self.assertEqual(run('83 < -2'), 83 < -2)
+        self.assertEqual(run('-2 < 82'), -2 < 82)
+        self.assertEqual(run('83 > -2'), 83 > -2)
+        self.assertEqual(run('-2 > 82'), -2 > 82)
+        self.assertEqual(run('83 >= -2'), 83 >= -2)
+        self.assertEqual(run('-2 >= 82'), -2 >= 82)
+        self.assertEqual(run('83 <= -2'), 83 <= -2)
+        self.assertEqual(run('-2 <= 82'), -2 <= 82)
+        self.assertEqual(run('-2 == -2'), -2 == -2)
+        self.assertEqual(run('-82 == -2'), -82 == -2)        
+        self.assertEqual(run('-2 != -2'), -2 != -2)
+        self.assertEqual(run('-82 != -2'), -82 != -2)        
 
         # operators can be used with non-numeric types
         self.assertEqual(run('"a" + "b"'), 'ab')
@@ -36,6 +61,19 @@ class TestMiniPy(TestCase):
         # Nested false case
         self.assertEqual(run('3 if (1 if 0 else 0) else 2'), 2)
 
+        # Test that the IF builtin can be set to modify the semantics
+        def backwards_if_exp(test, body, orelse, env):
+            '''
+            An if expression, but when the test is true the orelse block is evaluated
+            and when the test is false, the body is evaluated.
+            '''
+            if test.compile().run(env):
+                return orelse.compile().run(env)
+            else:
+                return body.compile().run(env)
+        self.assertEqual(run('"b" if 1 else "a"', builtins={ 'IF': backwards_if_exp }), "a")
+        self.assertEqual(run('"b" if 0 else "a"', builtins={ 'IF': backwards_if_exp }), "b")
+
     def test_environment(self):
         '''
         Variables should be able to be bound via Python and properly looked up during runtime.
@@ -48,9 +86,9 @@ class TestMiniPy(TestCase):
         '''
         Allow for passing builtin functions as a parameter.
         '''
-        self.assertEqual(run('rightplusone(9, 3)', {}, { 'rightplusone': lambda xs: xs[1]+1 }), 3+1)
-        self.assertEqual(run('threeargs(9, 2, 8)', {}, { 'threeargs': lambda xs: xs[0] + xs[1] - xs[2] }), 9 + 2 - 8)
-        self.assertEqual(run('onearg(83)', {}, { 'onearg': lambda xs: xs[0]+7 }), 83 + 7)
+        self.assertEqual(run('rightplusone(9, 3)', {}, { 'rightplusone': lambda x, y: y + 1 }), 3+1)
+        self.assertEqual(run('threeargs(9, 2, 8)', {}, { 'threeargs': lambda x, y, z: x + y - z }), 9 + 2 - 8)
+        self.assertEqual(run('onearg(83)', {}, { 'onearg': lambda x: x+7 }), 83 + 7)
 
     def test_builtins_override(self):
         '''
@@ -95,9 +133,9 @@ class TestMiniPy(TestCase):
         '''
         All identifiers for builtins should be case insensitive.
         '''
-        self.assertEqual(run('testmod(11, 3)', {}, { 'testmod': lambda xs: xs[0] % xs[1] }), 11 % 3)
-        self.assertEqual(run('TestMod(93, 12)', {}, { 'testmod': lambda xs: xs[0] % xs[1] }), 93 % 12)
-        self.assertEqual(run('testMOD(80, 20)', {}, { 'TEsTMod': lambda xs: xs[0] % xs[1] }), 80 % 20)                                                                        
+        self.assertEqual(run('testmod(11, 3)', {}, { 'testmod': lambda x, y: x % y }), 11 % 3)
+        self.assertEqual(run('TestMod(93, 12)', {}, { 'testmod': lambda x, y: x % y }), 93 % 12)
+        self.assertEqual(run('testMOD(80, 20)', {}, { 'TEsTMod': lambda x, y: x % y }), 80 % 20)                                                                        
     def test_security(self):
         '''
         Normal Python functionality is disallowed.
@@ -119,28 +157,38 @@ class TestMiniPy(TestCase):
             run('raise Exception("test")')
 
     def test_get_identifiers(self):
-        ids_to_list = lambda xs: list(map(lambda x: x.name, xs))
-        
+        ids_to_set = lambda xs: {x for x in map(lambda x: x.name, xs)}
+
         mpy = MiniPy()
-        
+
+        # No identifiers
+        ids = mpy.parse('2').get_identifiers()
+#        self.assertEqual(ids_to_set(ids), {})
+
+        # One identifier
+        ids = mpy.parse('de').get_identifiers()
+        self.assertEqual(ids_to_set(ids), {'DE'})
+
+        # Two identifiers
         ids = mpy.parse('VA + VB').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['VA', 'VB'])
+        self.assertEqual(ids_to_set(ids), {'VA', 'VB'})
 
         # Resulting identifiers should be case insensitive (always uppercased)
         ids = mpy.parse('vA + VB').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['VA', 'VB'])
+        self.assertEqual(ids_to_set(ids), {'VA', 'VB'})
 
+        # Three identifiers with noise (parenthesis)
         ids = mpy.parse('((vA + VB)+ neww)').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['VA', 'VB', 'NEWW'])
+        self.assertEqual(ids_to_set(ids), {'VA', 'VB', 'NEWW'})
 
         # Applications should extract identifiers
         ids = mpy.parse('((fcall(vA) + vcc)+ call2(neww))').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['VA', 'VCC', 'NEWW'])
+        self.assertEqual(ids_to_set(ids), {'VA', 'VCC', 'NEWW'})
 
         # Nested applications should extract identifiers
         ids = mpy.parse('((fcall(arg1, arg2, ie(arg3, wo(arg4))) + vcc)+ call2(neww))').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['ARG1', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'])
+        self.assertEqual(ids_to_set(ids), {'ARG1', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'})
 
         # If expressions should extract identifiers
         ids = mpy.parse('((fcall(arg1 if unicorn else donkey, arg2, ie(arg3, wo(arg4))) + vcc)+ call2(neww))').get_identifiers()
-        self.assertEqual(ids_to_list(ids), ['ARG1', 'UNICORN', 'DONKEY', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'])
+        self.assertEqual(ids_to_set(ids), {'ARG1', 'UNICORN', 'DONKEY', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'})
