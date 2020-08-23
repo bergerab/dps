@@ -11,5 +11,6 @@ setup(
     author='Adam Berger',
     author_email='bergerab@icloud.com',
     test_suite='nose.collector',
-    tests_require=['nose'],    
+    tests_require=['nose', 'numpy'],
+    install_requires=['numpy'],
 )

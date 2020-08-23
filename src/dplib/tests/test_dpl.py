@@ -79,6 +79,16 @@ class TestDPL(TestCase):
         self.assertEqual(list(DPL.eval('A if 0 else B', { 'A': A, 'B': B })),
                          [9, 8, 7, 6])
 
+    def test_with_constants(self):
+        A = DataSeries.from_list([1,2,3,4])
+        self.assertEqual(list(DPL.eval('A*22', { 'A': A })), [1*22, 2*22, 3*22, 4*22])
+        self.assertEqual(list(DPL.eval('A*2.13', { 'A': A })), [1*2.13, 2*2.13, 3*2.13, 4*2.13])
+        self.assertEqual(list(DPL.eval('2.13*A', { 'A': A })), [2.13*1, 2.13*2, 2.13*3, 2.13*4])
+
+        # Constants inside of a if expression
+        T = DataSeries.from_list([True, True, False, False])
+        self.assertEqual(list(DPL.eval('2.13*A if T else A*83.22', { 'A': A, 'T': T })), [2.13*1, 2.13*2, 3*83.22, 4*83.22])
+
     def test_time_parsing(self):
         '''Should be able to parse time strings for milliseconds, seconds, minutes, hours, and days.'''
         self.assertEqual(DPL.eval('"2ms"'), timedelta(milliseconds=2))

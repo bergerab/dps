@@ -1,7 +1,43 @@
 from unittest import TestCase
 from datetime import datetime, timedelta
 
+import numpy as np
+import matplotlib.pyplot as plot
+
 from dplib import DataSeries
+
+def generate_sine_wave(t0=0, periods=2, offset=0.0, dt=1e-5, amplitude=2, base_harmonic=40):
+    cycles = 0.025*periods
+    N = int((cycles-t0)/dt)
+    time = np.linspace(0.0, cycles, N)
+    return [time, amplitude*np.sin(2.0*np.pi*base_harmonic*time) + offset]
+
+def plot_wave(time, wave):
+    plot.plot(time, wave)
+    plot.title('Wave')
+    plot.xlabel('Time')
+    plot.ylabel('Amplitude = sin(time)')
+    plot.grid(True, which='both')
+    plot.axhline(y=0, color='k')
+    plot.show()
+
+#print("freq is" + str(scipy.fftpack.fftfreq(sampled_data, dt )  ))
+#As far as I know, THD=sqrt(sum of square magnitude of
+#harmonics+noise)/Fundamental value (Is it correct?)So I'm
+#just summing up square of all frequency data obtained from FFT,
+#sqrt() them and dividing them with fundamental frequency value.
+
+def thd(wave):
+    abs_yf = np.abs(np.fft.fft(wave))
+    abs_data = abs_yf[1:int(len(abs_yf)/2)]
+    sq_sum=0.0
+    for r in range( len(abs_data)):
+       sq_sum = sq_sum + (abs_data[r])**2
+
+    sq_harmonics = sq_sum -(max(abs_data))**2.0
+    thd = 100*sq_harmonics**0.5 / max(abs_data)
+
+    return thd
 
 class TestDataSeries(TestCase):
     def test_operators(self):
@@ -33,8 +69,31 @@ class TestDataSeries(TestCase):
         self.assertEqual(len(dss.average().to_list()), 2)
 
     def test_pointwise_computations_with_constants(self):
-        ds = DataSeries.from_list([1,2])
-#        self.assertEqual(list(ds*2), [2, 4])
+        a = 7
+        b = 13
+        c = 9
+        ds = DataSeries.from_list([a,b])
+        self.assertEqual(list(c+ds), [c+a, c+b])
+        self.assertEqual(list(ds+c), [a+c, b+c])
+        self.assertEqual(list(c-ds), [c-a, c-b])
+        self.assertEqual(list(ds-c), [a-c, b-c])        
+        self.assertEqual(list(c*ds), [c*a, c*b])
+        self.assertEqual(list(ds*c), [a*c, b*c])
+        self.assertEqual(list(c/ds), [c/a, c/b])
+        self.assertEqual(list(ds/c), [a/c, b/c])
+        self.assertEqual(list(c//ds), [c//a, c//b])
+        self.assertEqual(list(ds//c), [a//c, b//c])
+
+    def test_negate(self):
+        ds = DataSeries.from_list([1,2,3,4])        
+        self.assertEqual(list(-ds), [-1,-2,-3,-4])
+
+    def test_thd(self):
+        time, wave = generate_sine_wave()
+
+        # THD of a perfect sine wave should be very close to 0
+        ds = DataSeries.from_list(list(wave), timedelta(seconds=1/len(wave)))
+        self.assertLess(ds.thd(40) * 100, 0.01) # 0.01%
     
     def test_when(self):
         '''`when` should take from A when T has a 1 (truthy value) and take from B when T has a 0 (non-truthy value).

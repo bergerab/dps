@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+import numpy as np
+
 class Datapoint:
     '''
     A value with an absolute time
@@ -109,6 +111,25 @@ class DataSeries:
                 ds.add(orelse_series.datapoints[i].value, dp.time)
         return ds
 
+    def thd(self, base_harmonic):
+        fft_vals = np.absolute(np.fft.fft(list(self)))
+
+        # Look at twice the amount just in case we miss the base harmonic
+        fund_freq, fund_freq_idx = max([(v,i) for i,v in enumerate(fft_vals[:2*base_harmonic])])
+
+        sum = 0        
+        harmonic = fund_freq_idx + base_harmonic
+        offset = int(base_harmonic/2)
+
+        while harmonic < len(fft_vals)/2:
+            peak = np.max(fft_vals[harmonic - offset : harmonic + offset])
+            sum += peak * peak
+            harmonic += base_harmonic
+
+        thd = np.sqrt(sum) / fund_freq
+
+        return thd;
+
     def windows_to_list(self):
         '''
         Takes a nested DataSeries of DataSeries and returns just a List of Lists
@@ -124,14 +145,27 @@ class DataSeries:
 
     def __add__(self, other):
         return self.pointwise(other, lambda x, y: x + y)
+    def __radd__(self, other):
+        return self + other
     def __sub__(self, other):
         return self.pointwise(other, lambda x, y: x - y)
+    def __rsub__(self, other):
+        return self.pointwise(other, lambda x, y: y - x)        
     def __mul__(self, other):
         return self.pointwise(other, lambda x, y: x * y)
+    def __rmul__(self, other):
+        return self * other
     def __truediv__(self, other):
         return self.pointwise(other, lambda x, y: x / y)
+    def __rtruediv__(self, other):
+        return self.pointwise(other, lambda x, y: y / x)        
     def __floordiv__(self, other):
         return self.pointwise(other, lambda x, y: x // y)
+    def __rfloordiv__(self, other):
+        return self.pointwise(other, lambda x, y: y // x)        
+
+    def __neg__(self):
+        return self.map(lambda x: -x)
 
     def __gt__(self, other):
         return self.pointwise(other, lambda x, y: x > y)
@@ -148,8 +182,12 @@ class DataSeries:
 
     def pointwise(self, other, f):
         ds = DataSeries()
-        for datapoint1, datapoint2 in zip(self.datapoints, other.datapoints):
-            ds.add(f(datapoint1.value, datapoint2.value), datapoint1.time)
+        if isinstance(other, DataSeries):        
+            for datapoint1, datapoint2 in zip(self.datapoints, other.datapoints):
+                ds.add(f(datapoint1.value, datapoint2.value), datapoint1.time)
+        else:
+            for datapoint in self.datapoints:
+                ds.add(f(datapoint.value, other), datapoint.time)
         return ds
 
     def average(self):
