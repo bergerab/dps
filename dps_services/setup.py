@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='dplib',
+    name='dps_services',
     version='0.1',
     packages=find_packages(exclude=['tests*']),
     license='MIT',
-    description='A data processing library for pointwise and windowed computations',
+    description='Micro-services for DPS',
     long_description=open('README.org').read(),
     url='https://github.com/bergerab/dps',
     author='Adam Berger',

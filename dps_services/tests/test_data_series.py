@@ -2,7 +2,6 @@ from unittest import TestCase
 from datetime import datetime, timedelta
 
 import numpy as np
-import matplotlib.pyplot as plot
 
 from dplib import DataSeries
 
@@ -13,19 +12,16 @@ def generate_sine_wave(t0=0, periods=2, offset=0.0, dt=1e-5, amplitude=2, base_h
     return [time, amplitude*np.sin(2.0*np.pi*base_harmonic*time) + offset]
 
 def plot_wave(time, wave):
+    # This code is not used, it is included for interactive testing
+    # Using this function requires installing matplotlib
+    import matplotlib.pyplot as plot
     plot.plot(time, wave)
     plot.title('Wave')
     plot.xlabel('Time')
-    plot.ylabel('Amplitude = sin(time)')
+    plot.ylabel('Amplitude')
     plot.grid(True, which='both')
     plot.axhline(y=0, color='k')
     plot.show()
-
-#print("freq is" + str(scipy.fftpack.fftfreq(sampled_data, dt )  ))
-#As far as I know, THD=sqrt(sum of square magnitude of
-#harmonics+noise)/Fundamental value (Is it correct?)So I'm
-#just summing up square of all frequency data obtained from FFT,
-#sqrt() them and dividing them with fundamental frequency value.
 
 def thd(wave):
     abs_yf = np.abs(np.fft.fft(wave))

@@ -2,7 +2,7 @@ import re
 from datetime import timedelta
 
 from .minipy import MiniPy
-from .dataseries import DataSeries
+from .data_series import DataSeries
 
 class DPL:
     def __init__(self):
