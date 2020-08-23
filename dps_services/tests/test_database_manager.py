@@ -32,8 +32,8 @@ class TestDatabaseManager(TestCase):
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
             "interval": {
-                "from": 29292929,
-                "to": 3939393939
+                "start": 29292929,
+                "end": 3939393939
             }
         }
     ]
@@ -47,16 +47,16 @@ class TestDatabaseManager(TestCase):
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
             "interval": {
-                "from": 39,
-                "to": 8833
+                "start": 39,
+                "end": 8833
             }
         },
         {
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
             "interval": {
-                "from": 9,
-                "to": 19
+                "start": 9,
+                "end": 19
             }
         }
     ]
@@ -80,15 +80,15 @@ class TestDatabaseManager(TestCase):
         {
             "signals": ["ia", "ib"],
             "interval": {
-                "from": 9,
-                "to": 19
+                "start": 9,
+                "end": 19
             }
         }
     ]
 }
         ''')
 
-        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[0\].interval.from".'):
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[0\].interval.start".'):
             dbm.parse_query_request('''
 {
     "queries": [
@@ -96,14 +96,14 @@ class TestDatabaseManager(TestCase):
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
             "interval": {
-                "to": 19
+                "end": 19
             }
         }
     ]
 }
         ''')
 
-        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.to".'):            
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.end".'):            
             dbm.parse_query_request('''
 {
     "queries": [
@@ -111,22 +111,22 @@ class TestDatabaseManager(TestCase):
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
             "interval": {
-                "from": 39,
-                "to": 8833
+                "start": 39,
+                "end": 8833
             }
         },
         {
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
             "interval": {
-                "from": 9
+                "start": 9
             }
         }
     ]
 }
             ''')
 
-        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.to".'):            
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.end".'):            
             dbm.parse_query_request('''
 {
     "queries": [
@@ -134,15 +134,15 @@ class TestDatabaseManager(TestCase):
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
             "interval": {
-                "from": 39,
-                "to": 8833
+                "start": 39,
+                "end": 8833
             }
         },
         {
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
             "interval": {
-                "from": 9
+                "start": 9
             }
         }
     ]
@@ -150,21 +150,117 @@ class TestDatabaseManager(TestCase):
             ''')            
             
 
-    def test_data_store(self):
+    def test_data_store_execute_queries(self):
         class MockDataStore(dbm.DataStore):
             def __init__(self):
                 self.queries = []
             
-            def query(self, dataset, signals, interval, aggregation=None):
-                self.queries.append(dbm.Query(dataset, signals, interval, aggregation))
+            def fetch_signals(self, result, dataset, signals, interval):                
+                self.queries.append(dbm.Query(dataset, signals, interval))
+                
+            def aggregate_signals(self, result, dataset, signals, interval, aggregation):
+                self.queries.append(dbm.Query(dataset, signals, interval, aggregation))                
 
         ds = MockDataStore()
-        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82), 'meatball')]
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
 
         ds = MockDataStore()
-        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82), 'meatball'),
-                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444), 'am')]
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82)),
+                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444))]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
+
+        ds = MockDataStore()
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82), 'max'),
+                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444), 'min')]
+        ds.execute_queries(queries)
+        self.assertEqual(queries, ds.queries)
+
+    def test_data_store_signal_query_results(self):
+        query = dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))
+        result = dbm.SignalQueryResult(query)
+        result.add([1, 2, 3], 4)
+        result.add([8, 9, 6], 5)
+        self.assertEqual(result.to_dict(), {
+            'samples': [[1, 2, 3], [8, 9, 6]],
+            'times': [4, 5],
+            'query': {
+                'dataset': 'name1',
+                'signals': ['s1', 's2', 'sb'],
+                'interval': {
+                    'start': 3,
+                    'end': 82,
+                }
+            }
+        })
+
+        # No results
+        result = dbm.SignalQueryResult(query)
+        self.assertEqual(result.to_dict(), {
+            'samples': [],
+            'times': [],
+            'query': {
+                'dataset': 'name1',
+                'signals': ['s1', 's2', 'sb'],
+                'interval': {
+                    'start': 3,
+                    'end': 82,
+                }
+            }
+        })
+
+        with self.assertRaisesRegex(Exception, 'Must provide a value for all signal values in each call.'):
+            result = dbm.SignalQueryResult(query)
+            result.add([10, 13], 1) # missing a value for 'sb'
+
+        with self.assertRaisesRegex(Exception, 'Given time "1" is out-of-bounds of the query interval \(between "3" and "82"\).'):
+            result = dbm.SignalQueryResult(query)
+            result.add([10, 13, 32], 1) # time too early
+
+        with self.assertRaisesRegex(Exception, 'Given time "90" is out-of-bounds of the query interval \(between "3" and "82"\).'):
+            result = dbm.SignalQueryResult(query)
+            result.add([10, 13, 32], 90) # time too late
+
+        result = dbm.SignalQueryResult(query)
+        result.add([10, 13, 32], 90, validate=False) # time too late - but skipping validation
+
+        with self.assertRaisesRegex(Exception, 'Received time value "5" in non-monotonically increasing order.'):
+            result = dbm.SignalQueryResult(query)
+            result.add([10, 13, 14], 10)
+            result.add([1, 2, 3], 20)
+            result.add([94, 83, 12], 5)
+
+    def test_data_store_aggregate_query_results(self):
+        query = dbm.Query('sampleag', ['AGGG8', 'AG9'], dbm.Interval(90, 10000), 'max')
+        result = dbm.AggregateQueryResult(query)
+        result.add(392)
+        result.add(899209)
+        self.assertEqual(result.to_dict(), {
+            'results': [392, 899209],
+            'query': {
+                'dataset': 'sampleag',
+                'signals': ['AGGG8', 'AG9'],
+                'interval': {
+                    'start': 90,
+                    'end': 10000,
+                },
+                'aggregation': 'max',
+            }
+        })
+
+        # No results
+        result = dbm.AggregateQueryResult(query)
+        self.assertEqual(result.to_dict(), {
+            'results': [],
+            'query': {
+                'dataset': 'sampleag',
+                'signals': ['AGGG8', 'AG9'],
+                'interval': {
+                    'start': 90,
+                    'end': 10000,
+                },
+                'aggregation': 'max',
+            }
+        })

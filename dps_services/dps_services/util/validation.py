@@ -17,8 +17,8 @@ class RequestValidator:
         self.errors = []
         self.prefixes = []
 
-    def require(self, key, required_type=None, optional=False, one_of=None):
-        value = self.requests[-1].get(key)
+    def require(self, key, required_type=None, optional=False, one_of=None, default=None):
+        value = self.requests[-1].get(key, default)
         prefix = ''.join(self.prefixes)
         parameter_name = quoted(prefix + key)
         skipped = optional and not value
@@ -34,9 +34,15 @@ class RequestValidator:
             self.errors.append(f'Expected parameter {parameter_name} to be {possibilities}, but was {quoted(value)}.')
         return value
 
-    def scope(self, request, name):
-        self.requests.append(request)
+    def scope(self, name):
+        self.requests.append(self.requests[-1][name]) # TODO: handle case for when this doesn't exist
         self.prefixes.append(name + '.')
+        return self
+
+    def scope_list(self, name, i):
+        request_list = self.requests[-1][name]
+        self.requests.append(request_list[i]) # TODO: handle case for when this doesn't exist
+        self.prefixes.append(f'{name}[{i}].')
         return self
 
     def __enter__(self):
@@ -46,5 +52,6 @@ class RequestValidator:
         if self.prefixes:
             self.prefixes.pop()
         self.requests.pop()
-        if self.errors:
+        # if we have popped off all the scoped requests, and there are errors, throw a validation exception
+        if not self.requests and self.errors:
             raise ValidationException(self.errors)

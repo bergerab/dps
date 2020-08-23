@@ -2,19 +2,6 @@ import json
 
 import dps_services.util as util
 
-class Interval:
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    def __eq__(self, other):
-        if isinstance(self, other.__class__):
-            return self.start == other.start and self.end == other.end
-        return False
-
-    def __repr__(self):
-        return f'Interval(from={self.start}, to={self.end})'
-    
 class Query:
     def __init__(self, dataset, signals, interval, aggregation=None):
         self.dataset = dataset
@@ -33,6 +20,35 @@ class Query:
     def __repr__(self):
         return f'Query(dataset={self.dataset}, signals={self.signals}, interval={self.interval}, aggregation={self.aggregation})'
 
+    def to_dict(self):
+        d = {
+            'dataset': self.dataset,
+            'signals': self.signals,
+            'interval': self.interval.to_dict()
+        }
+        if self.aggregation:
+            d['aggregation'] = self.aggregation
+        return d
+            
+class Interval:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.start == other.start and self.end == other.end
+        return False
+
+    def __repr__(self):
+        return f'Interval(start={self.start}, end={self.end})'
+
+    def to_dict(self):
+        return {
+            'start': self.start,
+            'end': self.end,
+        }
+    
 def parse_query_request(json_string, cls=Query):
     '''
     Parses a JSON string of queries, and returns a list of query objects
@@ -50,18 +66,17 @@ def load_query_request(query_request, cls=Query):
     :returns: a list of Query objects
     '''
     with util.RequestValidator(query_request) as validator:
-        validator.require('queries', object)
-    
-        queries = []
-        sub_query_requests = query_request['queries']
+        queries = []        
+        sub_query_requests = validator.require('queries', list, default=[])
         for i, sub_query_request in enumerate(sub_query_requests):
-            with validator.scope(sub_query_request, f'queries[{i}]'):
+            with validator.scope_list('queries', i):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 interval = validator.require('interval', object)
-                with validator.scope(interval, 'interval'):
-                    interval_from = validator.require('from', int)
-                    interval_to = validator.require('to', int)
-                aggregation = validator.require('aggregation', str, optional=True, one_of=['average', 'count', 'min', 'max'])
-            queries.append(Query(dataset, signals, Interval(interval_from, interval_to), aggregation))
+                with validator.scope('interval'):
+                    interval_start = validator.require('start', int)
+                    interval_end = validator.require('end', int)
+                aggregation = validator.require('aggregation', str, optional=True,
+                                                one_of=['average', 'count', 'min', 'max'])
+            queries.append(Query(dataset, signals, Interval(interval_start, interval_end), aggregation))
         return queries
