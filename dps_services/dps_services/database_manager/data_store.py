@@ -37,7 +37,7 @@ class DataStore:
 
     def aggregate_signals(self, result, dataset, signals, interval, aggregation):
         '''
-        Writes the results of the query to the `AggregateQueryResult` object (using `results.add(value)`)
+        Writes the results of the query to the `AggregateQueryResult` object (using `results.set(signal_name, value)`)
         '''
         raise Exception('DataStore.aggregate_signals unimplemented')
 
@@ -74,13 +74,15 @@ class SignalQueryResult:
 class AggregateQueryResult:
     def __init__(self, query):
         self.query = query
-        self.results = []
+        self.results = { signal: 0 for signal in self.query.signals }
 
-    def add(self, value):
-        self.results.append(value)
+    def set(self, signal_name, value):
+        if signal_name not in self.results:
+            raise Exception(f'Invalid signal name {util.quoted(signal_name)}.')
+        self.results[signal_name] = value
 
     def to_dict(self):
         return {
-            'results': self.results,
+            'results': list(self.results.values()),
             'query': self.query.to_dict()
         }

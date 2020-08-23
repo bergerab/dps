@@ -235,8 +235,8 @@ class TestDatabaseManager(TestCase):
     def test_data_store_aggregate_query_results(self):
         query = dbm.Query('sampleag', ['AGGG8', 'AG9'], dbm.Interval(90, 10000), 'max')
         result = dbm.AggregateQueryResult(query)
-        result.add(392)
-        result.add(899209)
+        result.set('AGGG8', 392)
+        result.set('AG9', 899209)
         self.assertEqual(result.to_dict(), {
             'results': [392, 899209],
             'query': {
@@ -253,7 +253,7 @@ class TestDatabaseManager(TestCase):
         # No results
         result = dbm.AggregateQueryResult(query)
         self.assertEqual(result.to_dict(), {
-            'results': [],
+            'results': [0, 0],
             'query': {
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
@@ -264,3 +264,6 @@ class TestDatabaseManager(TestCase):
                 'aggregation': 'max',
             }
         })
+
+        with self.assertRaisesRegex(Exception, 'Invalid signal name "badvalue".'):
+            result.set('badvalue', 93)
