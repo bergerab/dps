@@ -4,6 +4,31 @@ from datetime import datetime, timedelta
 import dps_services.database_manager as dbm
 import dps_services.util as util
 
+class MockDataStore(dbm.DataStore):
+    def __init__(self):
+        self.queries = []
+        self.counter = 0
+
+    def next(self):
+        count = self.counter
+        self.counter += 1
+        return count
+
+    def reset(self):
+        self.counter = 0
+        
+    def fetch_signals(self, result, dataset, signals, interval):
+        self.reset()
+        self.queries.append(dbm.Query(dataset, signals, interval))
+        for x in range(3):
+            result.add(list(map(lambda x: self.next(), signals)), interval.start + self.counter)
+                
+    def aggregate_signals(self, result, dataset, signals, interval, aggregation):
+        self.reset()
+        self.queries.append(dbm.Query(dataset, signals, interval, aggregation))
+        for signal in signals:
+            result.set(signal, self.next())
+
 class TestDatabaseManager(TestCase):
     def test_interval_eq(self):
         self.assertEqual(dbm.Interval(1, 2),
@@ -151,16 +176,6 @@ class TestDatabaseManager(TestCase):
             
 
     def test_data_store_execute_queries(self):
-        class MockDataStore(dbm.DataStore):
-            def __init__(self):
-                self.queries = []
-            
-            def fetch_signals(self, result, dataset, signals, interval):                
-                self.queries.append(dbm.Query(dataset, signals, interval))
-                
-            def aggregate_signals(self, result, dataset, signals, interval, aggregation):
-                self.queries.append(dbm.Query(dataset, signals, interval, aggregation))                
-
         ds = MockDataStore()
         queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))]
         ds.execute_queries(queries)
@@ -211,7 +226,7 @@ class TestDatabaseManager(TestCase):
             }
         })
 
-        with self.assertRaisesRegex(Exception, 'Must provide a value for all signal values in each call.'):
+        with self.assertRaisesRegex(Exception, 'Must provide a value for every signal value.'):
             result = dbm.SignalQueryResult(query)
             result.add([10, 13], 1) # missing a value for 'sb'
 
@@ -267,3 +282,55 @@ class TestDatabaseManager(TestCase):
 
         with self.assertRaisesRegex(Exception, 'Invalid signal name "badvalue".'):
             result.set('badvalue', 93)
+
+    def test_data_store_query(self):
+        query_request = {
+            'queries': [
+                {
+                    "dataset": "somename",
+                    "signals": ["va", "vb", "vc"],
+                    "interval": {
+                        "start": 39,
+                        "end": 8833
+                    },
+                    "aggregation": "max"
+                },
+                {
+                    "dataset": "otherthing",
+                    "signals": ["ia", "ib"],
+                    "interval": {
+                        "start": 9,
+                        "end": 50
+                    }
+                }
+            ],
+        }
+        self.maxDiff = None
+        self.assertEqual(MockDataStore.query(query_request), {
+            'results': [
+                {
+                    "results": [0, 1, 2],
+                    "query": {
+                        "dataset": "somename",
+                        "signals": ["va", "vb", "vc"],
+                        "interval": {
+                            "start": 39,
+                            "end": 8833,
+                        },
+                        "aggregation": "max"
+                    },
+                },
+                {
+                    "samples": [[0, 1], [2, 3], [4, 5]],
+                    "times": [9+2, 9+4, 9+6],
+                    "query": {
+                        "dataset": "otherthing",
+                        "signals": ["ia", "ib"],
+                        "interval": {
+                            "start": 9,
+                            "end": 50,
+                        }
+                    }
+                }
+            ]
+        })

@@ -1,12 +1,32 @@
 import dps_services.util as util
 
+from .query import load_query_request
+
 class DataStore:
+    @staticmethod
+    def to_results_response(results):
+        return {
+            'results': list(map(lambda x: x.to_dict(), results))
+        }
+    
+    @classmethod
+    def insert(DataStoreClass, insert_request):
+        ds = DataStoreClass()
+        results = ds.execute_inserts(None) # TODO
+        return DataStore.to_results_response(results)
+    
+    @classmethod
+    def query(DataStoreClass, query_request):
+        ds = DataStoreClass()
+        results = ds.execute_queries(load_query_request(query_request))
+        return DataStore.to_results_response(results)
+
     def execute_inserts(self, inserts):
         for insert in inserts:
             self.insert(insert.dataset, insert.signals, \
-                       query.interval, query.aggregation)
+                       insert.interval, insert.aggregation)
     
-    def insert(self, dataset, signals, samples, times):
+    def insert_signals(self, dataset, signals, samples, times):
         raise Exception('DataStore.insert unimplemented')
 
     def execute_queries(self, queries):
@@ -52,7 +72,7 @@ class SignalQueryResult:
     def add(self, values, time, validate=True):
         if validate:
             if len(values) != len(self.signals):
-                raise Exception('Must provide a value for all signal values in each call.')
+                raise Exception('Must provide a value for every signal value.')
             if time < self.query.interval.start or time > self.query.interval.end:
                 start = util.quoted(self.query.interval.start)
                 end = util.quoted(self.query.interval.end)
