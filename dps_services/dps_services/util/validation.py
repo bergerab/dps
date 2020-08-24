@@ -8,9 +8,6 @@ def quoted(x, n=200):
     '''Add quotation marks around `x`, and take only the first `n` letters.'''
     return f'"{str(x)[:n]}"'
 
-def make_api_url(name, version=1):
-    return f'/api/v{version}/{name}'
-
 class RequestValidator:
     def __init__(self, request):
         self.requests = [request]

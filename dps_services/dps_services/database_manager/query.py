@@ -49,16 +49,16 @@ class Interval:
             'end': self.end,
         }
     
-def parse_query_request(json_string, cls=Query):
+def parse_query_request(json_string):
     '''
     Parses a JSON string of queries, and returns a list of query objects
     
     :params json_string: the JSON string containing the request
     '''
     jo = json.loads(json_string)
-    return load_query_request(jo, cls)
+    return load_query_request(jo)
 
-def load_query_request(query_request, cls=Query):
+def load_query_request(query_request):
     '''
     Given a Python dictionary representing a query, produces a Query object
     

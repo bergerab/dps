@@ -1,21 +1,23 @@
 import json
 
-from flask import Flask, request, jsonify
+from flask import Flask
 
 import dps_services.util as util
 
-def create_app(DataStore):
+def make_app(DataStore):
     app = Flask(__name__)
 
     @app.route(util.make_api_url('insert'), methods=['POST'])
-    def insert():
-        insert_request = request.get_json()
-        return jsonify(DataStore.insert(insert_request))
-    
-    @app.route(util.make_api_url('query'), methods=['POST'])
-    def query():
-        query_request = request.get_json()
-        return jsonify(DataStore.query(query_request))
+    @util.json_api
+    def insert(jo):
+        return DataStore.insert(jo)
+
+    @app.route(util.make_api_url('query'), methods=['POST'])    
+    @util.json_api
+    def query(jo):
+        return DataStore.query(jo)
+
+    return app
 
 '''
 Request: (insert)
