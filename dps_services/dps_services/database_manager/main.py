@@ -10,7 +10,8 @@ def make_app(DataStore):
     @app.route(util.make_api_url('insert'), methods=['POST'])
     @util.json_api
     def insert(jo):
-        return DataStore.insert(jo)
+        DataStore.insert(jo)
+        return True
 
     @app.route(util.make_api_url('query'), methods=['POST'])    
     @util.json_api

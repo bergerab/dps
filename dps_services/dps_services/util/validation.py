@@ -1,12 +1,4 @@
-class ValidationException(Exception):
-    def __init__(self, errors):
-        self.errors = errors
-        self.message = '\n'.join(self.errors)
-        super().__init__(self.message)        
-        
-def quoted(x, n=200):
-    '''Add quotation marks around `x`, and take only the first `n` letters.'''
-    return f'"{str(x)[:n]}"'
+from .string import quoted
 
 class RequestValidator:
     def __init__(self, request):
@@ -14,10 +6,15 @@ class RequestValidator:
         self.errors = []
         self.prefixes = []
 
-    def require(self, key, required_type=None, optional=False, one_of=None, default=None):
+    def require(self, key, *args, default=None, **kwargs):
+        '''Require a key to be in the request, along with regular validation'''
         value = self.requests[-1].get(key, default)
+        return self.validate(value, key, *args, **kwargs)
+
+    def validate(self, value, name, required_type=None, optional=False, one_of=None):
+        '''Ensure the value has certain properties (if not, collect the issue in a list of validation errors)'''
         prefix = ''.join(self.prefixes)
-        parameter_name = quoted(prefix + key)
+        parameter_name = quoted(prefix + name)                
         skipped = optional and not value
         if not optional and not value:
             self.errors.append(f'Request is missing required parameter {parameter_name}.')
@@ -30,7 +27,7 @@ class RequestValidator:
                 possibilities = 'either ' + ', '.join(map(quoted, one_of[:-1])) + last
             self.errors.append(f'Expected parameter {parameter_name} to be {possibilities}, but was {quoted(value)}.')
         return value
-
+ 
     def scope(self, name):
         self.requests.append(self.requests[-1][name]) # TODO: handle case for when this doesn't exist
         self.prefixes.append(name + '.')
@@ -52,3 +49,9 @@ class RequestValidator:
         # if we have popped off all the scoped requests, and there are errors, throw a validation exception
         if not self.requests and self.errors:
             raise ValidationException(self.errors)
+
+class ValidationException(Exception):
+    def __init__(self, errors):
+        self.errors = errors
+        self.message = '\n'.join(self.errors)
+        super().__init__(self.message)

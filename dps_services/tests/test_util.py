@@ -22,7 +22,8 @@ class TestUtil(TestCase):
             }],
             'e': 3.14,
             'f': {
-                'g': 3
+                'g': 3,
+                "9": [[1,2], [3,4]],
             }
         }
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "d".'):

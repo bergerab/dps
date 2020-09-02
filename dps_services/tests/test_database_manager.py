@@ -7,6 +7,7 @@ import dps_services.util as util
 class MockDataStore(dbm.DataStore):
     def __init__(self):
         self.queries = []
+        self.inserts = []        
         self.counter = 0
 
     def next(self):
@@ -16,6 +17,9 @@ class MockDataStore(dbm.DataStore):
 
     def reset(self):
         self.counter = 0
+
+    def insert_signals(self, dataset, signals, samples, times):
+        self.inserts.append(dbm.Insert(dataset, signals, samples, times))
         
     def fetch_signals(self, result, dataset, signals, interval):
         self.reset()
@@ -192,6 +196,19 @@ class TestDatabaseManager(TestCase):
                    dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444), 'min')]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
+
+
+    def test_data_store_execute_inserts(self):
+        ds = MockDataStore()
+        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [9, 10])]
+        ds.execute_inserts(inserts)
+        self.assertEqual(inserts, ds.inserts)
+
+        ds = MockDataStore()
+        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [9, 10]),
+                   dbm.Insert('name2', ['ab', 'dc'], [[5,4], [3,2], [9,8], [32,54]], [9, 4, 3, 2])]
+        ds.execute_inserts(inserts)
+        self.assertEqual(inserts, ds.inserts)
 
     def test_data_store_signal_query_results(self):
         query = dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))

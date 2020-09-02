@@ -52,6 +52,6 @@ def load_insert_request(insert_request):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 samples = validator.require('samples', list)
-                times = validator.require('times', list)                
+                times = validator.require('times', list)
             inserts.append(Insert(dataset, signals, samples, times))
         return inserts

@@ -1,8 +1,12 @@
 import dps_services.util as util
 
 from .query import load_query_request
+from .insert import load_insert_request
 
 class DataStore:
+    def __init__(self, validate_inserts=False):
+        self.validate_inserts = validate_inserts
+
     @staticmethod
     def to_results_response(results):
         return {
@@ -12,8 +16,7 @@ class DataStore:
     @classmethod
     def insert(DataStoreClass, insert_request):
         ds = DataStoreClass()
-        results = ds.execute_inserts(None) # TODO
-        return DataStore.to_results_response(results)
+        results = ds.execute_inserts(load_insert_request(insert_request))
     
     @classmethod
     def query(DataStoreClass, query_request):
@@ -23,11 +26,11 @@ class DataStore:
 
     def execute_inserts(self, inserts):
         for insert in inserts:
-            self.insert(insert.dataset, insert.signals, \
-                       insert.interval, insert.aggregation)
+            self.insert_signals(insert.dataset, insert.signals, \
+                        insert.samples, insert.times)
     
     def insert_signals(self, dataset, signals, samples, times):
-        raise Exception('DataStore.insert unimplemented')
+        raise Exception('DataStore.insert_signals not implemented.')
 
     def execute_queries(self, queries):
         '''
@@ -53,13 +56,13 @@ class DataStore:
         '''
         Writes the results of the query to the `SignalQueryResult` object (using `results.add(values, time)`)
         '''
-        raise Exception('DataStore.fetch_signals unimplemented')
+        raise Exception('DataStore.fetch_signals not implemented.')
 
     def aggregate_signals(self, result, dataset, signals, interval, aggregation):
         '''
         Writes the results of the query to the `AggregateQueryResult` object (using `results.set(signal_name, value)`)
         '''
-        raise Exception('DataStore.aggregate_signals unimplemented')
+        raise Exception('DataStore.aggregate_signals not implemented.')
 
 class SignalQueryResult:
     def __init__(self, query):
