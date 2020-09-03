@@ -1,50 +1,62 @@
+from sqlalchemy import create_engine, Table, Column, Integer, Float, DateTime, String, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 from config import CONNECTION
-import psycopg2 as pg
 
-dataset_cache = []
-signal_cache = []
+Base = declarative_base()
 
-class TimeCache:
-    def __init__(self, duration):
-        self.value = value
-        self.duration = duration
-        self.cache_time
+class Dataset(Base):
+    __tablename__ = 'datasets'
+    dataset_id = Column(Integer, primary_key=True)
+    name = Column(String(200), unique=True)
 
-    def get_or_cache(self, cache):
-        
-        
-def connect():
-    return pg.connect(CONNECTION)
+class Signal(Base):
+    __tablename__ = 'signals'
+    signal_id = Column(Integer, primary_key=True)
+    name = Column(String(200))
+    dataset_id = Column(Integer, ForeignKey('datasets.dataset_id'))
 
-def select_all(cur, table):
-    query = pg.sql.SQL('SELECT * FROM {table};').format(table=pg.sql.Identifier(table))
-    cur.execute(query)
-    results = cur.fetchall()
-    return [] if results is None else results
+class SignalData(Base):
+    __tablename__ = 'signal_data'
+    signal_data_id = Column(Integer, primary_key=True)
+    signal_id = Column(Integer, ForeignKey('signals.signal_id'))
+    value = Column(Float())
+    time = Column(DateTime())
 
-def select_where(cur, table, key, value):
-    query = pg.sql.SQL('SELECT * FROM {table} where {key} = {value};').format(
-        table=pg.sql.Identifier(table),
-        key=key,
-        value=value,
-    )
-    cur.execute(query)
-    return cur.fetchall()
+class DatabaseClient:
+    def __init__(self):
+        engine = create_engine(CONNECTION)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
 
-def exists(cur, table, id_name, key, value):
-    query = pg.sql.SQL('SELECT {id_name} FROM {table} where {key} = {value};').format(
-        id_name=pg.sql.Identifier(id_name),
-        table=pg.sql.Identifier(table),
-        key=pg.sql.Identifier(key),
-        value=value,
-    )
-    cur.execute(query)
-    return bool(cur.fetchone())
+        # Caches for datasets and signals
+        self.datasets = self.query(Dataset).all()
+        self.signals = self.query(Signal).all()
 
-def insert_data(cur, table, name, check_exists=True):
-    if not check_exists or not dataset_exists(cur, name):
-        query = pg.sql.SQL('INSERT INTO {table} ({name}) VALUES ({name});').format(
-            table=pg.sql.Identifier(table),
-            name=name,
-        )
-        cur.execute(query)
+    def get_dataset_by_name(self, dataset_name):
+        for dataset in self.datasets:
+            if dataset.name.strip() == dataset_name:
+                return dataset
+        return None
+
+    def get_signal_by_name(self, signal_name):
+        for signal in self.signals:
+            if signal.name.strip() == signal_name:
+                return signal
+        return None
+
+    def commit(self):
+        self.session.commit()
+
+    def query(self, cls):
+        return self.session.query(cls)
+
+    def add(self, obj):
+        # Not perfect - if commit fails, the cache doesn't rollback
+        if isinstance(obj, Dataset):
+            self.datasets.append(obj)
+        if isinstance(obj, Signal):
+            self.signals.append(obj)
+        return self.session.add(obj)

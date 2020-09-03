@@ -1,1 +1,1 @@
-from .main import BulkClient, DeviceClient, Client, connect
+from .main import Client, BatchClient, connect
