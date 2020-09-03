@@ -25,7 +25,7 @@ class TimescaleDBDataStore(dbm.DataStore):
 
         signals = []
         for signal_name in signal_names:
-            signal = self.dbc.get_signal_by_name(signal_name)
+            signal = dbc.get_signal_by_name_and_dataset_id(signal_name, dataset.dataset_id)
             if signal is None:
                 signal = Signal(dataset_id=dataset.dataset_id, name=signal_name)
                 self.dbc.add(signal)
