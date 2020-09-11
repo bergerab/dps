@@ -2,7 +2,7 @@ import dps_client
 
 from datetime import datetime, timedelta
 
-URL = 'http://localhost:5000/api/v1/'
+URL = 'http://bergerab.com/dps/db/api/v1/'
 
 client = dps_client.connect(URL, 'LabVIEW Device')
 
