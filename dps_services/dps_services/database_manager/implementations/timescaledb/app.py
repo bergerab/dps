@@ -44,11 +44,11 @@ class TimescaleDBDataStore(dbm.DataStore):
         return dbc.query(SignalData).filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end))
 
     def fetch_signals(self, result, dataset, signals, interval):
-        return fetch_signals(result, dataset, signals, interval).all()        
+        return fetch_signals_query(result, dataset, signals, interval).all()        
 
     def aggregate_signals(self, result, dataset, signals, interval, aggregation):
-        raise Exception('DataStore.aggregate_signals unimplemented')
-
+        pass
+        
 if __name__ == '__main__':
     app = dbm.make_app(TimescaleDBDataStore)
     app.run(debug=True)
