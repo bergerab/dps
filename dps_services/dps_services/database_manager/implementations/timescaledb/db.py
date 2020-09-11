@@ -41,9 +41,9 @@ class DatabaseClient:
                 return dataset
         return None
 
-    def get_signal_by_name(self, signal_name):
+    def get_signal_by_name_and_dataset_id(self, signal_name, dataset_id):
         for signal in self.signals:
-            if signal.name.strip() == signal_name:
+            if signal.dataset_id == dataset_id and signal.name.strip() == signal_name:
                 return signal
         return None
 

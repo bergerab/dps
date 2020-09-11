@@ -1,7 +1,11 @@
 from unittest import TestCase
 
-from dps_client import connect
+import dps_client as dpsc
 
 class TestDPSClient(TestCase):
-    def test_something(self):
+    def test_normalize_url(self):
+        self.assertEqual(dpsc._normalize_url('http://localhost/oijwef'), 'http://localhost/oijwef/')
+        self.assertEqual(dpsc._normalize_url('http://localhost/oijwef/'), 'http://localhost/oijwef/')
+
+    def test_(self):
         pass

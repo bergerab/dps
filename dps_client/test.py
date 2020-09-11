@@ -1,14 +1,11 @@
 import dps_client
-
-from datetime import datetime, timedelta
+from datetime import datetime
 
 URL = 'http://bergerab.com/dps/db/api/v1/'
+client = dps_client.connect(URL, 'Adam Test')
 
-client = dps_client.connect(URL, 'LabVIEW Device')
+batch = client.make_batch(datetime.now())
+batch.add('Signal A', 1.2)
+batch.add('Signal B', 1.3)
 
-for i in range(100):
-    batch = client.create_batch_client(datetime.now() + timedelta(microseconds=i))
-    batch.add('Signal A', 1.2)
-    batch.add('Signal B', 1.3)
-
-client.send()
+print(client.send())
