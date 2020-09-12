@@ -1,0 +1,15 @@
+* UWM Database Manager
+ 
+A DPS Database Manager implementation for TimescaleDB that is used by the UWM system.
+
+** Dependencies
+
+First, make sure you have the ~dps_services~ Python package installed. This package is found in the root of this repository. Follow the instructions from that package's README file.
+
+Then install the rest of the dependencies by running:
+
+#+BEGIN_SRC shell
+python3 setup.py install
+#+END_SRC
+
+Then install TimescaleDB, and apply the schema (found in ~schema.sql~) to the database.

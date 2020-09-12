@@ -1,0 +1,4 @@
+* Allow for Protobuf for client/database manager
+* Move parsing into database manager (just give datetime)
+* Integration tests
+* fetch_signals and aggregate_signals

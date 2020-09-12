@@ -49,33 +49,33 @@ class Interval:
             'end': self.end,
         }
     
-def parse_query_request(json_string):
+def parse_query_json(json_string):
     '''
     Parses a JSON string of queries, and returns a list of query objects
     
     :params json_string: the JSON string containing the request
     '''
     jo = json.loads(json_string)
-    return load_query_request(jo)
+    return load_query_json(jo)
 
-def load_query_request(query_request):
+def load_query_json(query_json):
     '''
     Given a Python dictionary representing a query, produces a Query object
     
     :params query: the dictionary containing the request
     :returns: a list of Query objects
     '''
-    with util.RequestValidator(query_request) as validator:
+    with util.RequestValidator(query_json) as validator:
         queries = []        
-        sub_query_requests = validator.require('queries', list, default=[])
-        for i, sub_query_request in enumerate(sub_query_requests):
+        sub_query_jsons = validator.require('queries', list, default=[])
+        for i, sub_query_json in enumerate(sub_query_jsons):
             with validator.scope_list('queries', i):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 interval = validator.require('interval', object)
                 with validator.scope('interval'):
-                    interval_start = validator.require('start', int)
-                    interval_end = validator.require('end', int)
+                    interval_start = validator.require('start', datetime_format_string=util.DATETIME_FORMAT_STRING)
+                    interval_end = validator.require('end', datetime_format_string=util.DATETIME_FORMAT_STRING)
                 aggregation = validator.require('aggregation', str, optional=True,
                                                 one_of=['average', 'count', 'min', 'max'])
             queries.append(Query(dataset, signals, Interval(interval_start, interval_end), aggregation))

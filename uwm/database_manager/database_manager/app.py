@@ -9,9 +9,6 @@ from sqlalchemy.sql import func
 import dps_services.database_manager as dbm
 from db import *
 
-def parse_datetime(datetime_string):
-    return datetime.strptime(datetime_string, '%Y-%m-%d %H:%M:%S.%f')
-
 class TimescaleDBDataStore(dbm.DataStore):
     def __init__(self):
         self.dbc = DatabaseClient()
@@ -41,15 +38,26 @@ class TimescaleDBDataStore(dbm.DataStore):
                 self.dbc.add(signal_data)
                 self.dbc.commit()
 
-    def fetch_signals_query(self, result, dataset, signals, interval):
-        return self.dbc.query(SignalData).filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end))
+    def fetch_signals(self, result, dataset_name, signal_names, interval):
+        signal_values = self.time_filter(self.dbc.query(SignalData), interval).all()
 
-    def fetch_signals(self, result, dataset, signals, interval):
-        return fetch_signals_query(result, dataset, signals, interval).all()        
+    def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
+        f = None
+        if aggregation == 'max':
+            f = func.max
+        elif aggregation == 'min':
+            f = func.min
+        elif aggregation == 'average':
+            f = func.avg
+        else:
+            raise Exception(f'aggregate_signals was given an unsupported aggregation of "{aggregation}".')
+        val = self.time_filter(self.dbc.query(f(SignalData.value)), interval).scalar()
 
-    def aggregate_signals(self, result, dataset, signals, interval, aggregation):
-        pass
+    def time_filter(self, query, interval):
+        return query.filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end))
         
+def make_app():
+    return dbm.make_app(TimescaleDBDataStore)
+
 if __name__ == '__main__':
-    app = dbm.make_app(TimescaleDBDataStore)
-    app.run(port=3001)
+    make_app().run(port=3001)

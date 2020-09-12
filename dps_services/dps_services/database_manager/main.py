@@ -18,21 +18,11 @@ def make_app(DataStore):
     def query(jo):
         return DataStore.query(jo)
 
-    return app
-
-'''
-Request: (insert)
-{
-    "inserts": [
-        {
-            "dataset": <string>,
-            "samples": [[<float>, <float>], [<float>, <float>]],
-            "signals": [<string>, <string>],
-            "times": [<int:nanoseconds>, <int:nanoseconds>]
+    @app.route(util.make_api_url('info'), methods=['GET'])    
+    @util.json_api
+    def info(jo):
+        return {
+            'protocols': ['application/json', 'application/protobuf'],
         }
-    ]
-}
 
-Response: (insert)
-HTTP 200 or 201
-'''
+    return app

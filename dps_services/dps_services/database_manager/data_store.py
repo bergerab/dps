@@ -1,7 +1,7 @@
 import dps_services.util as util
 
-from .query import load_query_request
-from .insert import load_insert_request
+from .query import load_query_json
+from .insert import load_insert_json
 
 class DataStore:
     def __init__(self, validate_inserts=False):
@@ -16,12 +16,12 @@ class DataStore:
     @classmethod
     def insert(DataStoreClass, insert_request):
         ds = DataStoreClass()
-        results = ds.execute_inserts(load_insert_request(insert_request))
+        results = ds.execute_inserts(load_insert_json(insert_request))
     
     @classmethod
     def query(DataStoreClass, query_request):
         ds = DataStoreClass()
-        results = ds.execute_queries(load_query_request(query_request))
+        results = ds.execute_queries(load_query_json(query_request))
         return DataStore.to_results_response(results)
 
     def execute_inserts(self, inserts):

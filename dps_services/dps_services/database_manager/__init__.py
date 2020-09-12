@@ -1,9 +1,9 @@
-from .query import parse_query_request
-from .query import load_query_request
+from .query import parse_query_json
+from .query import load_query_json
 from .query import Query, Interval
 
-from .insert import parse_insert_request
-from .insert import load_insert_request
+from .insert import parse_insert_json
+from .insert import load_insert_json
 from .insert import Insert
 
 from .data_store import DataStore

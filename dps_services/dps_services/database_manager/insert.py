@@ -28,30 +28,30 @@ class Insert:
             'times': self.times,
         }
             
-def parse_insert_request(json_string):
+def parse_insert_json(json_string):
     '''
     Parses a JSON string of inserts, and returns a list of insert objects
     
     :params json_string: the JSON string containing the request
     '''
     jo = json.loads(json_string)
-    return load_insert_request(jo)
+    return load_insert_json(jo)
 
-def load_insert_request(insert_request):
+def load_insert_json(insert_json):
     '''
     Given a Python dictionary representing an insert, produces a Insert object
     
     :params query: the dictionary containing the request
     :returns: a list of Insert objects
     '''
-    with util.RequestValidator(insert_request) as validator:
+    with util.RequestValidator(insert_json) as validator:
         inserts = []        
-        sub_insert_requests = validator.require('inserts', list, default=[])
-        for i, sub_insert_request in enumerate(sub_insert_requests):
+        sub_insert_jsons = validator.require('inserts', list, default=[])
+        for i, sub_insert_json in enumerate(sub_insert_jsons):
             with validator.scope_list('inserts', i):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 samples = validator.require('samples', list)
-                times = validator.require('times', list)
+                times = map(lambda x: util.parse_datetime(x), validator.require('times', list))
             inserts.append(Insert(dataset, signals, samples, times))
         return inserts

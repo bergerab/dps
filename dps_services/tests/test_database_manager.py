@@ -4,16 +4,27 @@ from datetime import datetime, timedelta
 import dps_services.database_manager as dbm
 import dps_services.util as util
 
+datetime_string1 = '2020-06-30 03:54:45.175489'
+datetime1 = datetime(2020, 6, 30, 3, 54, 45, 175489)
+datetime_string2 = '2021-07-12 10:37:19.839234'
+datetime2 = datetime(2021, 7, 12, 10, 37, 19, 839234)
+datetime_string3 = '2023-10-06 14:00:02.002'
+datetime3 = datetime(2023, 10, 6, 14, 0, 2, 2000)
+datetime_string4 = '2023-10-06 15:02:12.000392'
+datetime4 = datetime(2023, 10, 6, 15, 2, 12, 392)
+datetime_string5 = '2023-10-06 16:07:08.001811'
+datetime5 = datetime(2023, 10, 6, 16, 7, 8, 1811)
+
 class MockDataStore(dbm.DataStore):
     def __init__(self):
         self.queries = []
-        self.inserts = []        
+        self.inserts = []
         self.counter = 0
 
     def next(self):
-        count = self.counter
+        counter = self.counter
         self.counter += 1
-        return count
+        return counter
 
     def reset(self):
         self.counter = 0
@@ -25,7 +36,7 @@ class MockDataStore(dbm.DataStore):
         self.reset()
         self.queries.append(dbm.Query(dataset, signals, interval))
         for x in range(3):
-            result.add(list(map(lambda x: self.next(), signals)), interval.start + self.counter)
+            result.add(list(map(lambda x: self.next(), signals)), interval.start + timedelta(seconds=self.counter))
                 
     def aggregate_signals(self, result, dataset, signals, interval, aggregation):
         self.reset()
@@ -46,184 +57,161 @@ class TestDatabaseManager(TestCase):
                             dbm.Interval(2, 2))
     
     def test_query_eq(self):
-        self.assertEqual(dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(1, 2)),
-                         dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(1, 2)))
-        self.assertNotEqual(dbm.Query('name', ['s1', 's5', 's3'], dbm.Interval(1, 2)),
-                            dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(1, 2)))
-        self.assertNotEqual(dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(9, 2)),
-                            dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(1, 2)))
+        self.assertEqual(dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(datetime1, datetime2)),
+                         dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(datetime1, datetime2)))
+        self.assertNotEqual(dbm.Query('name', ['s1', 's5', 's3'], dbm.Interval(datetime1, datetime2)),
+                            dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(datetime1, datetime2)))
+        self.assertNotEqual(dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(datetime3, datetime2)),
+                            dbm.Query('name', ['s1', 's2', 's3'], dbm.Interval(datetime1, datetime2)))
     
-    def test_parse_query_requests(self):
-        self.assertEqual(dbm.parse_query_request('''
-{
+    def test_parse_query_jsons(self):
+        self.assertEqual(dbm.parse_query_json(f'''
+{{
     "queries": [
-        {
+        {{
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
-            "interval": {
-                "start": 29292929,
-                "end": 3939393939
-            }
-        }
+            "interval": {{
+                "start": "{datetime_string1}",
+                "end": "{datetime_string2}"
+            }}
+        }}
     ]
-}
-        '''), [dbm.Query('somename', ['va', 'vb', 'vc'], dbm.Interval(29292929, 3939393939))])
+}}
+        '''), [dbm.Query('somename', ['va', 'vb', 'vc'],
+                         dbm.Interval(datetime1, datetime2))])
 
-        self.assertEqual(dbm.parse_query_request('''
-{
+        self.assertEqual(dbm.parse_query_json(f'''
+{{
     "queries": [
-        {
+        {{
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
-            "interval": {
-                "start": 39,
-                "end": 8833
-            }
-        },
-        {
+            "interval": {{
+                "start": "{datetime_string1}",
+                "end": "{datetime_string2}"
+            }}
+        }},
+        {{
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
-            "interval": {
-                "start": 9,
-                "end": 19
-            }
-        }
+            "interval": {{
+                "start": "{datetime_string2}",
+                "end": "{datetime_string3}"
+            }}
+        }}
     ]
-}
-        '''), [dbm.Query('somename', ['va', 'vb', 'vc'], dbm.Interval(39, 8833)),
-               dbm.Query('otherthing', ['ia', 'ib'], dbm.Interval(9, 19))])
+}}
+        '''), [dbm.Query('somename', ['va', 'vb', 'vc'], dbm.Interval(datetime1, datetime2)),
+               dbm.Query('otherthing', ['ia', 'ib'], dbm.Interval(datetime2, datetime3))])
 
 
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries".'):
-            dbm.parse_query_request('''
-{
+            dbm.parse_query_json(f'''
+{{
     "queries": [
     ]
-}
+}}
         ''')
 
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[0\].dataset".'):
-            dbm.parse_query_request('''
-{
+            dbm.parse_query_json(f'''
+{{
     "queries": [
-        {
+        {{
             "signals": ["ia", "ib"],
-            "interval": {
-                "start": 9,
-                "end": 19
-            }
-        }
+            "interval": {{
+                "start": "{datetime_string1}",
+                "end": "{datetime_string3}"
+            }}
+        }}
     ]
-}
+}}
         ''')
 
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[0\].interval.start".'):
-            dbm.parse_query_request('''
-{
+            dbm.parse_query_json(f'''
+{{
     "queries": [
-        {
+        {{
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
-            "interval": {
-                "end": 19
-            }
-        }
+            "interval": {{
+                "end": "{datetime_string2}"
+            }}
+        }}
     ]
-}
+}}
         ''')
 
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.end".'):            
-            dbm.parse_query_request('''
-{
+            dbm.parse_query_json(f'''
+{{
     "queries": [
-        {
+        {{
             "dataset": "somename",
             "signals": ["va", "vb", "vc"],
-            "interval": {
-                "start": 39,
-                "end": 8833
-            }
-        },
-        {
+            "interval": {{
+                "start": "{datetime_string1}",
+                "end": "{datetime_string3}"
+            }}
+        }},
+        {{
             "dataset": "otherthing",
             "signals": ["ia", "ib"],
-            "interval": {
-                "start": 9
-            }
-        }
+            "interval": {{
+                "start": "{datetime_string2}"
+            }}
+        }}
     ]
-}
+}}
             ''')
-
-        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "queries\[1\].interval.end".'):            
-            dbm.parse_query_request('''
-{
-    "queries": [
-        {
-            "dataset": "somename",
-            "signals": ["va", "vb", "vc"],
-            "interval": {
-                "start": 39,
-                "end": 8833
-            }
-        },
-        {
-            "dataset": "otherthing",
-            "signals": ["ia", "ib"],
-            "interval": {
-                "start": 9
-            }
-        }
-    ]
-}
-            ''')            
-            
 
     def test_data_store_execute_queries(self):
         ds = MockDataStore()
-        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))]
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime1, datetime2))]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
 
         ds = MockDataStore()
-        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82)),
-                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444))]
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime1, datetime2)),
+                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(datetime1, datetime3))]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
 
         ds = MockDataStore()
-        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82), 'max'),
-                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(2929, 4444), 'min')]
+        queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime1, datetime2), 'max'),
+                   dbm.Query('name2', ['a2', 'b48', 'VIA'], dbm.Interval(datetime2, datetime3), 'min')]
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
 
 
     def test_data_store_execute_inserts(self):
         ds = MockDataStore()
-        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [9, 10])]
+        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [datetime1, datetime2])]
         ds.execute_inserts(inserts)
         self.assertEqual(inserts, ds.inserts)
 
         ds = MockDataStore()
-        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [9, 10]),
-                   dbm.Insert('name2', ['ab', 'dc'], [[5,4], [3,2], [9,8], [32,54]], [9, 4, 3, 2])]
+        inserts = [dbm.Insert('name1', ['s1', 's2', 'sb'], [[1,2,3], [4,5,6]], [datetime1, datetime2]),
+                   dbm.Insert('name2', ['ab', 'dc'], [[5,4], [3,2], [9,8], [32,54]], [datetime2, datetime3, datetime4, datetime5])]
         ds.execute_inserts(inserts)
         self.assertEqual(inserts, ds.inserts)
 
     def test_data_store_signal_query_results(self):
-        query = dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(3, 82))
+        query = dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime2, datetime4))
         result = dbm.SignalQueryResult(query)
-        result.add([1, 2, 3], 4)
-        result.add([8, 9, 6], 5)
+        result.add([1, 2, 3], datetime3)
+        result.add([8, 9, 6], datetime4)
         self.assertEqual(result.to_dict(), {
             'samples': [[1, 2, 3], [8, 9, 6]],
-            'times': [4, 5],
+            'times': [datetime3, datetime4],
             'query': {
                 'dataset': 'name1',
                 'signals': ['s1', 's2', 'sb'],
                 'interval': {
-                    'start': 3,
-                    'end': 82,
+                    'start': datetime2,
+                    'end': datetime4,
                 }
             }
         })
@@ -237,35 +225,35 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'name1',
                 'signals': ['s1', 's2', 'sb'],
                 'interval': {
-                    'start': 3,
-                    'end': 82,
+                    'start': datetime2,
+                    'end': datetime4,
                 }
             }
         })
 
         with self.assertRaisesRegex(Exception, 'Must provide a value for every signal value.'):
             result = dbm.SignalQueryResult(query)
-            result.add([10, 13], 1) # missing a value for 'sb'
+            result.add([10, 13], datetime3) # missing a value for 'sb'
 
-        with self.assertRaisesRegex(Exception, 'Given time "1" is out-of-bounds of the query interval \(between "3" and "82"\).'):
+        with self.assertRaisesRegex(Exception, f'Given time "{datetime_string1}" is out-of-bounds of the query interval \(between "{datetime_string2}" and "{datetime_string4}"\).'):
             result = dbm.SignalQueryResult(query)
-            result.add([10, 13, 32], 1) # time too early
+            result.add([10, 13, 32], datetime1) # time too early
 
-        with self.assertRaisesRegex(Exception, 'Given time "90" is out-of-bounds of the query interval \(between "3" and "82"\).'):
+        with self.assertRaisesRegex(Exception, f'Given time "{datetime_string5}" is out-of-bounds of the query interval \(between "{datetime_string2}" and "{datetime_string4}"\).'):
             result = dbm.SignalQueryResult(query)
-            result.add([10, 13, 32], 90) # time too late
+            result.add([10, 13, 32], datetime5) # time too late
 
         result = dbm.SignalQueryResult(query)
-        result.add([10, 13, 32], 90, validate=False) # time too late - but skipping validation
+        result.add([10, 13, 32], datetime5, validate=False) # time too late - but skipping validation
 
-        with self.assertRaisesRegex(Exception, 'Received time value "5" in non-monotonically increasing order.'):
+        with self.assertRaisesRegex(Exception, f'Received time value "{datetime_string2}" in non-monotonically increasing order.'):
             result = dbm.SignalQueryResult(query)
-            result.add([10, 13, 14], 10)
-            result.add([1, 2, 3], 20)
-            result.add([94, 83, 12], 5)
+            result.add([10, 13, 14], datetime3)
+            result.add([1, 2, 3], datetime4)
+            result.add([94, 83, 12], datetime2)
 
     def test_data_store_aggregate_query_results(self):
-        query = dbm.Query('sampleag', ['AGGG8', 'AG9'], dbm.Interval(90, 10000), 'max')
+        query = dbm.Query('sampleag', ['AGGG8', 'AG9'], dbm.Interval(datetime2, datetime4), 'max')
         result = dbm.AggregateQueryResult(query)
         result.set('AGGG8', 392)
         result.set('AG9', 899209)
@@ -275,8 +263,8 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
                 'interval': {
-                    'start': 90,
-                    'end': 10000,
+                    'start': datetime2,
+                    'end': datetime4,
                 },
                 'aggregation': 'max',
             }
@@ -290,8 +278,8 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
                 'interval': {
-                    'start': 90,
-                    'end': 10000,
+                    'start': datetime2,
+                    'end': datetime4,
                 },
                 'aggregation': 'max',
             }
@@ -301,14 +289,14 @@ class TestDatabaseManager(TestCase):
             result.set('badvalue', 93)
 
     def test_data_store_query(self):
-        query_request = {
+        query_json = {
             'queries': [
                 {
                     "dataset": "somename",
                     "signals": ["va", "vb", "vc"],
                     "interval": {
-                        "start": 39,
-                        "end": 8833
+                        "start": datetime_string2,
+                        "end": datetime_string4
                     },
                     "aggregation": "max"
                 },
@@ -316,14 +304,15 @@ class TestDatabaseManager(TestCase):
                     "dataset": "otherthing",
                     "signals": ["ia", "ib"],
                     "interval": {
-                        "start": 9,
-                        "end": 50
+                        "start": datetime_string3,
+                        "end": datetime_string5
                     }
                 }
             ],
         }
-        self.maxDiff = None
-        self.assertEqual(MockDataStore.query(query_request), {
+
+        # The MockDataStore is 
+        self.assertEqual(MockDataStore.query(query_json), {
             'results': [
                 {
                     "results": [0, 1, 2],
@@ -331,21 +320,21 @@ class TestDatabaseManager(TestCase):
                         "dataset": "somename",
                         "signals": ["va", "vb", "vc"],
                         "interval": {
-                            "start": 39,
-                            "end": 8833,
+                            "start": datetime2,
+                            "end": datetime4,
                         },
                         "aggregation": "max"
                     },
                 },
                 {
                     "samples": [[0, 1], [2, 3], [4, 5]],
-                    "times": [9+2, 9+4, 9+6],
+                    "times": [datetime3+timedelta(seconds=2), datetime3+timedelta(seconds=4), datetime3+timedelta(seconds=6)],
                     "query": {
                         "dataset": "otherthing",
                         "signals": ["ia", "ib"],
                         "interval": {
-                            "start": 9,
-                            "end": 50,
+                            "start": datetime3,
+                            "end": datetime5,
                         }
                     }
                 }
