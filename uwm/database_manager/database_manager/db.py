@@ -47,6 +47,17 @@ class DatabaseClient:
                 return signal
         return None
 
+    def clear(self, dataset_name):
+        dataset = self.query(Dataset).filter_by(name=dataset_name).first()
+        if not dataset:
+            return
+        signals = self.query(Signal).filter_by(dataset_id=dataset.id).all()
+        for signal in signals:
+            self.query(SignalData).filter_by(signal_id=signal.id).delete()
+            signal.delete()
+        dataset.delete()
+        self.commit()
+
     def commit(self):
         self.session.commit()
 

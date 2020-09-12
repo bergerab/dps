@@ -11,5 +11,7 @@ setup(
         'Flask',
         'SQLAlchemy',
         'psycopg2-binary'
-    ]
+    ],
+    test_suite='nose.collector',
+    tests_require=['nose'],    
 )

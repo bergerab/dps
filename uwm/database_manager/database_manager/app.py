@@ -7,7 +7,9 @@ from sqlalchemy import and_
 from sqlalchemy.sql import func
 
 import dps_services.database_manager as dbm
+import dps_services.util as util
 from db import *
+from config import DEBUG
 
 class TimescaleDBDataStore(dbm.DataStore):
     def __init__(self):
@@ -34,7 +36,7 @@ class TimescaleDBDataStore(dbm.DataStore):
                 time = times[i]
                 signal = signals[j]
             
-                signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=parse_datetime(time))
+                signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=time)
                 self.dbc.add(signal_data)
                 self.dbc.commit()
 
@@ -57,7 +59,19 @@ class TimescaleDBDataStore(dbm.DataStore):
         return query.filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end))
         
 def make_app():
-    return dbm.make_app(TimescaleDBDataStore)
+    app = dbm.make_app(TimescaleDBDataStore)
+
+    # For integration testing, expose an endpoint to clear all data.
+    if DEBUG:
+        @app.route(util.make_api_url('clear'), methods=['POST'])
+        @util.json_api        
+        def clear(jo):
+            dataset_name = jo['dataset_name']
+            dbc = DatabaseClient()
+            dbc.clear(dataset_name)
+            return True
+    
+    return app
 
 if __name__ == '__main__':
-    make_app().run(port=3001)
+    make_app().run(debug=DEBUG, port=3001)

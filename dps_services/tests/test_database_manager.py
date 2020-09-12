@@ -167,6 +167,64 @@ class TestDatabaseManager(TestCase):
 }}
             ''')
 
+    def test_parse_insert_jsons(self):
+        self.assertEqual(dbm.parse_insert_json(f'''
+{{
+    "inserts": [
+        {{
+            "dataset": "somename",
+            "signals": ["va", "vb", "vc"],
+            "samples": [[1, 2, 3], [3, 4, 5]],
+            "times": ["{datetime_string1}", "{datetime_string2}"]
+        }}
+    ]
+}}
+        '''), [dbm.Insert('somename', ['va', 'vb', 'vc'],
+                          [[1,2,3], [3,4,5]],
+                          [datetime1, datetime2])])
+
+        self.assertEqual(dbm.parse_insert_json(f'''
+{{
+    "inserts": [
+        {{
+            "dataset": "somename",
+            "signals": ["va", "vb", "vc"],
+            "samples": [[1, 2, 3], [3, 4, 5]],
+            "times": ["{datetime_string1}", "{datetime_string2}"]
+        }},
+        {{
+            "dataset": "otherthing",
+            "signals": ["ia", "ib"],
+            "samples": [[1, 2], [3, 4]],
+            "times": ["{datetime_string2}", "{datetime_string3}"]
+        }}
+    ]
+}}
+        '''), [dbm.Insert('somename', ['va', 'vb', 'vc'], [[1, 2, 3], [3, 4, 5]], [datetime1, datetime2]),
+               dbm.Insert('otherthing', ['ia', 'ib'], [[1, 2], [3, 4]], [datetime2, datetime3])])
+
+
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "inserts".'):
+            dbm.parse_insert_json(f'''
+{{
+    "inserts": [
+    ]
+}}
+        ''')
+
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "inserts\[0\].dataset".'):
+            dbm.parse_insert_json(f'''
+{{
+    "inserts": [
+        {{
+            "signals": ["ia", "ib"],
+            "samples": [[1, 2], [3, 4]],
+            "times": ["{datetime_string2}", "{datetime_string3}"]
+        }}
+    ]
+}}
+        ''')
+
     def test_data_store_execute_queries(self):
         ds = MockDataStore()
         queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime1, datetime2))]

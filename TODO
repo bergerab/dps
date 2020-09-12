@@ -1,4 +1,7 @@
 * Allow for Protobuf for client/database manager
-* Move parsing into database manager (just give datetime)
+* Move parsing into database manager (just give datetime) - OK - double check UWM impl
 * Integration tests
 * fetch_signals and aggregate_signals
+* Proper way of deploying Flask apps
+* Clean up DatabaseClient after usage in UWM DBM?
+* Bundle integration tests with dps_services code (allow to be run with command)

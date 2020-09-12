@@ -52,6 +52,6 @@ def load_insert_json(insert_json):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 samples = validator.require('samples', list)
-                times = map(lambda x: util.parse_datetime(x), validator.require('times', list))
+                times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING)
             inserts.append(Insert(dataset, signals, samples, times))
         return inserts
