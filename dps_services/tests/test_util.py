@@ -24,7 +24,11 @@ class TestUtil(TestCase):
             'f': {
                 'g': 3,
                 "9": [[1,2], [3,4]],
-            }
+            },
+            'x': '2020/03/20 12:20:30.322123',
+            'y': '2020-03-20 12:20:30.322123',
+            'z': ['2020-04-20 12:20:30.322123', '2020-05-13 4:2:08.003'],
+            '1': ['2020-04-20 12:20:30.322123', '2020/05/13 4:2:08.003', '2020/10/13 6:2:08.003'],            
         }
         with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "d".'):
             with util.RequestValidator(d) as validator:
@@ -88,6 +92,25 @@ class TestUtil(TestCase):
                 validator.require('a', str)                
                 with validator.scope('f'):
                     validator.require('h')
+
+        DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'                    
+        with self.assertRaisesRegex(util.ValidationException, f'Expected datetime string in format "{DATETIME_FORMAT_STRING}", but received "{d["x"]}".'):
+            with util.RequestValidator(d) as validator:
+                validator.require('x', datetime_format_string=DATETIME_FORMAT_STRING)
+
+        with util.RequestValidator(d) as validator:
+            self.assertEqual(datetime(2020, 3, 20, 12, 20, 30, 322123), validator.require('y', datetime_format_string=DATETIME_FORMAT_STRING))
+
+        with util.RequestValidator(d) as validator:
+            self.assertEqual([datetime(2020, 4, 20, 12, 20, 30, 322123),
+                              datetime(2020, 5, 13, 4, 2, 8, 3000)],
+                             validator.require('z', datetime_format_string=DATETIME_FORMAT_STRING))
+
+        with self.assertRaisesRegex(util.ValidationException,
+                                    f'Expected datetime string in format "{DATETIME_FORMAT_STRING}" at index 1 for list "1", but received "{d["1"][1]}".\n' +
+                                    f'Expected datetime string in format "{DATETIME_FORMAT_STRING}" at index 2 for list "1", but received "{d["1"][2]}".'):
+            with util.RequestValidator(d) as validator:
+                validator.require('1', datetime_format_string=DATETIME_FORMAT_STRING)
 
     def test_make_api_url(self):
         self.assertEqual(util.make_api_url('a'), '/api/v1/a')

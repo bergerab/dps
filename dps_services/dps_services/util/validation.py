@@ -27,13 +27,13 @@ class RequestValidator:
                     values = []
                     for i, item in enumerate(value):
                         datetime = validate_datetime(item, datetime_format_string)
-                        if not value:
-                            self.errors.append(f'Expected datetime string in format {quoted(datetime_format_string)} at index {i} for list {parameter_name}, but received {quoted(value)}.')
+                        if not datetime:
+                            self.errors.append(f'Expected datetime string in format {quoted(datetime_format_string)} at index {i} for list {parameter_name}, but received {quoted(item)}.')
                         values.append(datetime)
                     value = values
                 else:
                     datetime = validate_datetime(value, datetime_format_string)
-                    if not value:
+                    if not datetime:
                         self.errors.append(f'Expected datetime string in format {quoted(datetime_format_string)}, but received {quoted(value)}.')
                     value = datetime
             if one_of is not None and value not in one_of:
