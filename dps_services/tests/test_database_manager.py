@@ -292,49 +292,49 @@ class TestDatabaseManager(TestCase):
         query_json = {
             'queries': [
                 {
-                    "dataset": "somename",
-                    "signals": ["va", "vb", "vc"],
-                    "interval": {
-                        "start": datetime_string2,
-                        "end": datetime_string4
+                    'dataset': 'somename',
+                    'signals': ['va', 'vb', 'vc'],
+                    'interval': {
+                        'start': datetime_string2,
+                        'end': datetime_string4
                     },
-                    "aggregation": "max"
+                    'aggregation': 'max'
                 },
                 {
-                    "dataset": "otherthing",
-                    "signals": ["ia", "ib"],
-                    "interval": {
-                        "start": datetime_string3,
-                        "end": datetime_string5
+                    'dataset': 'otherthing',
+                    'signals': ['ia', 'ib'],
+                    'interval': {
+                        'start': datetime_string3,
+                        'end': datetime_string5
                     }
                 }
             ],
         }
 
-        # The MockDataStore is 
+        # See MockDataStore implementation as to why the results are spaced out by seconds:
         self.assertEqual(MockDataStore.query(query_json), {
             'results': [
                 {
-                    "results": [0, 1, 2],
-                    "query": {
-                        "dataset": "somename",
-                        "signals": ["va", "vb", "vc"],
-                        "interval": {
-                            "start": datetime2,
-                            "end": datetime4,
+                    'results': [0, 1, 2],
+                    'query': {
+                        'dataset': 'somename',
+                        'signals': ['va', 'vb', 'vc'],
+                        'interval': {
+                            'start': datetime2,
+                            'end': datetime4,
                         },
-                        "aggregation": "max"
+                        'aggregation': 'max'
                     },
                 },
                 {
-                    "samples": [[0, 1], [2, 3], [4, 5]],
-                    "times": [datetime3+timedelta(seconds=2), datetime3+timedelta(seconds=4), datetime3+timedelta(seconds=6)],
-                    "query": {
-                        "dataset": "otherthing",
-                        "signals": ["ia", "ib"],
-                        "interval": {
-                            "start": datetime3,
-                            "end": datetime5,
+                    'samples': [[0, 1], [2, 3], [4, 5]],
+                    'times': [datetime3+timedelta(seconds=2), datetime3+timedelta(seconds=4), datetime3+timedelta(seconds=6)],
+                    'query': {
+                        'dataset': 'otherthing',
+                        'signals': ['ia', 'ib'],
+                        'interval': {
+                            'start': datetime3,
+                            'end': datetime5,
                         }
                     }
                 }
