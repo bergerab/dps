@@ -108,7 +108,7 @@ class SignalQueryResult:
     def to_dict(self):
         return {
             'samples': self.samples,
-            'times': self.times,
+            'times': list(map(lambda x: util.format_datetime(x), self.times)),
             'query': self.query.to_dict()
         }
 

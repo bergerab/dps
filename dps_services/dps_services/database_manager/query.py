@@ -45,8 +45,8 @@ class Interval:
 
     def to_dict(self):
         return {
-            'start': self.start,
-            'end': self.end,
+            'start': util.format_datetime(self.start),
+            'end': util.format_datetime(self.end),
         }
     
 def parse_query_json(json_string):

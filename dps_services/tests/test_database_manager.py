@@ -8,7 +8,7 @@ datetime_string1 = '2020-06-30 03:54:45.175489'
 datetime1 = datetime(2020, 6, 30, 3, 54, 45, 175489)
 datetime_string2 = '2021-07-12 10:37:19.839234'
 datetime2 = datetime(2021, 7, 12, 10, 37, 19, 839234)
-datetime_string3 = '2023-10-06 14:00:02.002'
+datetime_string3 = '2023-10-06 14:00:02.002000'
 datetime3 = datetime(2023, 10, 6, 14, 0, 2, 2000)
 datetime_string4 = '2023-10-06 15:02:12.000392'
 datetime4 = datetime(2023, 10, 6, 15, 2, 12, 392)
@@ -171,6 +171,25 @@ class TestDatabaseManager(TestCase):
 }}
             ''')
 
+    def test_parse_query_aggreagtion_jsons(self):
+        self.assertEqual(dbm.parse_query_json(f'''
+{{
+    "queries": [
+        {{
+            "dataset": "somename",
+            "signals": ["va", "vb", "vc"],
+            "interval": {{
+                "start": "{datetime_string1}",
+                "end": "{datetime_string2}"
+            }},
+            "aggregation": "max"
+        }}
+    ]
+}}
+        '''), [dbm.Query('somename', ['va', 'vb', 'vc'],
+                         dbm.Interval(datetime1, datetime2),
+                         aggregation='max')])
+
     def test_parse_insert_jsons(self):
         self.assertEqual(dbm.parse_insert_json(f'''
 {{
@@ -287,13 +306,13 @@ class TestDatabaseManager(TestCase):
         result.add([8, 9, 6], datetime4)
         self.assertEqual(result.to_dict(), {
             'samples': [[1, 2, 3], [8, 9, 6]],
-            'times': [datetime3, datetime4],
+            'times': [datetime_string3, datetime_string4],
             'query': {
                 'dataset': 'name1',
                 'signals': ['s1', 's2', 'sb'],
                 'interval': {
-                    'start': datetime2,
-                    'end': datetime4,
+                    'start': datetime_string2,
+                    'end': datetime_string4,
                 }
             }
         })
@@ -307,8 +326,8 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'name1',
                 'signals': ['s1', 's2', 'sb'],
                 'interval': {
-                    'start': datetime2,
-                    'end': datetime4,
+                    'start': datetime_string2,
+                    'end': datetime_string4,
                 }
             }
         })
@@ -345,8 +364,8 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
                 'interval': {
-                    'start': datetime2,
-                    'end': datetime4,
+                    'start': datetime_string2,
+                    'end': datetime_string4,
                 },
                 'aggregation': 'max',
             }
@@ -360,8 +379,8 @@ class TestDatabaseManager(TestCase):
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
                 'interval': {
-                    'start': datetime2,
-                    'end': datetime4,
+                    'start': datetime_string2,
+                    'end': datetime_string4,
                 },
                 'aggregation': 'max',
             }
@@ -394,6 +413,9 @@ class TestDatabaseManager(TestCase):
         }
 
         # See MockDataStore implementation as to why the results are spaced out by seconds:
+        datetime_string3_plus2 = '2023-10-06 14:00:04.002000'
+        datetime_string3_plus4 = '2023-10-06 14:00:06.002000'
+        datetime_string3_plus6 = '2023-10-06 14:00:08.002000'                
         self.assertEqual(MockDataStore.query(query_json), {
             'results': [
                 {
@@ -402,21 +424,21 @@ class TestDatabaseManager(TestCase):
                         'dataset': 'somename',
                         'signals': ['va', 'vb', 'vc'],
                         'interval': {
-                            'start': datetime2,
-                            'end': datetime4,
+                            'start': datetime_string2,
+                            'end': datetime_string4,
                         },
                         'aggregation': 'max'
                     },
                 },
                 {
                     'samples': [[0, 1], [2, 3], [4, 5]],
-                    'times': [datetime3+timedelta(seconds=2), datetime3+timedelta(seconds=4), datetime3+timedelta(seconds=6)],
+                    'times': [datetime_string3_plus2, datetime_string3_plus4, datetime_string3_plus6],
                     'query': {
                         'dataset': 'otherthing',
                         'signals': ['ia', 'ib'],
                         'interval': {
-                            'start': datetime3,
-                            'end': datetime5,
+                            'start': datetime_string3,
+                            'end': datetime_string5,
                         }
                     }
                 }

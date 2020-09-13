@@ -1,6 +1,3 @@
-'''
-Running requires installation of the dps_services package and 
-'''
 from datetime import datetime
 
 from sqlalchemy import and_
@@ -16,32 +13,34 @@ class TimescaleDBDataStore(dbm.DataStore):
         self.dbc = DatabaseClient()
 
     def insert_signals(self, dataset_name, signal_names, batches, times):
-        dataset = self.dbc.get_dataset_by_name(dataset_name)
-        # If the dataset, doesn't exist in the database, create it and continue.
-        if dataset is None:
-            dataset = Dataset(name=dataset_name)
-            self.dbc.add(dataset)
-            self.dbc.commit()
+        with self.dbc.scope() as session:
+            dataset = self.dbc.get_dataset_by_name(dataset_name)
+            # If the dataset, doesn't exist in the database, create it and continue.
+            if dataset is None:
+                dataset = Dataset(name=dataset_name)
+                self.dbc.add(session, dataset)
+                session.commit()
 
-        signals = []
-        for signal_name in signal_names:
-            signal = self.dbc.get_signal_by_name_and_dataset_id(signal_name, dataset.dataset_id)
-            # If any of the signals, don't exist in the database, create it and continue.            
-            if signal is None:
-                signal = Signal(dataset_id=dataset.dataset_id, name=signal_name)
-                self.dbc.add(signal)
-                self.dbc.commit()
-            signals.append(signal)
-            
-        for i, batch in enumerate(batches):
-            for j, sample in enumerate(batch):
-                time = times[i]
-                signal = signals[j]
+            signals = []
+            for signal_name in signal_names:
+                signal = self.dbc.get_signal_by_name_and_dataset_id(signal_name, dataset.dataset_id)
+                # If any of the signals, don't exist in the database, create it and continue.            
+                if signal is None:
+                    signal = Signal(dataset_id=dataset.dataset_id, name=signal_name)
+                    self.dbc.add(session, signal)
+                    session.commit()
+                signals.append(signal)
+
+            for i, batch in enumerate(batches):
+                for j, sample in enumerate(batch):
+                    time = times[i]
+                    signal = signals[j]
                 
-                # Add the actual signal_data to the database for each (one signal_data for each sample).
-                signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=time)
-                self.dbc.add(signal_data)
-        self.dbc.commit()
+                    # Add the actual signal_data to the database for each (one signal_data for each sample).
+                    signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=time)
+                    self.dbc.add(session, signal_data)
+            session.commit()
+            session.expunge_all()
 
     def fetch_signals(self, result, dataset_name, signal_names, interval):
         dataset_id = self.dbc.get_cached_dataset(dataset_name).dataset_id
@@ -49,7 +48,8 @@ class TimescaleDBDataStore(dbm.DataStore):
 
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
-        signal_datas = self.time_filter(self.dbc.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc()).all()
+        with self.dbc.scope() as session:        
+            signal_datas = self.time_filter(session.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc()).all()
 
         if not signal_datas:
             return
@@ -101,8 +101,9 @@ class TimescaleDBDataStore(dbm.DataStore):
             f = func.avg
         else:
             raise Exception(f'aggregate_signals was given an unsupported aggregation of "{aggregation}".')
-        
-        val = self.time_filter(self.dbc.query(f(SignalData.value)), interval, dataset_id).scalar()
+
+        with self.dbc.scope() as session:                
+            val = self.time_filter(session.query(f(SignalData.value)), interval, dataset_id).scalar()
 
     def time_filter(self, query, interval, dataset_id):
         return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end))

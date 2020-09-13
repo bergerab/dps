@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine, Table, Column, Integer, Float, DateTime, String, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -28,18 +30,15 @@ class SignalData(Base):
 class DatabaseClient:
     def __init__(self):
         engine = create_engine(CONNECTION)
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
+        self.Session = sessionmaker(bind=engine)
 
         # Keep caches for datasets and signals to avoid database lookups.
-        self.cache_datasets()
-        self.cache_signals()
+        self.cache()
 
-    def cache_signals(self):
-        self.signals = self.query(Signal).all()
-
-    def cache_datasets(self):
-        self.datasets = self.query(Dataset).all()
+    def cache(self):
+        with self.scope() as session:
+            self.signals = session.query(Signal).all()
+            self.datasets = session.query(Dataset).all()            
 
     def get_cached_signal(self, signal_name):
         def lookup():
@@ -50,7 +49,7 @@ class DatabaseClient:
         if signal:
             return signal
         # If signal not found in cache, refresh the cache.
-        self.cache_signals()
+        self.cache()
         signal = lookup()
         if signal:
             return signal
@@ -66,7 +65,7 @@ class DatabaseClient:
         if dataset:
             return dataset
         # If signal not found in cache, refresh the cache.
-        self.cache_datasets()
+        self.cache()        
         dataset = lookup()
         if dataset:
             return dataset
@@ -81,34 +80,45 @@ class DatabaseClient:
 
     def get_signal_by_name_and_dataset_id(self, signal_name, dataset_id):
         for signal in self.signals:
-            if signal.dataset_id == dataset_id and signal.name.strip() == signal_name:
+            if signal.dataset_id == dataset_id and signal.name == signal_name:
                 return signal
         return None
 
     def delete_dataset(self, dataset_name):
-        dataset = self.query(Dataset).filter_by(name=dataset_name).first()
-        if not dataset:
-            return
-        signals = self.query(Signal).filter_by(dataset_id=dataset.dataset_id).all()
-        for signal in signals:
-            self.query(SignalData).filter_by(signal_id=signal.signal_id).delete()
-        self.query(Signal).filter_by(dataset_id=dataset.dataset_id).delete()
-        self.session.delete(dataset)
-        self.commit()
-        # Refresh the caches.
-        self.cache_datasets()
-        self.cache_signals()        
+        with self.scope() as session:
+            dataset = session.query(Dataset).filter_by(name=dataset_name).first()
+            if not dataset:
+                return
+            signals = session.query(Signal).filter_by(dataset_id=dataset.dataset_id).all()
+            for signal in signals:
+                session.query(SignalData).filter_by(signal_id=signal.signal_id).delete()
+            session.query(Signal).filter_by(dataset_id=dataset.dataset_id).delete()
+            session.delete(dataset)
+            session.commit()
+            
+            # Refresh the caches.
+            self.cache()
 
-    def commit(self):
-        self.session.commit()
+    def scope(self):
+        return session_scope(self.Session)
 
-    def query(self, cls):
-        return self.session.query(cls)
-
-    def add(self, obj):
+    def add(self, session, obj):
         # Not perfect - if commit fails, the cache doesn't rollback.
         if isinstance(obj, Dataset):
             self.datasets.append(obj)
         if isinstance(obj, Signal):
             self.signals.append(obj)
-        return self.session.add(obj)
+        return session.add(obj)
+
+@contextmanager
+def session_scope(Session):
+    # Required expire_on_commit=False to support caching.
+    session = Session(expire_on_commit=False)
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()

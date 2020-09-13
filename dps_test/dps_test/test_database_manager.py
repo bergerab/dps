@@ -19,8 +19,8 @@ def make_test_case(client):
             'dataset': dataset_name,
         })
 
-    def query(dataset_name, signal_names, interval_start, interval_end):
-        return client.POST('query', {
+    def query(dataset_name, signal_names, interval_start, interval_end, aggregation=None):
+        d = {
             'queries': [
                 {
                     'dataset': dataset_name,
@@ -31,7 +31,10 @@ def make_test_case(client):
                     },
                 }
             ]
-        })
+        }
+        if aggregation:
+            d['aggregation'] = aggregation
+        return client.POST('query', d)
 
     DS1 = 'test_dataset1'
     DS2 = 'test_dataset2'
@@ -40,7 +43,7 @@ def make_test_case(client):
     datetime1 = datetime(2020, 6, 30, 3, 54, 45, 175489)
     datetime_string2 = '2021-07-12 10:37:19.839234'
     datetime2 = datetime(2021, 7, 12, 10, 37, 19, 839234)
-    datetime_string3 = '2023-10-06 14:00:02.002'
+    datetime_string3 = '2023-10-06 14:00:02.002000'
     datetime3 = datetime(2023, 10, 6, 14, 0, 2, 2000)
     datetime_string4 = '2023-10-06 15:02:12.000392'
     datetime4 = datetime(2023, 10, 6, 15, 2, 12, 392)
@@ -48,36 +51,121 @@ def make_test_case(client):
     datetime5 = datetime(2023, 10, 6, 16, 7, 8, 1811)
     
     class TestDatabaseManager(unittest.TestCase):
-        def test_insert(self):
+        def __init__(self, *args, **kwargs):
+            super(TestDatabaseManager, self).__init__(*args, **kwargs)        
+            self.maxDiff = None
+        
+        def validate_status_code(self, response):
+            if response.status_code != 200:
+                print(response.json())
+            self.assertEqual(response.status_code, 200)
+
+        def delete_dataset(self, dataset_name):
             delete_response = delete_dataset(DS1)
-            self.assertEqual(delete_response.status_code, 200)            
+            self.validate_status_code(delete_response)
             self.assertEqual(delete_response.json(), {
                 'message': 'OK',
             })
+        
+        def test_insert_then_query(self):
+            self.delete_dataset(DS1)
+            
             insert_response = insert(DS1, ['va', 'vb', 'vc'], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [datetime_string2, datetime_string3])
-            self.assertEqual(insert_response.status_code, 200)                        
+            self.validate_status_code(insert_response)            
             self.assertEqual(insert_response.json(), {
                 'message': 'OK',
             })
+            
             query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4)
-            self.assertEqual(query_response.status_code, 200)
-            self.maxDiff = None
+            self.validate_status_code(query_response)                        
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
-                        'signals': ['va', 'vb', 'vc'],
-                        'times': [datetime2, datetime3],
+                        'times': [datetime_string2, datetime_string3],
                         'samples': [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
                         'query': {
                             'dataset': DS1,
                             'interval': {
-                                'start': datetime2,
-                                'end': datetime3,
+                                'start': datetime_string1,
+                                'end': datetime_string4,
                             },
                             'signals': ['va', 'vb', 'vc'],
                         }
                     }
                 ]
             })
+            
+            self.delete_dataset(DS1)
+
+        def test_multiple_inserts(self):
+            self.delete_dataset(DS1)
+            
+            insert_response = insert(DS1, ['va', 'vb', 'vc'], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [datetime_string2, datetime_string3])
+            self.assertEqual(insert_response.status_code, 200)                        
+            self.assertEqual(insert_response.json(), {
+                'message': 'OK',
+            })
+            
+            insert_response = insert(DS1, ['sig1', 'sig2'], [[3.2, 9.324], [4.293, 3.21], [5.3, 2.1], [0.32, 3.11]],
+                                     [datetime_string1, datetime_string2, datetime_string3, datetime_string4])            
+            self.assertEqual(insert_response.status_code, 200)                        
+            self.assertEqual(insert_response.json(), {
+                'message': 'OK',
+            })
+            
+            query_response = query(DS1, ['va', 'vb', 'sig1', 'sig2'], datetime_string2, datetime_string5)
+            self.assertEqual(query_response.status_code, 200)
+            self.assertEqual(query_response.json(), {
+                'results': [
+                    {
+                        'times': [datetime_string2, datetime_string3, datetime_string4],
+                        'samples': [[1.0, 2.0, 4.293, 3.21], [4.0, 5.0, 5.3, 2.1], [0.0, 0.0, 0.32, 3.11]],
+                        'query': {
+                            'dataset': DS1,
+                            'interval': {
+                                'start': datetime_string2,
+                                'end': datetime_string5,
+                            },
+                            'signals': ['va', 'vb', 'sig1', 'sig2'],
+                        }
+                    }
+                ]
+            })
+
+            self.delete_dataset(DS1)
+
+        def test_aggregation(self):
+            self.delete_dataset(DS1)
+            
+            insert_response = insert(DS1, ['va', 'vb', 'vc'], [[1.0, 12.0, 3.0], [4.0, 5.0, 6.0]], [datetime_string2, datetime_string3])
+            self.assertEqual(insert_response.status_code, 200)                        
+            self.assertEqual(insert_response.json(), {
+                'message': 'OK',
+            })
+            
+            query_response = query(DS1, ['va', 'vb'], datetime_string2, datetime_string5, aggregation='max')
+            print(query_response.json())
+            self.assertEqual(query_response.status_code, 200)
+            self.assertEqual(query_response.json(), {
+                'results': [
+                    {
+                        'values': [4.0, 12.0],
+                        'query': {
+                            'dataset': DS1,
+                            'interval': {
+                                'start': datetime_string2,
+                                'end': datetime_string5,
+                            },
+                            'signals': ['va', 'vb'],
+                            'aggregation': 'max',
+                        }
+                    }
+                ]
+            })
+
+            self.delete_dataset(DS1)
+
+        def test_multiple_datasets(self):
+            pass
 
     return TestDatabaseManager
