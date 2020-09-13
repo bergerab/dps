@@ -1,2 +1,106 @@
 * DPS Services
 
+DPS Services is a collection of code that forms the backend servers of the DPS system.
+This includes code for the DPS Manager, DPS Database Manager, and for batch processing.
+
+** DPS Manager
+~DPS Manager~ is the primary server for the data processing system. It controls
+all metadata necessary for collecting signal data (system and device
+IDs), database connections, computations to perform, etc...
+** DPLib
+~DPLib~ is a library of data processing functions which can compute
+point-wise and windowed computations. The library can be used on
+batches of data to perform historical analysis of data, as well as
+perform stream processing (provided the stream is buffered into batches).
+
+~DPLib~ provides one abstraction which wraps a list of samples (absolute-time-bound
+values) called a ~DataSeries~. ~DataSeries~ objects are where all the
+computations take place. The interface to ~DataSeries~ is designed to
+feel native to Python 
+by overloading common operators. 
+
+For example, a (point-wise) power computation could be expressed as:
+#+BEGIN_SRC python
+I = DataSeries(...) 
+V = DataSeries(...)
+P = I * V
+#+END_SRC
+
+An averaging function (windowed) could be expressed as:
+#+BEGIN_SRC python
+V = DataSeries(...)
+window = V.time_window(timedelta(seconds=1), stride=timedelta(seconds=1))
+V_averaged = window.average()
+#+END_SRC
+That is, for every second of data, the average is computed over that
+second.
+
+There are a few builtin functions for specific computations. Such as
+THD:
+#+BEGIN_SRC python
+V = DataSeries(...)
+THD = V.thd(timedelta(seconds=2))
+#+END_SRC
+Which computes the total harmonic distortion (THD) of a voltage signal
+V over a 2 second window.
+
+*** MiniPy
+~MiniPy~ is a tiny language which is based off of Python. It uses the
+Python parser (ast.parse) to parse valid Python code, but provides
+slightly different semantics to the code. There are no variable definitions, no
+looping constructs, no branching (if-else). There are only values
+(numbers, strings) and builtin functions. It sounds like the language
+is feature-deprived, and it is, but that is on purpose.
+
+~MiniPy~ was created to allow for super-users to write basic
+computations via a web-server interface. Some security measures must
+be put into place to ensure these super-users cannot crash the system,
+or perform harmful computations (such as ~import os~ and calling
+subprocesses).
+
+The language also exists to rule out mistakes based on the casing of
+text. For that reason, all identifiers in ~MiniPy~ are insensitive to
+case. That means that ~Va~ is the same as ~VA~ which is the same as ~va~. 
+It was designed this way to avoid confusion caused by differing naming 
+conventions between the programmers and electrical engineers. For 
+example, it might be a convention in the electrical modeling software to have all
+uppercase names ~VA~, but in code to have title case ~Va~.
+
+The language has an environment it uses to lookup the value of
+identifiers during evaluation. This can be passed in as a parameter
+via Python. This means that you can make code that looks more natural
+in ~MiniPy~ than it does in regular Python. For example, to build off of
+the ~DPLib~ example, instead of having to include the boilerplate code
+in a power calculation:
+
+#+BEGIN_SRC python
+V = DataSeries(...)
+I = DataSeries(...)
+I * V
+#+END_SRC
+
+You can just say:
+
+#+BEGIN_SRC python
+I * V
+#+END_SRC
+
+And not have the user of ~MiniPy~ have to ever see what a ~DataSeries~
+object is. This is because when you execute ~MiniPy~ you can pass in ~I~
+and ~V~ in the environment. This could be done through Python hacking by
+calling ~exec~ with some values stored in Python's global environment,
+but that is not safe, because it gives the program access to the
+entire global environment. This is only significant in the domain
+which ~MiniPy~ was meant for which is providing safety to an unsafe web interface to
+Python programming.
+
+~MiniPy~ can perform some optimization on string literals too. 
+A feature called "string transformers" lets you define a function which
+takes a string literal, and optionally transformers it to any
+value. If the value is not ~None~, it will replace the value. For
+example, this way you can define a string literal like '1s' or '2'
+and a string transformer as ~lambda s: to_timedelta(s)~ which will
+convert '1s' to ~timedelta(seconds=1)~ and '2m' to
+~timedelta(minutes=2)~. This is an optimization because then your
+runtime code doesn't need to perform the string parsing to convert
+from string to timedelta, because it was already done.
