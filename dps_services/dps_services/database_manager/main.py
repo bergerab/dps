@@ -26,7 +26,7 @@ def make_app(AppDataStore, debug=False):
     def query(jo):
         return AppDataStore.query(jo)
 
-    @app.route(util.make_api_url('info'), methods=['GET'])    
+    @app.route('/', methods=['GET'])    
     def info():
         capabilities = []
         # Only support delete_dataset if in debug mode (because it is only for integration testing)

@@ -10,15 +10,15 @@ class APIClient:
         self.debug = self.server_info['debug']
 
     def info(self):
-        return self._GET('info')
+        return requests.get(self.url)
 
     def _make_url(self, endpoint):
         return self.url + 'api/v1/' + endpoint
 
-    def _POST(self, endpoint, jo={}):
+    def POST(self, endpoint, jo={}):
         return requests.post(self._make_url(endpoint), json=jo)
 
-    def _GET(self, endpoint, jo={}):
+    def GET(self, endpoint, jo={}):
         return requests.get(self._make_url(endpoint))
 
     def _validate_response(response):

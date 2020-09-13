@@ -62,7 +62,6 @@ def insert(dataset_name):
         'inserts': [
             {
                 'dataset': dataset_name,
-                
             }
         ]
     })

@@ -31,13 +31,51 @@ class DatabaseClient:
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-        # Caches for datasets and signals
-        self.datasets = self.query(Dataset).all()
+        # Keep caches for datasets and signals to avoid database lookups.
+        self.cache_datasets()
+        self.cache_signals()
+
+    def cache_signals(self):
         self.signals = self.query(Signal).all()
+
+    def cache_datasets(self):
+        self.datasets = self.query(Dataset).all()
+
+    def get_cached_signal(self, signal_name):
+        def lookup():
+            for signal in self.signals:
+                if signal.name == signal_name:
+                    return signal
+        signal = lookup()
+        if signal:
+            return signal
+        # If signal not found in cache, refresh the cache.
+        self.cache_signals()
+        signal = lookup()
+        if signal:
+            return signal
+        # If the signal is still not found, error.
+        raise Exception(f'Attempted to find signal "{signal_name}" in cache, but could not find it.')
+
+    def get_cached_dataset(self, dataset_name):
+        def lookup():
+            for dataset in self.datasets:
+                if dataset.name == dataset_name:
+                    return dataset
+        dataset = lookup()
+        if dataset:
+            return dataset
+        # If signal not found in cache, refresh the cache.
+        self.cache_datasets()
+        dataset = lookup()
+        if dataset:
+            return dataset
+        # If the signal is still not found, error.
+        raise Exception(f'Attempted to find dataset "{dataset_name}" in cache, but could not find it.')
 
     def get_dataset_by_name(self, dataset_name):
         for dataset in self.datasets:
-            if dataset.name.strip() == dataset_name:
+            if dataset.name == dataset_name:
                 return dataset
         return None
 
@@ -51,12 +89,15 @@ class DatabaseClient:
         dataset = self.query(Dataset).filter_by(name=dataset_name).first()
         if not dataset:
             return
-        signals = self.query(Signal).filter_by(dataset_id=dataset.id).all()
+        signals = self.query(Signal).filter_by(dataset_id=dataset.dataset_id).all()
         for signal in signals:
-            self.query(SignalData).filter_by(signal_id=signal.id).delete()
-            signal.delete()
-        dataset.delete()
+            self.query(SignalData).filter_by(signal_id=signal.signal_id).delete()
+        self.query(Signal).filter_by(dataset_id=dataset.dataset_id).delete()
+        self.session.delete(dataset)
         self.commit()
+        # Refresh the caches.
+        self.cache_datasets()
+        self.cache_signals()        
 
     def commit(self):
         self.session.commit()
@@ -65,7 +106,7 @@ class DatabaseClient:
         return self.session.query(cls)
 
     def add(self, obj):
-        # Not perfect - if commit fails, the cache doesn't rollback
+        # Not perfect - if commit fails, the cache doesn't rollback.
         if isinstance(obj, Dataset):
             self.datasets.append(obj)
         if isinstance(obj, Signal):
