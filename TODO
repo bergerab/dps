@@ -1,4 +1,3 @@
 * Allow for Protobuf for client/database manager
 * Integration tests for DBM and LabVIEW integration
 * Proper way of deploying Flask apps
-* Dispose of database connection properly in db.py

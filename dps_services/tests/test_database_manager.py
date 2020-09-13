@@ -359,7 +359,7 @@ class TestDatabaseManager(TestCase):
         result.set('AGGG8', 392)
         result.set('AG9', 899209)
         self.assertEqual(result.to_dict(), {
-            'results': [392, 899209],
+            'values': [392, 899209],
             'query': {
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
@@ -374,7 +374,7 @@ class TestDatabaseManager(TestCase):
         # No results
         result = dbm.AggregateQueryResult(query)
         self.assertEqual(result.to_dict(), {
-            'results': [0, 0],
+            'values': [0, 0],
             'query': {
                 'dataset': 'sampleag',
                 'signals': ['AGGG8', 'AG9'],
@@ -419,7 +419,7 @@ class TestDatabaseManager(TestCase):
         self.assertEqual(MockDataStore.query(query_json), {
             'results': [
                 {
-                    'results': [0, 1, 2],
+                    'values': [0, 1, 2],
                     'query': {
                         'dataset': 'somename',
                         'signals': ['va', 'vb', 'vc'],

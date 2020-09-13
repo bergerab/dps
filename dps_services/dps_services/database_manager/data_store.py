@@ -124,6 +124,6 @@ class AggregateQueryResult:
 
     def to_dict(self):
         return {
-            'results': list(self.results.values()),
+            'values': list(self.results.values()),
             'query': self.query.to_dict()
         }

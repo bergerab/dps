@@ -90,8 +90,10 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         dataset_id = self.dbc.get_cached_dataset(dataset_name).dataset_id
+        signal_ids = list(map(lambda x: self.dbc.get_cached_signal(x).signal_id, signal_names))        
         
         # Get the correct SQLAlchemy functions for each of the "aggregation" directives
+        # Complete list is: max, min, average, and count.
         f = None
         if aggregation == 'max':
             f = func.max
@@ -99,11 +101,15 @@ class TimescaleDBDataStore(dbm.DataStore):
             f = func.min
         elif aggregation == 'average':
             f = func.avg
+        elif aggregation == 'count':
+            f = func.count
         else:
             raise Exception(f'aggregate_signals was given an unsupported aggregation of "{aggregation}".')
 
-        with self.dbc.scope() as session:                
-            val = self.time_filter(session.query(f(SignalData.value)), interval, dataset_id).scalar()
+        with self.dbc.scope() as session:
+            for signal_id, signal_name in zip(signal_ids, signal_names):
+                signal_datas = session.query(f(SignalData.value)).filter(SignalData.signal_id == signal_id)
+                result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id).scalar())
 
     def time_filter(self, query, interval, dataset_id):
         return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end))
