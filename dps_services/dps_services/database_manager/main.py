@@ -36,12 +36,15 @@ def make_app(AppDataStore, debug=False):
             capabilities.append('fetch_signals')
         if AppDataStore.aggregate_signals is not DataStore.aggregate_signals:
             capabilities.append('aggregate_signals')
+        if AppDataStore.insert_signals is not DataStore.insert_signals:
+            capabilities.append('insert_signals')
         
         return {
-            'name': 'database_manager',
+            'type': 'database_manager',
             'version': '1.0.0',
             'protocols': ['application/json', 'application/protobuf'],
             'capabilities': capabilities,
+            'debug': debug,
         }
 
     return app
