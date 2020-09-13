@@ -57,21 +57,13 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def time_filter(self, query, interval):
         return query.filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end))
+
+    # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
+    def delete_dataset(self, dataset_name):
+        self.dbc.delete_dataset(dataset_name)
         
 def make_app():
-    app = dbm.make_app(TimescaleDBDataStore)
-
-    # For integration testing, expose an endpoint to clear all data.
-    if DEBUG:
-        @app.route(util.make_api_url('clear'), methods=['POST'])
-        @util.json_api        
-        def clear(jo):
-            dataset_name = jo['dataset_name']
-            dbc = DatabaseClient()
-            dbc.clear(dataset_name)
-            return True
-    
-    return app
+    return dbm.make_app(TimescaleDBDataStore, DEBUG)
 
 if __name__ == '__main__':
     make_app().run(debug=DEBUG, port=3001)

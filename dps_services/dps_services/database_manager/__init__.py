@@ -6,6 +6,10 @@ from .insert import parse_insert_json
 from .insert import load_insert_json
 from .insert import Insert
 
+from .delete import parse_delete_json
+from .delete import load_delete_json
+from .delete import Delete
+
 from .data_store import DataStore
 from .data_store import SignalQueryResult
 from .data_store import AggregateQueryResult

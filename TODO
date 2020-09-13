@@ -5,3 +5,4 @@
 * Proper way of deploying Flask apps
 * Clean up DatabaseClient after usage in UWM DBM?
 * Bundle integration tests with dps_services code (allow to be run with command)
+    * Integrate "clear" function into DBM

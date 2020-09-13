@@ -19,6 +19,7 @@ class MockDataStore(dbm.DataStore):
     def __init__(self):
         self.queries = []
         self.inserts = []
+        self.deletes = []
         self.counter = 0
 
     def next(self):
@@ -44,6 +45,9 @@ class MockDataStore(dbm.DataStore):
         for signal in signals:
             result.set(signal, self.next())
 
+    def delete_dataset(self, dataset_name):
+        self.deletes.append(dbm.Delete(dataset_name))
+        
 class TestDatabaseManager(TestCase):
     def test_interval_eq(self):
         self.assertEqual(dbm.Interval(1, 2),
@@ -225,6 +229,19 @@ class TestDatabaseManager(TestCase):
 }}
         ''')
 
+    def test_parse_delete_jsons(self):
+        self.assertEqual(dbm.parse_delete_json(f'''
+{{
+    "dataset": "somename"
+}}
+        '''), dbm.Delete('somename'))
+
+        with self.assertRaisesRegex(util.ValidationException, 'Request is missing required parameter "dataset".'):
+            dbm.parse_delete_json(f'''
+{{
+}}
+        ''')
+
     def test_data_store_execute_queries(self):
         ds = MockDataStore()
         queries = [dbm.Query('name1', ['s1', 's2', 'sb'], dbm.Interval(datetime1, datetime2))]
@@ -243,6 +260,13 @@ class TestDatabaseManager(TestCase):
         ds.execute_queries(queries)
         self.assertEqual(queries, ds.queries)
 
+    def test_data_store_execute_deletes(self):
+        ds = MockDataStore()
+        delete1 = dbm.Delete('name1')
+        delete2 = dbm.Delete('name2')        
+        ds.execute_delete(delete1)
+        ds.execute_delete(delete2)
+        self.assertEqual(ds.deletes, [delete1, delete2])
 
     def test_data_store_execute_inserts(self):
         ds = MockDataStore()

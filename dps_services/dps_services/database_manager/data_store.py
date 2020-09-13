@@ -2,6 +2,7 @@ import dps_services.util as util
 
 from .query import load_query_json
 from .insert import load_insert_json
+from .delete import load_delete_json
 
 class DataStore:
     def __init__(self, validate_inserts=False):
@@ -16,7 +17,7 @@ class DataStore:
     @classmethod
     def insert(DataStoreClass, insert_request):
         ds = DataStoreClass()
-        results = ds.execute_inserts(load_insert_json(insert_request))
+        ds.execute_inserts(load_insert_json(insert_request))
     
     @classmethod
     def query(DataStoreClass, query_request):
@@ -24,13 +25,18 @@ class DataStore:
         results = ds.execute_queries(load_query_json(query_request))
         return DataStore.to_results_response(results)
 
+    @classmethod
+    def delete(DataStoreClass, delete_request):
+        ds = DataStoreClass()
+        ds.execute_delete(load_delete_json(delete_request))
+
+    def execute_delete(self, delete):
+        self.delete_dataset(delete.dataset)
+
     def execute_inserts(self, inserts):
         for insert in inserts:
             self.insert_signals(insert.dataset, insert.signals, \
                         insert.samples, insert.times)
-    
-    def insert_signals(self, dataset, signals, samples, times):
-        raise Exception('DataStore.insert_signals not implemented.')
 
     def execute_queries(self, queries):
         '''
@@ -51,18 +57,30 @@ class DataStore:
                                    aggregation=query.aggregation)
             results.append(result)
         return results
+    
+    def insert_signals(self, dataset, signals, samples, times):
+        raise Exception('DataStore.insert_signals not implemented.')
 
-    def fetch_signals(self, result, dataset, signals, interval):
+    def fetch_signals(self, result, dataset_name, signal_names, interval):
         '''
         Writes the results of the query to the `SignalQueryResult` object (using `results.add(values, time)`)
         '''
         raise Exception('DataStore.fetch_signals not implemented.')
 
-    def aggregate_signals(self, result, dataset, signals, interval, aggregation):
+    def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         '''
         Writes the results of the query to the `AggregateQueryResult` object (using `results.set(signal_name, value)`)
         '''
         raise Exception('DataStore.aggregate_signals not implemented.')
+
+    def delete_dataset(self, dataset_name):
+        '''
+        Deletes a dataset, and all data that is associated with that dataset.
+
+        NOTE: Only implement this method if you wish to support the integration tests.
+              This method can be left unimplemented in production systems. It is only for testing purposes.
+        '''
+        raise Exception('DataStore.delete_dataset not implemented.')
 
 class SignalQueryResult:
     def __init__(self, query):

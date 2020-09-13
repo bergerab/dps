@@ -47,7 +47,7 @@ class DatabaseClient:
                 return signal
         return None
 
-    def clear(self, dataset_name):
+    def delete_dataset(self, dataset_name):
         dataset = self.query(Dataset).filter_by(name=dataset_name).first()
         if not dataset:
             return
