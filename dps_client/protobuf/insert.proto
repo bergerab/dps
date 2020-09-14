@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package dps;
+
+message Inserts {
+  required repeated Insert = 1;
+}
+
+message Insert {
+  required string dataset = 1;
+  required repeated string signals = 2;
+  required Samples samples = 3;
+  required google.protobuf.Timestamp times = 4;
+}
+
+message Samples {
+    repeated Batch batches=1;
+}
+
+message Batch {
+    repeated double value=2;
+}

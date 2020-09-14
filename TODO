@@ -1,3 +1,4 @@
 * Allow for Protobuf for client/database manager
-* Integration tests for DBM and LabVIEW integration
 * Proper way of deploying Flask apps
+    * https://hackersandslackers.com/flask-application-factory/
+    * https://flask.palletsprojects.com/en/1.1.x/tutorial/install/
