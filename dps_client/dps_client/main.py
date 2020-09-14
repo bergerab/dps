@@ -3,6 +3,13 @@ import requests
 
 from datetime import datetime
 
+DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'
+'''
+The datetime format used in JSON requests.
+
+Example: 2020-06-30 03:54:45.175489 means June 30th, 2020 at 3:54:45AM and 175489 microseconds.
+'''
+
 class Client:
     '''A connection to the DPS Manager.'''
     def __init__(self, url, dataset):
@@ -10,10 +17,13 @@ class Client:
         self.dataset = dataset
         self.batches = []
 
-    def make_batch(self, time=datetime.utcnow()):
+    def make_batch(self, time=None):
+        
         '''Create a :class:`BatchClient` for sending multiple signal values
         at the same time (more efficient and organizes the time values for ease of processing).
         '''
+        if time is None:
+            time = datetime.utcnow()        
         batch = BatchClient(self, time)
         self.batches.append(batch)
         return batch
@@ -42,7 +52,7 @@ class Client:
 
         times = []
         for batch in self.batches:
-            times.append(str(batch.time))
+            times.append(datetime.strftime(batch.time, DATETIME_FORMAT_STRING))
 
         # Reset batch clients
         self.batches = []
@@ -55,9 +65,11 @@ class Client:
         }
 
     def send(self):
+        o = self._flush()
+        print('FLUSH ', o)
         return requests.post(self.url + 'insert', json={
             'inserts': [
-                self._flush()
+                o
             ]
         })
 
@@ -73,6 +85,7 @@ class BatchClient:
 def _normalize_url(url):
     if url[-1] != '/':
         url += '/'
+    url += 'api/v1/'
     return url
     
 def connect(url, dataset):

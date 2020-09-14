@@ -40,7 +40,7 @@ def make_app(AppDataStore, debug=False):
             capabilities.append('insert_signals')
         
         return {
-            'type': 'database_manager',
+            'type': 'database-manager',
             'version': '1.0.0',
             'protocols': ['application/json', 'application/protobuf'],
             'capabilities': capabilities,

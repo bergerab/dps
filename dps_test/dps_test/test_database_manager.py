@@ -77,7 +77,6 @@ def make_test_case(client):
             })
             
             query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4)
-            print(query_response.json())
             self.validate_status_code(query_response)                        
             self.assertEqual(query_response.json(), {
                 'results': [
