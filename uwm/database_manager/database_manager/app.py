@@ -8,26 +8,25 @@ import dps_services.util as util
 from db import *
 from config import DEBUG
 
-class TimescaleDBDataStore(dbm.DataStore):
-    def __init__(self):
-        self.dbc = DatabaseClient()
+dbc = None
 
+class TimescaleDBDataStore(dbm.DataStore):
     def insert_signals(self, dataset_name, signal_names, batches, times):
-        with self.dbc.scope() as session:
-            dataset = self.dbc.get_dataset_by_name(dataset_name)
+        with dbc.scope() as session:
+            dataset = dbc.get_dataset_by_name(dataset_name)
             # If the dataset, doesn't exist in the database, create it and continue.
             if dataset is None:
                 dataset = Dataset(name=dataset_name)
-                self.dbc.add(session, dataset)
+                dbc.add(session, dataset)
                 session.commit()
 
             signals = []
             for signal_name in signal_names:
-                signal = self.dbc.get_signal_by_name_and_dataset_id(signal_name, dataset.dataset_id)
+                signal = dbc.get_signal_by_name_and_dataset_id(signal_name, dataset.dataset_id)
                 # If any of the signals, don't exist in the database, create it and continue.            
                 if signal is None:
                     signal = Signal(dataset_id=dataset.dataset_id, name=signal_name)
-                    self.dbc.add(session, signal)
+                    dbc.add(session, signal)
                     session.commit()
                 signals.append(signal)
 
@@ -38,17 +37,17 @@ class TimescaleDBDataStore(dbm.DataStore):
                 
                     # Add the actual signal_data to the database for each (one signal_data for each sample).
                     signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=time)
-                    self.dbc.add(session, signal_data)
+                    dbc.add(session, signal_data)
             session.commit()
             session.expunge_all()
 
     def fetch_signals(self, result, dataset_name, signal_names, interval):
-        dataset_id = self.dbc.get_cached_dataset(dataset_name).dataset_id
-        signal_ids = list(map(lambda x: self.dbc.get_cached_signal(x).signal_id, signal_names))
+        dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+        signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))
 
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
-        with self.dbc.scope() as session:        
+        with dbc.scope() as session:        
             signal_datas = self.time_filter(session.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc()).all()
 
         if not signal_datas:
@@ -89,8 +88,8 @@ class TimescaleDBDataStore(dbm.DataStore):
                 buffer.append(signal_data)
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
-        dataset_id = self.dbc.get_cached_dataset(dataset_name).dataset_id
-        signal_ids = list(map(lambda x: self.dbc.get_cached_signal(x).signal_id, signal_names))        
+        dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+        signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))        
         
         # Get the correct SQLAlchemy functions for each of the "aggregation" directives
         # Complete list is: max, min, average, and count.
@@ -106,7 +105,7 @@ class TimescaleDBDataStore(dbm.DataStore):
         else:
             raise Exception(f'aggregate_signals was given an unsupported aggregation of "{aggregation}".')
 
-        with self.dbc.scope() as session:
+        with dbc.scope() as session:
             for signal_id, signal_name in zip(signal_ids, signal_names):
                 signal_datas = session.query(f(SignalData.value)).filter(SignalData.signal_id == signal_id)
                 result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id).scalar())
@@ -116,10 +115,15 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):
-        self.dbc.delete_dataset(dataset_name)
+        dbc.delete_dataset(dataset_name)
         
 def make_app():
+    global dbc
+    dbc = DatabaseClient()
     return dbm.make_app(TimescaleDBDataStore, DEBUG)
 
 if __name__ == '__main__':
-    make_app().run(debug=DEBUG, port=3001)
+    try:
+        make_app().run(debug=DEBUG, port=3001)
+    finally:
+        dbc.engine.dispose()

@@ -29,8 +29,8 @@ class SignalData(Base):
 
 class DatabaseClient:
     def __init__(self):
-        engine = create_engine(CONNECTION)
-        self.Session = sessionmaker(bind=engine)
+        self.engine = create_engine(CONNECTION)
+        self.Session = sessionmaker(bind=self.engine)
 
         # Keep caches for datasets and signals to avoid database lookups.
         self.cache()

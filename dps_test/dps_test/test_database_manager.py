@@ -61,7 +61,7 @@ def make_test_case(client):
             self.assertEqual(response.status_code, 200)
 
         def delete_dataset(self, dataset_name):
-            delete_response = delete_dataset(DS1)
+            delete_response = delete_dataset(dataset_name)
             self.validate_status_code(delete_response)
             self.assertEqual(delete_response.json(), {
                 'message': 'OK',
@@ -102,20 +102,20 @@ def make_test_case(client):
             self.delete_dataset(DS1)
             
             insert_response = insert(DS1, ['va', 'vb', 'vc'], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [datetime_string2, datetime_string3])
-            self.assertEqual(insert_response.status_code, 200)                        
+            self.validate_status_code(insert_response)                                                
             self.assertEqual(insert_response.json(), {
                 'message': 'OK',
             })
             
             insert_response = insert(DS1, ['sig1', 'sig2'], [[3.2, 9.324], [4.293, 3.21], [5.3, 2.1], [0.32, 3.11]],
-                                     [datetime_string1, datetime_string2, datetime_string3, datetime_string4])            
-            self.assertEqual(insert_response.status_code, 200)                        
+                                     [datetime_string1, datetime_string2, datetime_string3, datetime_string4])
+            self.validate_status_code(insert_response)                                                            
             self.assertEqual(insert_response.json(), {
                 'message': 'OK',
             })
             
             query_response = query(DS1, ['va', 'vb', 'sig1', 'sig2'], datetime_string2, datetime_string5)
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)                                                                        
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
@@ -139,14 +139,14 @@ def make_test_case(client):
             self.delete_dataset(DS1)
             
             insert_response = insert(DS1, ['va', 'vb', 'vc'], [[1.0, 12.0, 3.0], [4.0, 5.0, 6.0]], [datetime_string2, datetime_string3])
-            self.assertEqual(insert_response.status_code, 200)                        
+            self.validate_status_code(insert_response)                                                                                    
             self.assertEqual(insert_response.json(), {
                 'message': 'OK',
             })
 
             # Test max aggregation
             query_response = query(DS1, ['va', 'vb'], datetime_string2, datetime_string5, aggregation='max')
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)                                                                                                
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
@@ -166,7 +166,7 @@ def make_test_case(client):
 
             # Test min aggregation
             query_response = query(DS1, ['vc'], datetime_string1, datetime_string4, aggregation='min')
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)                                                                                                            
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
@@ -186,7 +186,7 @@ def make_test_case(client):
 
             # Test count aggregation
             query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4, aggregation='count')
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)                                                                                                                        
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
@@ -206,7 +206,7 @@ def make_test_case(client):
 
             # Test average aggregation
             query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4, aggregation='average')
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
@@ -226,7 +226,7 @@ def make_test_case(client):
 
             # Test max aggregation with filter
             query_response = query(DS1, ['vc'], datetime_string2, datetime_string2, aggregation='max')
-            self.assertEqual(query_response.status_code, 200)
+            self.validate_status_code(query_response)            
             self.assertEqual(query_response.json(), {
                 'results': [
                     {
