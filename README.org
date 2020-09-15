@@ -1,42 +1,36 @@
 * Data Processing System (DPS)
 
 A system for doing point-wise and windowed calculations on data
-collected from external systems. 
+collected from external systems. There are several components to the system.
 
-#+html: <p align="center"><img src="img/architecture.png" /></p>
+First there is the DPS UI which is a user interface for creating batch processes.
+The UI is controlled via a backend server called DPS Manager. This stores metadata
+about the system (which batch processes are running, their status, etc...). This backend
+is currently under development.
 
-The architecture includes a primary
-server called the ~DPS Manager~ where devices and signals are
-configured. The data processing computations are expressed in a custom
-language in the user interface of ~DPS Manager~. Devices send signal values into
-DPS via the API ~DPS Client~. Then, ~DPS Manager~ processes them via its
-~DPS Worker~ server cluster. The processed data is then visualized in
-the ~DPS UI~ (the user interface for the system).
+There is the DPS Database Manager which is a micro-service which provides an interface between
+time-series databases and the rest of the system. It provides functions for fetching signal data, 
+and inserting signal data.
 
-This repository includes several isolated modules. All of the source
-code is found in the ~./src~ directory. Code documentation is found in
-~./docs~. Images relevant to README files is found in ~./img~. Below is a
-overview of the various modules in the source code directory:
+The DPS Manager and DPS Database Manager are found in the ~dps_services~ directory.
 
-First there is ~dplib~ which implements a library for
-expressing data processing computations. Then, there is ~minipy~, a
-small domain specific language which can be intergrated with ~dplib~ to
-allow for administrators do express data processing computations in a
-safe way. This is the language exposed in the ~DPS Manager~ UI when
-specifying data processing computations.
+There is a client API for sending data to a DPS Manager in the ~dps_client~ directory.
 
-Then, there is ~dps_manager~ which is the system's primary server. It holds configuration
-for the system such as inputs and constants, controls different
-clusters, is the target for the ~dps_client~. The ~dps_manager~ server
-uses worker servers found in ~dps_worker~ to perform data processing
-tasks. 
+There is a Python package for running integration tests on the system in the ~dps_test~ directory.
 
-The ~dps_client~ is a client API for sending signal data to the system,
-which connects to the ~dps_manager~, and sends signal data to a
-~dps_worker~ where it is then processed and stored in a database
-(governed by the configuration some administator setup in the
-~dps_manager~).
+UWM specific implementations are in the ~uwm~ directory. This includes an implementation of a 
+DPS Database Manager, and a server for integrating LabVIEW with the system.
 
-Each module in this project has its own ~README.org~ file which serves
-as the documentation. The entire project will have a documentation
-page of its own in ~./docs~, when the project is complete.
+KPI computations are implemented in the ~kpi-stream~ directory. All of the KPIs are found in ~kpi-stream/src/kpi.py~.
+This folder includes Typhoon models for simulating electrical systems (in the ~typhoon~ directory), and Grafana dashboards
+in the ~grafana~ directory. There is a web-server included in the ~src~ directory for starting Typhoon simulations, KPI 
+stream processing, and running batch processes. This web-server was the first PoC of the DPS UI, and will no longer be used; 
+however, the code remains here just in case.
+
+All directories (Python packages) have unit tests that verify the implementation is correct. They can be run by calling:
+
+#+BEGIN_SRC shell
+python3 setup.py test
+#+END_SRC
+
+In a directory that has a ~setup.py~ file.
