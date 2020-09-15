@@ -1,0 +1,3 @@
+flask
+yattag
+influxdb<5.3.0
