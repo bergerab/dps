@@ -29,9 +29,9 @@ def ingest():
     if request.method == 'GET':
         data = request.args.get('data')
     else:
-        data = request.data
+        data = request.data.decode()
 
-    data = data.decode().split(';')
+    data = data.split(';')
     device_name = data[0]
     signal_sample_pairs = data[1:]
         
@@ -50,6 +50,8 @@ def ingest():
         print('SENDING')
         response = client.send()
         print(response)
+        if response.status_code is not 500:
+            print(response.text)
 
     return 'OK'
 
