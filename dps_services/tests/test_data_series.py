@@ -6,14 +6,19 @@ import numpy as np
 from dplib import DataSeries
 
 def generate_sine_wave(t0=0, periods=2, offset=0.0, dt=1e-5, amplitude=2, base_harmonic=40):
+    '''
+    Generate discrete samples of a pure sine wave.
+    '''
     cycles = 0.025*periods
     N = int((cycles-t0)/dt)
     time = np.linspace(0.0, cycles, N)
     return [time, amplitude*np.sin(2.0*np.pi*base_harmonic*time) + offset]
 
 def plot_wave(time, wave):
-    # This code is not used, it is included for interactive testing
-    # Using this function requires installing matplotlib
+    '''
+    This code is not used, it is included for interactive testing
+    Using this function requires installing matplotlib
+    '''
     import matplotlib.pyplot as plot
     plot.plot(time, wave)
     plot.title('Wave')
@@ -24,6 +29,10 @@ def plot_wave(time, wave):
     plot.show()
 
 def thd(wave):
+    '''
+    An unused THD calculation I found online.
+    I interactively plotted this to compare it to the results of ours.
+    '''
     abs_yf = np.abs(np.fft.fft(wave))
     abs_data = abs_yf[1:int(len(abs_yf)/2)]
     sq_sum=0.0

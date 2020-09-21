@@ -1,4 +1,5 @@
 import re
+import numbers
 from datetime import timedelta
 
 from .minipy import MiniPy
@@ -26,12 +27,17 @@ class DPL:
         })
         self.mpy.add_string_transformer(parse_time)        
         self.ast = None
+        self.compiled_ast = None
 
     def parse(self, text):
         '''
         Parses the text to prepare it for evaluation.
         '''
         self.ast = self.mpy.parse(text)
+
+    def compile(self, text):
+        self.parse(text)
+        self.compiled_ast = self.ast.compile()
 
     def get_windows(self):
         self.require_ast()
@@ -47,7 +53,11 @@ class DPL:
         Executes the last parsed text.
         '''
         self.require_ast()
-        return self.ast.compile().run(env)
+        # If self.compile() has not been called, compile now.
+        # Otherwise, use same compiled AST as before.
+        if self.compiled_ast is None:
+            self.compiled_ast = self.ast.compile()
+        return self.compiled_ast.run(env)
 
     def require_ast(self):
         if not self.ast:

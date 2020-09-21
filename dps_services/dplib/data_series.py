@@ -56,6 +56,23 @@ class DataSeries:
             ds.add(x, start_time + (delta_time * i))
         return ds
 
+    @staticmethod
+    def from_df(df, column, time_column='Time'):
+        '''
+        Create a DataSeries from a Pandas DataFrame column.
+        '''
+        if column not in df:
+            raise Exception(f'DataFrame column "{column}" does not exist.')
+        if time_column not in df:
+            raise Exception(f'DataFrame time column "{time_column}" does not exist.')
+        if df.dtypes[time_column] is not datetime:
+            raise Exception(f'DataFrame time column "{time_column}" must be a datetime, not a {df.dtypes[time_column]}.')
+            
+        ds = DataSeries()
+        for i, row in df.iterrows():
+            ds.add(row[column], row[time_column])
+        return ds
+
     def add_datapoint(self, datapoint):
         self.datapoints.append(datapoint)
 
