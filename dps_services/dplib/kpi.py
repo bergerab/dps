@@ -1,24 +1,50 @@
 import numbers
 
-from .dpl import DPL
+import pandas as pd
+
+from .dpl import DPL, DataSeries
+
+class MappedKPI:
+    '''
+    A KPI who's KPI input values have been mapped to a DataFrame's column names.
+    '''
+    def __init__(self, name, env, dpl, time_column):
+        self.name = name
+        self.env = env
+        self.dpl = dpl
+        self.time_column = time_column
+
+    def run(self):
+        ds = self.dpl.run(self.env)
+        return self._dataseries_to_dataframe(ds)
+
+    def _dataseries_to_dataframe(self, ds):
+        return pd.DataFrame(data={
+            self.name: ds.to_list(),
+            self.time_column: ds.get_times(),
+        })
 
 class KPI:
     '''
-    
+    A KPI computation.
     '''
     def __init__(self, code):
         self.code = code
         self.dpl = DPL()
         self.dpl.compile(code)
 
-    def run(self, df, mapping=None, time_column='Time'):
+    def run(self, name, df, mapping={}, time_column='Time'):
         '''
-        
+        Create a mapping from KPI inputs to DataFrame column names, then execute the KPI immediately.
         '''
-        env = self._make_environment_from_dataframe_mapping(df, mapping)
-        return self.run(env)
+        mapped_kpi = self.map(name, df, mapping, time_column)
+        return mapped_kpi.run()
 
-    def _make_environment_from_dataframe_mapping(self, df, mapping=None, time_column='Time'):
+    def map(self, name, df, mapping={}, time_column='Time'):
+        env = self._make_environment_from_dataframe_mapping(df, mapping, time_column)
+        return MappedKPI(name, env, self.dpl, time_column)
+
+    def _make_environment_from_dataframe_mapping(self, df, mapping={}, time_column='Time'):
         '''
         Creates an environment to use with MiniPy from a Pandas DataFrame.
 
@@ -53,22 +79,22 @@ class KPI:
         
         env = {}
 
-        identifiers = self.ast.get_identifiers()
+        identifiers = self.dpl.ast.get_case_sensitive_identifier_names()
         for identifier in identifiers:
             if identifier not in mapping:
                 if identifier not in df:
                     errors.append(f'Input DataFrame has no mapping for identifier: "{identifier}".')
                 else:
-                    env[identifier] = identifier
+                    env[identifier] = DataSeries.from_df(df, identifier, time_column)
             
         for key, value in mapping.items():
             if isinstance(value, numbers.Number):
                 env[key] = value
             elif isinstance(value, str):
                 if value not in df:
-                    errors.append(f'Input DataFrame has column named "{value}" (when attempting to map from {key} to {value}).')
+                    errors.append(f'Input DataFrame has no column named "{value}" (when attempting to map from "{key}" to "{value}").')
                 else:
-                    env[key] = df[value]
+                    env[key] = DataSeries.from_df(df, value, time_column)
             else:
                 errors.append(f'Received invalid type in mapping {type(value)}')
 

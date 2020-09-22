@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pandas.api.types import is_datetime64_any_dtype as is_datetime
 
 import numpy as np
 
@@ -38,19 +39,36 @@ class DataSeries:
         self.datapoints = [] if not datapoints else datapoints
 
     def add(self, value, time):
+        '''
+        Adds a value/time pair to the DataSeries (must be added in monotonically increasing order).
+        '''
         self.datapoints.append(Datapoint(value, time))
 
     def map(self, f):
+        '''
+        Maps a function over the values of the DataSeries.
+        '''
         ds = DataSeries()
         for datapoint in self.datapoints:
             ds.add(f(datapoint.value), datapoint.time)
         return ds
 
     def to_list(self):
+        '''
+        Returns all values from the DataSeries (discards the time information).
+        '''
         return list(map(lambda x: x.value, self.datapoints))
+
+    def get_times(self):
+        return list(map(lambda x: x.time, self.datapoints))
 
     @staticmethod
     def from_list(xs, start_time=datetime.now(), delta_time=timedelta(seconds=1)):
+        '''
+        Creates a DataSeries from a list of values, a `start_time` which indicates when the 
+        first sample was taken, and a `delta_time` which indicates how much time passes between
+        each sample in the list.
+        '''
         ds = DataSeries()
         for i, x in enumerate(xs):
             ds.add(x, start_time + (delta_time * i))
@@ -65,8 +83,6 @@ class DataSeries:
             raise Exception(f'DataFrame column "{column}" does not exist.')
         if time_column not in df:
             raise Exception(f'DataFrame time column "{time_column}" does not exist.')
-        if df.dtypes[time_column] is not datetime:
-            raise Exception(f'DataFrame time column "{time_column}" must be a datetime, not a {df.dtypes[time_column]}.')
             
         ds = DataSeries()
         for i, row in df.iterrows():

@@ -95,12 +95,16 @@ class Expression:
         '''
         return []
 
+    def get_case_sensitive_identifier_names(self):
+        return list(map(lambda x: x.original_name, self.get_identifiers()))
+
     def get_sexprs(self):
         return []
 
 class Identifier(Expression):
     def __init__(self, name):
-        self.name = name
+        self.name = name.upper() # The case insensitive name
+        self.original_name = name # The case sensitive name
 
     def compile(self):
         return Reader(lambda env: env.lookup(self.name))
@@ -208,8 +212,7 @@ class MiniPyVisitor(ast.NodeVisitor):
         return self.visit(node.value)
 
     def visit_Name(self, node):
-        name = node.id.upper()
-        return Identifier(name)
+        return Identifier(node.id)
 
     def visit_UnaryOp(self, node):
         op = node.op
