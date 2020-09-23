@@ -42,26 +42,21 @@ The result of multiplying Voltage and Current from DF1 and DF2.
 
 class TestKPI(TestCase):
     def test_identity_kpi(self):
-        '''Test a KPI that does a NOOP.
-        '''
+        '''Test a KPI that does a NOOP.'''
         df = ID_KPI.run('Identity', DF1, {
             'x': 'Voltage',
         })
         self.assertTrue(df.equals(DF1[['Voltage', 'Time']].rename(columns={ 'Voltage': 'Identity' })))
 
     def test_default_mappings(self):
-        '''The default mappings should match the symbols used in the KPI computation.
-        '''
+        '''The default mappings should match the symbols used in the KPI computation.'''
         df = POWER_KPI.run('Power', DF1)
         self.assertTrue(df.equals(DF_POWER))
 
-    # def test_mappings(self):
-    #     '''The input DataFrame should be able to map its input column names.
-    #     '''
-    #     df = POWER_KPI.run('Power', DF2, {
-    #         'Voltage': 'volts',
-    #         'Current': 'amps',
-    #     }, time_column='my_time')
-    #     self.assertTrue(df.equals(DF_POWER))
-
-    
+    def test_mappings(self):
+        '''The input DataFrame should be able to map its input column names (including the time column name).'''
+        df = POWER_KPI.run('Power', DF2, {
+            'Voltage': 'volts',
+            'Current': 'amps',
+        }, time_column='my_time').rename(columns={ 'my_time': 'Time' })
+        self.assertTrue(df.equals(DF_POWER))

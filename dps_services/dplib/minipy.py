@@ -132,10 +132,11 @@ class SExpr(Expression):
         self.builtins = builtins
 
     def compile(self):
-        values = map(Expression.compile, self.exprs)
+        values = list(map(Expression.compile, self.exprs))
         def get_value(env):
             f = self.builtins[self.name.upper()]
-            return f(*list(map(lambda value: value.run(env), values)))
+            xs = list(map(lambda value: value.run(env), values))
+            return f(*xs)
 
         return Reader(get_value)
 

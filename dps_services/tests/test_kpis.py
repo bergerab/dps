@@ -16,4 +16,5 @@ DF1 = pd.DataFrame(data={
 class TestKPIs(TestCase):
     def test_power(self):
         '''Tests a power KPI'''
-        POWER.run('Power', DF1)
+        df = POWER.run('Power', DF1)
+        self.assertTrue(df['Power'].equals(DF1['Voltage'] * DF1['Current']))

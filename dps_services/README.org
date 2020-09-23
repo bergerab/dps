@@ -44,6 +44,22 @@ THD = V.thd(timedelta(seconds=2))
 Which computes the total harmonic distortion (THD) of a voltage signal
 V over a 2 second window.
 
+*** Algorithm for KPI computations
+Special care is needed when processing KPI computations via DPL. Here is a power computation:
+
+POWER = KPI('Voltage * Current')
+
+This is easy to compute on its own, but when there are multiple KPIs involved which rely on each other, a dataflow graph must be made to track the connection between KPIs:
+
+POWER = KPI('Voltage * Current')
+LOAD = KPI('Power / MaxPower')
+THD_V = KPI('thd(Voltage)')
+THD_AT_50_LOAD = KPI('THD_V if LOAD == 50 else 0')
+
+The dataflow graph will organize the KPIs so we know which KPI to compute first, then second, etc... In the example above, we must compute POWER, then THD_V, then LOAD, then THD_AT_50_LOAD.
+
+The ordering of the statements in Python doesn't matter (POWER could be defined after LOAD), so we must impose the ordering based off of the relationships between the symbols.
+
 *** MiniPy
 ~MiniPy~ is a tiny language which is based off of Python. It uses the
 Python parser (ast.parse) to parse valid Python code, but provides
