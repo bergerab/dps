@@ -42,7 +42,7 @@ class BatchProcess:
         self._connect_graph()
         order = self._get_topological_ordering()
 
-        kpis = pd.DataFrame(data={ time_column: [] })
+        kpis = pd.DataFrame()
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
@@ -50,15 +50,11 @@ class BatchProcess:
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
-            kpi_df = kpi.run(kpi_name, df, mapping, include_time=False)
-            kpis.append(kpi_df[kpi_name])
-            print(kpis)
-#            print(kpis + kpi_df)
-            
+            kpi_df = kpi.run(kpi_name, df.join(kpis), mapping, include_time=False)
+            kpis = kpi_df.join(kpis)            
 
-        print(kpis)
         # Return a DataFrame of only the results
-        return None
+        return kpis.join(df[time_column])
 
 class Graph:
     def __init__(self):

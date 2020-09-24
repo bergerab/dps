@@ -1,5 +1,6 @@
 from unittest import TestCase
 from datetime import datetime, timedelta
+from pandas._testing import assert_frame_equal
 import copy
 
 import pandas as pd
@@ -12,6 +13,14 @@ DF1 = pd.DataFrame(data={
     'Voltage': [1.23, 5.32, 8.19],
     'Current': [0.32, -3.2, 4.2555],
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+})
+
+
+DF2 = pd.DataFrame(data={
+    'Voltage': [1, 2, 3, 4, 5],
+    'Current': [3, 4, 5, 6, 7],
+    'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
+                  NOW + timedelta(seconds=3), NOW + timedelta(seconds=4)],
 })
 
 def make_graph_sut():
@@ -39,6 +48,41 @@ def normalize_listdict(d):
         del d[key]
 
 class TestBatchProcess(TestCase):
+    def test_batch_process_dependent_kpis(self):
+        bp = dplib.BatchProcess() \
+            .add('Power', dplib.POWER, {
+                'Voltage': 'Voltage',
+                'Current': 'Current',
+            }) \
+            .add('Load %', dplib.LOAD, {
+                'CurrentValue': 'Power',
+                'MaxValue': 35,
+            }) \
+            .add('Power at 50% Load', dplib.AT_LOAD, {
+                'Load': 'Load %',
+                'Value': 'Power',
+                'LoadLowerBound': 0.4,  
+                'LoadUpperBound': 0.6,
+            }) \
+            .add('Power above 50% Load', dplib.AT_LOAD, {
+                'Load': 'Load %',
+                'Value': 'Power',
+                'LoadLowerBound': 0.5,  
+                'LoadUpperBound': 1.0,
+            })
+
+        expected_result = pd.DataFrame(data={
+            'Power': [1*3, 2*4, 3*5, 4*6, 5*7],
+            'Load %': [1*3/35, 2*4/35, 3*5/35, 4*6/35, 5*7/35],
+            'Power at 50% Load': [0, 0, 3*5, 0, 0],
+            'Power above 50% Load': [0, 0, 0, 4*6, 5*7],            
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
+                          NOW + timedelta(seconds=3), NOW + timedelta(seconds=4)],
+        })
+            
+        result = bp.run(DF2)
+        assert_frame_equal(result, expected_result, check_like=True)
+
     def test_batch_process_basic(self):
         bp = dplib.BatchProcess() \
             .add('Power', dplib.POWER, {
@@ -47,10 +91,16 @@ class TestBatchProcess(TestCase):
             }) \
             .add('MyVoltage', dplib.KPI('X'), {
                 'X': 'Voltage',
-            }) \
+            })
+
+        expected_result = pd.DataFrame(data={
+            'MyVoltage': [1.23, 5.32, 8.19],
+            'Power': [0.32 * 1.23, -3.2 * 5.32, 4.2555 * 8.19],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+        })
             
-        print(bp.run(DF1))
-        self.assertFalse(True)
+        result = bp.run(DF1)
+        assert_frame_equal(result, expected_result, check_like=True)
     
     def test_batch_process_graph_topological_order(self):
         bp = dplib.BatchProcess() \

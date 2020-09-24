@@ -3,6 +3,12 @@ import requests
 
 from datetime import datetime
 
+from google.protobuf.timestamp_pb2 import Timestamp
+from google.protobuf.json_format import MessageToJson
+
+from .insert_pb2 import InsertRequest, Samples, Batch
+
+
 DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'
 '''
 The datetime format used in JSON requests.
@@ -11,11 +17,16 @@ Example: 2020-06-30 03:54:45.175489 means June 30th, 2020 at 3:54:45AM and 17548
 '''
 
 class Client:
-    '''A connection to the DPS Manager.'''
-    def __init__(self, url, dataset):
+    '''
+    A connection to the DPS Database Manager.
+
+    Protocol can be either "protobuf" or "json"
+    '''
+    def __init__(self, url, dataset, protocol='protobuf'):
         self.url = _normalize_url(url)
         self.dataset = dataset
         self.batches = []
+        self.protocol = protocol
 
     def make_batch(self, time=None):
         
@@ -28,7 +39,7 @@ class Client:
         self.batches.append(batch)
         return batch
 
-    def _flush(self):
+    def _flush(self, datetimes_to_string=True):
         '''
         Collects all batch requests into a request dictionary.
         '''
@@ -50,9 +61,13 @@ class Client:
                     batch.append(0.0)
             batches.append(batch)
 
+
         times = []
         for batch in self.batches:
-            times.append(datetime.strftime(batch.time, DATETIME_FORMAT_STRING))
+            if datetimes_to_string:                
+                times.append(datetime.strftime(batch.time, DATETIME_FORMAT_STRING))
+            else:
+                times.append(batch.time)
 
         # Reset batch clients
         self.batches = []
@@ -65,13 +80,42 @@ class Client:
         }
 
     def send(self):
-        o = self._flush()
-        print('FLUSH ', o)
-        return requests.post(self.url + 'insert', json={
-            'inserts': [
-                o
-            ]
-        })
+
+        url = self.url + 'insert'
+        
+        if self.protocol == 'protobuf':
+            o = self._flush(False)
+            print('FLUSH ', o)
+            inserts_request = InsertRequest()
+            insert_request = inserts_request.inserts.add()
+            insert_request.dataset = self.dataset
+
+            insert_request.signals.extend(o['signals'])
+
+            for time in o['times']:
+                ts = Timestamp()
+                ts.FromDatetime(time)
+                insert_request.times.append(ts)
+
+            samples_request = insert_request.samples.add()
+            for batch in o['samples']:
+                batch_request = samples_request.batches.add()
+                batch_request.value.extend(batch)
+
+            pb_string = inserts_request.SerializeToString()
+            print(pb_string)
+            print(MessageToJson(inserts_request))
+            return requests.post(url, data=pb_string)
+        elif self.protocol == 'json':
+            o = self._flush()
+            print('FLUSH ', o)            
+            return requests.post(url, json={
+                'inserts': [
+                    o
+                ]
+            })
+        else:
+            raise Exception(f'Invalid DPS Client protocol "{self.protocol}"')
 
 class BatchClient:
     def __init__(self, client, time):

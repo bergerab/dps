@@ -69,9 +69,24 @@ class TestDataSeries(TestCase):
         ds.add(1.3, time + timedelta(seconds=0.1))
         ds.add(2, time + timedelta(seconds=1.1))
         dss = ds.time_window(timedelta(seconds=1))
-        self.assertEqual(dss.average().to_list()[0], sum([1, 1.3])/2)
-        self.assertEqual(dss.average().to_list()[1], 2)
-        self.assertEqual(len(dss.average().to_list()), 2)
+        avg1 = (1 + 1.3)/2
+        avg2 = 2/1
+        self.assertEqual(dss.average().to_list(), [avg1, avg1, avg2])
+
+    def test_comparison_overload(self):
+        ds = DataSeries.from_list([1,2,3,4,5,6,7,8])
+        self.assertEqual(list(ds<4), [True, True, True, False, False, False, False, False])
+        self.assertEqual(list(ds>4), [False, False, False, False, True, True, True, True])
+        self.assertEqual(list(ds>=4), [False, False, False, True, True, True, True, True])
+        self.assertEqual(list(ds<=4), [True, True, True, True, False, False, False, False])
+
+    def test_bool_op(self):
+        ds1 = DataSeries.from_list([True, False, True, False])
+        ds2 = DataSeries.from_list([True, False, False, True])        
+        self.assertEqual(list(ds1._and(ds2)), [True, False, False, False])
+        ds1 = DataSeries.from_list([True, False, True, False])
+        ds2 = DataSeries.from_list([True, False, False, True])        
+        self.assertEqual(list(ds1._or(ds2)), [True, False, True, True])
 
     def test_pointwise_computations_with_constants(self):
         a = 7

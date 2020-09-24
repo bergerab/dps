@@ -24,6 +24,8 @@ class DPL:
             'window': window,
             'average': average,
             'if': if_exp,
+            'and': lambda x, y: x._and(y),
+            'or': lambda x, y: x._or(y),
         })
         self.mpy.add_string_transformer(parse_time)        
         self.ast = None

@@ -127,21 +127,28 @@ class DataSeries:
             
         return windows
 
-    def when(self, body_series, orelse_series):
+    def when(self, body, orelse):
         '''
-        Maps True values in self to body_series values and False values to orelse_series values.
-        Requires that test_series, body_series, and orelse_series times match exactly, or else will produce incorrect results.
+        Maps True values in self to body values and False values to orelse_series values.
+        Requires that test_series, body, and orelse times match exactly, or else will produce incorrect results.
 
-        This looks like an if expression, but don't be fooled, this computes both body_series and orelse_series regardless 
+        This looks like an if expression, but don't be fooled, this computes both body and orelse regardless 
         if self is all False or all True
         '''
         ds = DataSeries()
         for i in range(len(self.datapoints)):
             dp = self.datapoints[i]
             if dp.value:
-                ds.add(body_series.datapoints[i].value, dp.time)
+                if isinstance(body, DataSeries):
+                    value = body.datapoints[i].value
+                else:
+                    value = body
             else:
-                ds.add(orelse_series.datapoints[i].value, dp.time)
+                if isinstance(orelse, DataSeries):
+                    value = orelse.datapoints[i].value
+                else:
+                    value = orelse
+            ds.add(value, dp.time)
         return ds
 
     def thd(self, base_harmonic):
@@ -204,14 +211,19 @@ class DataSeries:
         return self.pointwise(other, lambda x, y: x > y)
     def __lt__(self, other):
         return self.pointwise(other, lambda x, y: x < y)
-    def __gte__(self, other):
+    def __ge__(self, other):
         return self.pointwise(other, lambda x, y: x >= y)
-    def __lte__(self, other):
+    def __le__(self, other):
         return self.pointwise(other, lambda x, y: x <= y)
     def __eq__(self, other):
         return self.pointwise(other, lambda x, y: x == y)
     def __neq__(self, other):
         return self.pointwise(other, lambda x, y: x != y)
+
+    def _and(self, other):
+        return self.pointwise(other, lambda x, y: x and y)
+    def _or(self, other):
+        return self.pointwise(other, lambda x, y: x or y)
 
     def pointwise(self, other, f):
         ds = DataSeries()
@@ -238,5 +250,7 @@ class DataSeries:
         if not self.is_windowed(): raise Exception('Aggregations can only be made on windowed DataSeries.')
         agg = DataSeries()
         for dp in self.datapoints:
-            agg.add(f(dp.value), dp.time)
+            value = f(dp.value)
+            for sub_dp in dp.value.datapoints:
+                agg.add(value, sub_dp.time)
         return agg

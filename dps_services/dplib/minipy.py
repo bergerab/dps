@@ -47,6 +47,8 @@ class MiniPy:
             '<=': lambda x, y: x <= y,
             '==': lambda x, y: x == y,
             '!=': lambda x, y: x != y,
+            'AND': lambda x, y: x and y,
+            'OR': lambda x, y: x or y,            
             'IF': lambda test, body, orelse, env: body.compile().run(env) if test.compile().run(env) else orelse.compile().run(env),
             'USUB': lambda x: -x,
         }
@@ -238,6 +240,17 @@ class MiniPyVisitor(ast.NodeVisitor):
         body = self.visit(node.body)
         orelse = self.visit(node.orelse)
         return FExpr('IF', [test, body, orelse], self.mpy.builtins)
+
+    def visit_BoolOp(self, node):
+        values = list(map(lambda x: self.visit(x), node.values))
+        op = node.op
+        if isinstance(op, ast.And):
+            name = 'and'
+        elif isinstance(op, ast.Or):
+            name = 'or'
+        else:
+            raise Exception('Unsupported boolean operator.')
+        return SExpr(name, values, self.mpy.builtins)        
 
     def visit_Compare(self, node):
         if len(node.ops) > 1:

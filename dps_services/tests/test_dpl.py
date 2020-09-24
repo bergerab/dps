@@ -57,13 +57,19 @@ class TestDPL(TestCase):
 
     def test_average(self):
         ds = DataSeries.from_list([1,2,3,4,5,6,7,8,9,10])
+        avg1 = (1+2)/2
+        avg2 = (3+4)/2
+        avg3 = (5+6)/2
+        avg4 = (7+8)/2
+        avg5 = (9+10)/2
         self.assertEqual(list(DPL.eval('average(window(a, "2s"))', { 'a': ds })),
-                         [(1+2)/2, (3+4)/2, (5+6)/2, (7+8)/2, (9+10)/2])
+                         [avg1, avg1, avg2, avg2, avg3, avg3, avg4, avg4, avg5, avg5])
 
         # Should work when window is not a multiple of input size
         ds = DataSeries.from_list([1,2,3,4,5,6,7])
+        avg4 = 7/1
         self.assertEqual(list(DPL.eval('average(window(a, "2s"))', { 'a': ds })),
-                         [(1+2)/2, (3+4)/2, (5+6)/2, 7/1])
+                         [avg1, avg1, avg2, avg2, avg3, avg3, avg4])
 
     def test_if_exp(self):
         '''If expressions should call DataSeries.when'''

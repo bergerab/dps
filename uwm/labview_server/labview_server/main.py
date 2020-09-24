@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 URL = os.getenv('DBM_URL', 'http://bergerab.com/dps/db/')
 DEBUG = bool(os.getenv('LABVIEW_INTEGRATION_DEBUG', False))
-SEND_THRESHOLD = os.getenv('LABVIEW_INTEGRATION_SEND_THRESHOLD', 2)
+SEND_THRESHOLD = int(os.getenv('LABVIEW_INTEGRATION_SEND_THRESHOLD', 2))
 
 print('Using database manager URL: ' + URL)
 print('Using threshold of: ' + str(SEND_THRESHOLD))
