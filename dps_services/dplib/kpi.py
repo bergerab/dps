@@ -14,15 +14,17 @@ class MappedKPI:
         self.dpl = dpl
         self.time_column = time_column
 
-    def run(self):
+    def run(self, include_time):
         ds = self.dpl.run(self.env)
-        return self._dataseries_to_dataframe(ds)
+        return self._dataseries_to_dataframe(ds, include_time)
 
-    def _dataseries_to_dataframe(self, ds):
-        return pd.DataFrame(data={
+    def _dataseries_to_dataframe(self, ds, include_time):
+        data = {
             self.name: ds.to_list(),
-            self.time_column: ds.get_times(),
-        })
+        }
+        if include_time:
+            data[self.time_column] = ds.get_times()
+        return pd.DataFrame(data=data)
 
 class KPI:
     '''
@@ -33,12 +35,15 @@ class KPI:
         self.dpl = DPL()
         self.dpl.compile(code)
 
-    def run(self, name, df, mapping={}, time_column='Time'):
+    def run(self, name, df, mapping={}, time_column='Time', include_time=True):
         '''
         Create a mapping from KPI inputs to DataFrame column names, then execute the KPI immediately.
+
+        `include_time` indicates if the resulting DataFrame should also include a time column, or just
+        a single column of data (being the KPI).
         '''
         mapped_kpi = self.map(name, df, mapping, time_column)
-        return mapped_kpi.run()
+        return mapped_kpi.run(include_time)
 
     def map(self, name, df, mapping={}, time_column='Time'):
         env = self._make_environment_from_dataframe_mapping(df, mapping, time_column)

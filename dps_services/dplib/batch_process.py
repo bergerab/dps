@@ -1,48 +1,64 @@
 import numbers
-import copy
 from collections import defaultdict
 
 import pandas as pd
-
-from .dpl import DPL, DataSeries
 
 class BatchProcessKPI:
     def __init__(self, name, kpi, mapping):
         self.name = name
         self.kpi = kpi
         self.mapping = mapping
-        self.order = 0
 
 class BatchProcess:
     def __init__(self):
         '''
         :param kpis:
         '''
-        self.kpis = []
-        self.kpi_names = set()
+        self.kpis = {}
         self.graph = Graph()
 
     def add(self, name, kpi, mapping):
-        self.kpi_names.add(name)
-        self.kpis.append(BatchProcessKPI(name, kpi, mapping))
+        self.kpis[name] = BatchProcessKPI(name, kpi, mapping)
         return self
 
     def _connect_graph(self):
-        for kpi in self.kpis:
+        for kpi_name in self.kpis:
+            kpi = self.kpis[kpi_name]
             mapping = kpi.mapping
             name = kpi.name
+            self.graph.add_vertex(name)
             for ref_name in mapping.values():
-                if ref_name in self.kpi_names:
+                if ref_name in self.kpis.keys():
                     self.graph.connect(ref_name, name)
 
     def _get_topological_ordering(self):
         try:
-            self.graph.get_topological_ordering()
+            return self.graph.get_topological_ordering()
         except CyclicGraphException:
             raise Exception('Batch Processes cannot contain recursive KPI computations.')
 
-    def run(self, time_column='Time'):
-        pass
+    def run(self, df, time_column='Time'):
+        # Topological sort the KPIs to process KPIs with no dependencies first.
+        self._connect_graph()
+        order = self._get_topological_ordering()
+
+        kpis = pd.DataFrame(data={ time_column: [] })
+
+        # Compute each KPI in order, adding them to the DataFrame
+        for kpi_name in order:
+            print(kpi_name)
+            bpkpi = self.kpis[kpi_name]
+            kpi = bpkpi.kpi
+            mapping = bpkpi.mapping
+            kpi_df = kpi.run(kpi_name, df, mapping, include_time=False)
+            kpis.append(kpi_df[kpi_name])
+            print(kpis)
+#            print(kpis + kpi_df)
+            
+
+        print(kpis)
+        # Return a DataFrame of only the results
+        return None
 
 class Graph:
     def __init__(self):
@@ -51,29 +67,26 @@ class Graph:
             Identifies the names of vertices that have an arrow pointing at this one. 
         '''
         self.edges_out = defaultdict(list)        
-        self.edges = set()
-
-    def clone(self):
-        G = Graph()
-        G.edges_in = copy.deepcopy(self.edges_in)
-        G.edges_out = copy.deepcopy(self.edges_out)
-        G.edges = self.edges.copy()
-        return G
+        self.vertices = set()
 
     def connect(self, u, v):
         '''Make a connection (an edge) from node `n1` to `n2` (directed).'''
         self.edges_in[v].append(u)
         self.edges_out[u].append(v)        
-        self.edges.add(u)
-        self.edges.add(v)
+        self.vertices.add(u)
+        self.vertices.add(v)
+
+    def add_vertex(self, name):
+        '''Adds a vertex to the graph with no edges'''
+        self.vertices.add(name)
 
     def get_starting_vertices(self):
         ''' Returns all vertices that have no incoming edge. '''
-        edges = set()
-        for edge in self.edges:
+        vertices = set()
+        for edge in self.vertices:
             if edge not in self.edges_in or not self.edges_in[edge]:
-                edges.add(edge)
-        return edges
+                vertices.add(edge)
+        return vertices
 
     def remove_edge(self, u, v):
         self.edges_out[u].remove(v)
@@ -87,7 +100,7 @@ class Graph:
 
     def get_topological_ordering(self):
         '''
-        Kahn's Algorithm for Topological sorting
+        Kahn's Algorithm for topological sorting
         '''
         L = []
         S = list(self.get_starting_vertices())
@@ -119,21 +132,6 @@ class Graph:
 class CyclicGraphException(Exception): pass
     
 '''
-BatchProcess([
-  POWER.map('Power', {
-    'Voltage': 'volts',
-    'Current': 'amps',
-  }), 
-  THD.map('THD (Voltage)', {
-    'Signal': 'volts',
-  }),
-  THD.map('THD (Current)', {
-    'Signal': 'amps',
-  }),
- ])
-
-TODO: How to map KPI results to KPI input
-
 BatchProcess() \
   .add('Power', POWER, {
     'Voltage': 'volts',
@@ -153,17 +151,5 @@ BatchProcess() \
   }),
   .add('Efficiency at 25% Load', AT_LOAD, {
 
-  }),
-
-[
-  POWER.map('Power', {
-  }), 
-  THD.map('THD (Voltage)', {
-    'Signal': 'volts',
-  }),
-  THD.map('THD (Current)', {
-    'Signal': 'amps',
-  }),
- ])
-
+  })
 '''

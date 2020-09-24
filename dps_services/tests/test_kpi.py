@@ -40,6 +40,10 @@ DF_POWER = pd.DataFrame(data={
 The result of multiplying Voltage and Current from DF1 and DF2.
 '''
 
+DF_POWER_WITHOUT_TIME = pd.DataFrame(data={
+    'Power': [1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555],
+})
+
 class TestKPI(TestCase):
     def test_identity_kpi(self):
         '''Test a KPI that does a NOOP.'''
@@ -52,6 +56,10 @@ class TestKPI(TestCase):
         '''The default mappings should match the symbols used in the KPI computation.'''
         df = POWER_KPI.run('Power', DF1)
         self.assertTrue(df.equals(DF_POWER))
+
+    def test_excluding_time_column(self):
+        df = POWER_KPI.run('Power', DF1, include_time=False)
+        self.assertTrue(df.equals(DF_POWER_WITHOUT_TIME))
 
     def test_mappings(self):
         '''The input DataFrame should be able to map its input column names (including the time column name).'''

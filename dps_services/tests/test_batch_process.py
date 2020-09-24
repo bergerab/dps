@@ -39,7 +39,29 @@ def normalize_listdict(d):
         del d[key]
 
 class TestBatchProcess(TestCase):
+    def test_batch_process_basic(self):
+        bp = dplib.BatchProcess() \
+            .add('Power', dplib.POWER, {
+                'Voltage': 'Voltage',
+                'Current': 'Current',
+            }) \
+            .add('MyVoltage', dplib.KPI('X'), {
+                'X': 'Voltage',
+            }) \
+            
+        print(bp.run(DF1))
+        self.assertFalse(True)
+    
     def test_batch_process_graph_topological_order(self):
+        bp = dplib.BatchProcess() \
+            .add('Power', dplib.POWER, {
+                'Voltage': 'volts',
+                'Current': 'amps',
+            })
+        bp._connect_graph()        
+        order = bp.graph.get_topological_ordering()
+        self.assertEqual(order, ['Power'])
+
         bp = dplib.BatchProcess() \
             .add('Power', dplib.POWER, {
                 'Voltage': 'volts',
@@ -98,7 +120,13 @@ class TestBatchProcess(TestCase):
         G.remove_edge('A', 'B')
         self.assertTrue(G.has_edges())
         G.remove_edge('B', 'A')
-        self.assertFalse(G.has_edges())        
+        self.assertFalse(G.has_edges())
+
+    def test_graph_topological_sort_one_node(self):
+        G = dplib.Graph()
+        G.connect('A', 'B')
+        order = G.get_topological_ordering()
+        self.assertEqual(order, ['A', 'B'])
     
     def test_graph_topological_sort(self):
         G = make_graph_sut()        
@@ -119,12 +147,12 @@ class TestBatchProcess(TestCase):
         
         edges_out = copy.deepcopy(G.edges_out)
         edges_in = copy.deepcopy(G.edges_in)
-        edges = G.edges.copy()
+        vertices = G.vertices.copy()
         
         order = G.get_topological_ordering()
         self.assertEqual(normalize_listdict(G.edges_out), normalize_listdict(edges_out))
         self.assertEqual(normalize_listdict(G.edges_in), normalize_listdict(edges_in))
-        self.assertEqual(G.edges, edges)
+        self.assertEqual(G.vertices, vertices)
 
     def test_graph_topological_sort_throws_on_cycles(self):
         '''
