@@ -24,6 +24,7 @@ class DPL:
             'window': window,
             'average': average,
             'if': if_exp,
+            'thd': lambda x, base_harmonic: x.thd(base_harmonic),
             'and': lambda x, y: x._and(y),
             'or': lambda x, y: x._or(y),
         })

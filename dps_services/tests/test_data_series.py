@@ -113,7 +113,7 @@ class TestDataSeries(TestCase):
 
         # THD of a perfect sine wave should be very close to 0
         ds = DataSeries.from_list(list(wave), timedelta(seconds=1/len(wave)))
-        self.assertLess(ds.thd(40) * 100, 0.01) # 0.01%
+        self.assertLess(ds.thd_series(40) * 100, 0.01) # 0.01%
     
     def test_when(self):
         '''`when` should take from A when T has a 1 (truthy value) and take from B when T has a 0 (non-truthy value).

@@ -93,15 +93,13 @@ class KPI:
                     env[identifier] = DataSeries.from_df(df, identifier, time_column)
             
         for key, value in mapping.items():
-            if isinstance(value, numbers.Number):
-                env[key] = value
-            elif isinstance(value, str):
+            if isinstance(value, str):
                 if value not in df:
                     errors.append(f'Input DataFrame has no column named "{value}" (when attempting to map from "{key}" to "{value}").')
                 else:
                     env[key] = DataSeries.from_df(df, value, time_column)
-            else:
-                errors.append(f'Received invalid type in mapping {type(value)}')
+            elif isinstance(value, numbers.Number):
+                env[key] = value
 
         if errors:
             raise Exception('\n'.join(errors))

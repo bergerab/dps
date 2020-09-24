@@ -152,6 +152,12 @@ class DataSeries:
         return ds
 
     def thd(self, base_harmonic):
+        return self.aggregate(lambda ds: ds.thd_series(base_harmonic))
+
+    def thd_series(self, base_harmonic):
+        '''
+        Runs a THD computation on this series (assumes series is not windowed).
+        '''
         fft_vals = np.absolute(np.fft.fft(list(self)))
 
         # Look at twice the amount just in case we miss the base harmonic

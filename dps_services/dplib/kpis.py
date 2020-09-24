@@ -36,6 +36,11 @@ EFFICIENCY = KPI('Output / Input')
 How much output per unit of input.
 '''
 
+THD = KPI('thd(window(Signal, "1s"), BaseHarmonic)')
+'''
+THD with one second resolution.
+'''
+
 '''
 PV Array KPIs
 '''

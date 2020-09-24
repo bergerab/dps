@@ -17,7 +17,8 @@ class BatchProcess:
         self.kpis = {}
         self.graph = Graph()
 
-    def add(self, name, kpi, mapping):
+    def add(self, name, kpi, mapping=None):
+        mapping = {} if mapping is None else mapping
         self.kpis[name] = BatchProcessKPI(name, kpi, mapping)
         return self
 
@@ -46,7 +47,6 @@ class BatchProcess:
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
-            print(kpi_name)
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
@@ -117,7 +117,6 @@ class Graph:
 
         # Restore the edges that were removed
         for (n, m) in restore:
-            print(n, m)
             self.connect(n, m)
                     
         if has_edges:

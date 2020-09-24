@@ -67,7 +67,7 @@ class TestBatchProcess(TestCase):
             .add('Power above 50% Load', dplib.AT_LOAD, {
                 'Load': 'Load %',
                 'Value': 'Power',
-                'LoadLowerBound': 0.5,  
+                'LoadLowerBound': 0.5,
                 'LoadUpperBound': 1.0,
             })
 
@@ -81,6 +81,7 @@ class TestBatchProcess(TestCase):
         })
             
         result = bp.run(DF2)
+
         assert_frame_equal(result, expected_result, check_like=True)
 
     def test_batch_process_basic(self):
