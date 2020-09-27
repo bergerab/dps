@@ -102,7 +102,38 @@ class TestBatchProcess(TestCase):
             
         result = bp.run(DF1)
         assert_frame_equal(result, expected_result, check_like=True)
-    
+
+    def test_batch_process_get_windows(self):
+        bp = dplib.BatchProcess() \
+            .add('Window1', dplib.KPI('average(window(Signal, "2s"))'), {
+                'Signal': 'Voltage',
+            }) \
+            .add('Window2', dplib.KPI('average(window(Signal, "8s"))'), {
+                'Signal': 'Current',
+            }) \
+            .add('Window3', dplib.KPI('average(window(Signal, "16s")) + average(window(Signal, "32s"))'), {
+                'Signal': 'Current',
+            })
+
+        self.assertEqual(bp._get_windows(), [timedelta(seconds=2),
+                                             timedelta(seconds=8),
+                                             timedelta(seconds=16),
+                                             timedelta(seconds=32)])
+
+    def test_batch_process_get_max_window(self):
+        bp = dplib.BatchProcess() \
+            .add('Window1', dplib.KPI('average(window(Signal, "2s"))'), {
+                'Signal': 'Voltage',
+            }) \
+            .add('Window2', dplib.KPI('average(window(Signal, "8s"))'), {
+                'Signal': 'Current',
+            }) \
+            .add('Window3', dplib.KPI('average(window(Signal, "16s")) + average(window(Signal, "32s"))'), {
+                'Signal': 'Current',
+            })
+
+        self.assertEqual(bp._get_max_window(), timedelta(seconds=32))
+
     def test_batch_process_graph_topological_order(self):
         bp = dplib.BatchProcess() \
             .add('Power', dplib.POWER, {

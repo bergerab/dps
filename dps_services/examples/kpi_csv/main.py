@@ -4,7 +4,7 @@ import pandas as pd
 import dplib as dp
 
 # You can store KPIs as variables if you want to re-use them.
-POWER = dp.KPI('DC_Voltage * DC_Current')
+POWER = dp.KPI('DC_Voltage * DC_Current') # dplib.POWER contains this same definition (with different signal names)
 THD = dp.KPI('thd(window(Signal, "1s"), Freq) * 100')
 AT_50_LOAD = dp.KPI('Signal if Load > 40 and Load < 60 else 0')
 LOAD = dp.KPI('(CurrentValue / MaxValue) * 100')
@@ -47,4 +47,3 @@ if __name__ == '__main__':
     kpi_df.to_csv('kpis.csv')
     print('Done!')
     print(kpi_df)
-
