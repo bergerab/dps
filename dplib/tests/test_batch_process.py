@@ -47,7 +47,73 @@ def normalize_listdict(d):
     for key in remove:
         del d[key]
 
+def make_power_bp():
+    return dplib.BatchProcess() \
+            .add('Power', dplib.POWER) \
+            .add('Load %', dplib.LOAD, {
+                'CurrentValue': 'Power',
+                'MaxValue': 'MaxPower',
+            }) \
+            .add('Power at 50% Load', dplib.AT_LOAD, {
+                'Load': 'Load %',
+                'Value': 'Power',
+                'LoadLowerBound': 0.4,
+                'LoadUpperBound': 0.6,
+            }) \
+            .add('Power above 50% Load', dplib.AT_LOAD, {
+                'Load': 'Load %',
+                'Value': 'Power',
+                'LoadLowerBound': 0.5,  
+                'LoadUpperBound': 1.0,
+            })
+
 class TestBatchProcess(TestCase):
+    def test_batch_process_get_required_inputs(self):
+        bp = make_power_bp()
+        inputs = bp.get_required_inputs()
+        self.assertEqual(inputs, set(['Voltage', 'Current', 'MaxPower']))
+        
+        bp = dplib.BatchProcess() \
+            .add('Power', dplib.POWER) \
+            .add('Other', dplib.KPI('Thing * Ding'))
+        inputs = bp.get_required_inputs()
+        self.assertEqual(inputs, set(['Voltage', 'Current', 'Thing', 'Ding']))
+
+        bp = dplib.BatchProcess() \
+            .add('Power', dplib.POWER, {
+                'Voltage': 'MyVoltage',
+            })
+        inputs = bp.get_required_inputs()
+        self.assertEqual(inputs, set(['MyVoltage', 'Current']))
+    
+    def test_batch_process_prune(self):
+        bp = make_power_bp()        
+        self.assertEqual(bp.prune('Power at 50% Load').kpis.keys(), set(['Load %', 'Power', 'Power at 50% Load']))
+
+        bp = dplib.BatchProcess() \
+            .add('A', dplib.KPI('E + F')) \
+            .add('B', dplib.KPI('A + F'))
+        self.assertEqual(bp.prune('B').kpis.keys(), set(['A', 'B']))
+
+    def test_graph_prune(self):
+        G = dplib.Graph()
+        G.connect('A', 'B')
+        G.connect('B', 'C')
+        
+        self.assertEquals(G.prune('A').vertices, set(['A']))
+        self.assertEquals(G.prune('B').vertices, set(['A', 'B']))
+        self.assertEquals(G.prune('C').vertices, set(['A', 'B', 'C']))
+        self.assertEquals(G.vertices, set(['A', 'B', 'C'])) # Make sure no side effects occured
+
+        G.connect('C', 'E')
+        G.connect('D', 'E')
+        
+        self.assertEquals(G.prune('A').vertices, set(['A']))
+        self.assertEquals(G.prune('B').vertices, set(['A', 'B']))
+        self.assertEquals(G.prune('C').vertices, set(['A', 'B', 'C']))
+        self.assertEquals(G.prune('D').vertices, set(['D']))        
+        self.assertEquals(G.prune('E').vertices, set(['A', 'B', 'C', 'D', 'E']))                
+            
     def test_batch_process_dependent_kpis(self):
         bp = dplib.BatchProcess() \
             .add('Power', dplib.POWER, {

@@ -88,7 +88,7 @@ class KPI:
         for identifier in identifiers:
             if identifier not in mapping:
                 if identifier not in df:
-                    errors.append(f'Input DataFrame has no mapping for identifier: "{identifier}".')
+                    errors.append(f'Input DataFrame is missing column: "{identifier}".')
                 else:
                     env[identifier] = DataSeries.from_df(df, identifier, time_column)
             

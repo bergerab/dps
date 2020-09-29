@@ -1,4 +1,5 @@
 import numbers
+import copy
 from collections import defaultdict
 
 import pandas as pd
@@ -22,15 +23,46 @@ class BatchProcess:
         self.kpis[name] = BatchProcessKPI(name, kpi, mapping)
         return self
 
+    def prune(self, *kpi_names):
+        self._connect_graph()
+        print('self edges', self.graph.vertices)
+        bp = BatchProcess()
+        bp.graph = self.graph.prune(*kpi_names)
+        for kpi_name in bp.graph.vertices:
+            bp.kpis[kpi_name] = self.kpis[kpi_name]
+        self.graph = Graph()
+        return bp
+
+    def get_required_inputs(self):
+        s = set()
+        for kpi_name, kpi in self.kpis.items():
+            mapping = kpi.mapping
+            for id in kpi.kpi.dpl.ast.get_identifiers():
+                name = id.original_name
+                value = mapping.get(name)
+                if name not in mapping:
+                    s.add(id.original_name)
+                elif isinstance(value, str) and value not in self.kpis:
+                    s.add(value)
+        return s
+
     def _connect_graph(self):
         for kpi_name in self.kpis:
             kpi = self.kpis[kpi_name]
             mapping = kpi.mapping
             name = kpi.name
             self.graph.add_vertex(name)
+
+            dependent_kpis = []
             for ref_name in mapping.values():
                 if ref_name in self.kpis.keys():
-                    self.graph.connect(ref_name, name)
+                    dependent_kpis.append(ref_name)
+            for id in kpi.kpi.dpl.ast.get_identifiers():
+                if id.original_name in self.kpis.keys():
+                    dependent_kpis.append(id.original_name)                    
+            
+            for dependent_kpi in dependent_kpis:
+                self.graph.connect(dependent_kpi, name)
 
     def _get_topological_ordering(self):
         try:
@@ -47,6 +79,8 @@ class BatchProcess:
         order = self._get_topological_ordering()
 
         kpis = pd.DataFrame()
+
+        print('order', order)
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
@@ -127,6 +161,33 @@ class Graph:
             if connections:
                 return True
         return False
+
+    def clone(self):
+        G = Graph()
+        G.edges_out = copy.deepcopy(self.edges_out)
+        G.edges_in = copy.deepcopy(self.edges_in)
+        G.vertices = self.vertices.copy()
+        return G
+
+    def prune(self, *vertices):
+        '''
+        Creates a new graph that only has the vertices in `vertices` (and also all of the connections to `vertices`).
+        '''
+        vertices = list(vertices)
+        
+        G = Graph()
+        for vertex in vertices:
+            G.add_vertex(vertex)
+        
+        work_list = vertices
+        while work_list:
+            u = work_list.pop()
+            print('WL ', work_list, u, self.edges_in[u])            
+            for v in self.edges_in[u]:
+                if v not in G.edges_in[u]:
+                    G.connect(v, u)
+            work_list += self.edges_in[u]
+        return G
 
     def get_topological_ordering(self):
         '''
