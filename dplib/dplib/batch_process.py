@@ -25,7 +25,6 @@ class BatchProcess:
 
     def prune(self, *kpi_names):
         self._connect_graph()
-        print('self edges', self.graph.vertices)
         bp = BatchProcess()
         bp.graph = self.graph.prune(*kpi_names)
         for kpi_name in bp.graph.vertices:
@@ -53,14 +52,14 @@ class BatchProcess:
             name = kpi.name
             self.graph.add_vertex(name)
 
-            dependent_kpis = []
+            dependent_kpis = set()
             for ref_name in mapping.values():
                 if ref_name in self.kpis.keys():
-                    dependent_kpis.append(ref_name)
+                    dependent_kpis.add(ref_name)
             for id in kpi.kpi.dpl.ast.get_identifiers():
                 if id.original_name in self.kpis.keys():
-                    dependent_kpis.append(id.original_name)                    
-            
+                    dependent_kpis.add(id.original_name)
+
             for dependent_kpi in dependent_kpis:
                 self.graph.connect(dependent_kpi, name)
 
@@ -70,7 +69,7 @@ class BatchProcess:
         except CyclicGraphException:
             raise Exception('Batch Processes cannot contain recursive KPI computations.')
 
-    def run_all(self, df, time_column='Time'):
+    def run_all(self, df, time_column='Time', parameters=[]):
         '''
         Runs the batch process on the entire DataFrame (without reporting progress, one column at a time)
         '''
@@ -80,14 +79,12 @@ class BatchProcess:
 
         kpis = pd.DataFrame()
 
-        print('order', order)
-
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
-            kpi_df = kpi.run(kpi_name, df.join(kpis), mapping, include_time=False)
+            kpi_df = kpi.run(kpi_name, df.join(kpis), mapping, include_time=False, parameters=parameters)
             kpis = kpi_df.join(kpis)            
 
         # Return a DataFrame of only the results
@@ -114,7 +111,7 @@ class BatchProcess:
             if max_window.total_seconds() % window.total_seconds() != 0:
                 raise Exception('All windows in each KPI computation must be multiples of each other.')
 
-    def run(self, df, time_column='Time'):
+    def run(self, df, time_column='Time', parameters=[]):
         '''
         Runs the batch process taking sub batches of the DataFrame (that have a size which is a multiple of the largest window size in the KPIs).
 
@@ -122,7 +119,7 @@ class BatchProcess:
 
         As another example, if there are two KPIs one which is "average(window(Signal, '1s'))" and another which is "average(window(Signal, '2s'))", this will process the DataFrame two second at a time. It will take the two second, process it, then move to the next two second, until all the data has been processed. Notice how all windows must be multiples of each other (otherwise we will get a window which is missing data).
         '''
-        return self.run_all(df, time_column)
+        return self.run_all(df, time_column, parameters=parameters)
 
 class Graph:
     def __init__(self):
@@ -182,7 +179,6 @@ class Graph:
         work_list = vertices
         while work_list:
             u = work_list.pop()
-            print('WL ', work_list, u, self.edges_in[u])            
             for v in self.edges_in[u]:
                 if v not in G.edges_in[u]:
                     G.connect(v, u)

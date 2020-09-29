@@ -35,21 +35,21 @@ class KPI:
         self.dpl = DPL()
         self.dpl.compile(code)
 
-    def run(self, name, df, mapping={}, time_column='Time', include_time=True):
+    def run(self, name, df, mapping={}, time_column='Time', include_time=True, parameters=[]):
         '''
         Create a mapping from KPI inputs to DataFrame column names, then execute the KPI immediately.
 
         `include_time` indicates if the resulting DataFrame should also include a time column, or just
         a single column of data (being the KPI).
         '''
-        mapped_kpi = self.map(name, df, mapping, time_column)
+        mapped_kpi = self.map(name, df, mapping, time_column, parameters)
         return mapped_kpi.run(include_time)
 
-    def map(self, name, df, mapping={}, time_column='Time'):
-        env = self._make_environment_from_dataframe_mapping(df, mapping, time_column)
+    def map(self, name, df, mapping={}, time_column='Time', parameters=[]):
+        env = self._make_environment_from_dataframe_mapping(df, mapping, time_column, parameters)
         return MappedKPI(name, env, self.dpl, time_column)
 
-    def _make_environment_from_dataframe_mapping(self, df, mapping={}, time_column='Time'):
+    def _make_environment_from_dataframe_mapping(self, df, mapping={}, time_column='Time', parameters=[]):
         '''
         Creates an environment to use with MiniPy from a Pandas DataFrame.
 
@@ -88,7 +88,10 @@ class KPI:
         for identifier in identifiers:
             if identifier not in mapping:
                 if identifier not in df:
-                    errors.append(f'Input DataFrame is missing column: "{identifier}".')
+                    if identifier in parameters:
+                        errors.append(f'You must specify the "{identifier}" parameter.')                        
+                    else:
+                        errors.append(f'Input DataFrame is missing column: "{identifier}".')
                 else:
                     env[identifier] = DataSeries.from_df(df, identifier, time_column)
             

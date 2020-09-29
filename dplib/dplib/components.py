@@ -1,7 +1,6 @@
 from .component import Component
 from .kpi import KPI
 
-
 def PVArray():
     return Component('PV Array',
                 parameters=['Voc', 'Isc']) \
@@ -48,3 +47,24 @@ def add_thds(component, *names):
         component.add(f'THD {name} at 50% Load', f'THD_{name} if LOAD >= 45 and LOAD <= 55 else 0')
         component.add(f'THD {name} at 75% Load', f'THD_{name} if LOAD >= 70 and LOAD <= 80 else 0')
         component.add(f'THD {name} at 100% Load', f'THD_{name} if LOAD >= 95 else 0')        
+
+def ExampleSystem():
+    '''
+    Example KPI definitions for some electrical component.
+    '''
+    return Component('Example System',
+                     parameters=['MaxPower', 'VoltageBaseHarmonic']) \
+            .add('Power',
+                 'Vdc * Idc',
+                 doc='The output power of the system.') \
+            .add('THD Voltage (Percent)',
+                 'thd(window(Va, "1s"), VoltageBaseHarmonic) * 100',
+                 id='THD_Va',
+                 doc='Total harmonic distortion of the voltage signal (done every one second).') \
+            .add('Load (Percent)',
+                 '(Power / MaxPower) * 100',
+                 id='Load',
+                 doc='The ratio of the electrical max power output, compared to the current power of the system.') \
+            .add('THD Voltage (Percent) at 50% Load',
+                 'THD_Va if Load > 40 and Load < 60 else 0',
+                 doc='The total harmonic distortion of the voltage signal when the system is at 50% load.')

@@ -32,6 +32,12 @@ DF1_DEPENDENT_RESULT = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
+DF1_DEPENDENT_RESULT_BOTH = pd.DataFrame(data={
+    'KPI One': [7 + 9, 6 + 8, 5 + 7],    
+    'KPI Two': [7 + 9 + 9, 6 + 8 + 8, 5 + 7 + 7],
+    'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+})
+
 DF2_RESULT = pd.DataFrame(data={
     'KPI One': [1 + 4, 2 + 5, 3 + 6],
     'KPI Two': [7 + 2, 8 + 2, 9 + 2],
@@ -54,8 +60,10 @@ class TestComponent(TestCase):
 
     def test_dependent(self):
         SUT = Component('System Under Test') \
-            .add('KPI1', 'A + B') \
+            .add('KPI One', 'A + B', id='KPI1') \
             .add('KPI Two', 'KPI1 + B')
 
         # Should automatically compute KPI One (but not show it in the output):
-        assert_frame_equal(DF1_DEPENDENT_RESULT, SUT.run(DF1, 'KPI Two'))
+        assert_frame_equal(DF1_DEPENDENT_RESULT, SUT.run(DF1, ['KPI Two']))
+        
+        assert_frame_equal(DF1_DEPENDENT_RESULT_BOTH, SUT.run(DF1, ['KPI One', 'KPI Two']), check_like=True)

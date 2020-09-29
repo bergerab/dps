@@ -32,6 +32,9 @@ class Component:
             raise Exception('\n'.join(errors))
 
     def run(self, df, kpi_names=[], mapping={}, time_column='Time'):
+        return self.run_all(df, kpi_names, mapping, time_column)
+
+    def run_all(self, df, kpi_names=[], mapping={}, time_column='Time'):
         if isinstance(kpi_names, str):
             kpi_names = [kpi_names]
 
@@ -45,12 +48,15 @@ class Component:
         bp._connect_graph()
 
         # Prune BatchProcess so it only computes the necessary KPIs
-        bp = bp.prune(*kpi_names)
-        df = bp.run(df, time_column)
+        kpi_ids = []
+        for kpi_name in kpi_names:
+            if self.kpis[kpi_name]:
+                kpi_ids.append(self.kpis[kpi_name].id)
+        bp = bp.prune(*kpi_ids)
+        df = bp.run(df, time_column, parameters=self.parameters)
         
         rename_map = {}
         for kpi_name in kpi_names:
             kpi = self.kpis[kpi_name]
-            rename_map[kpi_name] = kpi.id
-        print('rename', rename_map)
+            rename_map[kpi.id] = kpi_name
         return df.rename(columns=rename_map)[kpi_names + [time_column]]
