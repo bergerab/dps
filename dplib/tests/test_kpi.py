@@ -6,6 +6,7 @@ import pandas as pd
 from dplib import KPI
 import dplib as dp
 from dplib.result import Result
+from dplib.result import ResultAssertions
 
 NOW = datetime.now()
 
@@ -68,7 +69,7 @@ DF_COMPOUND_KPI = Result(pd.DataFrame(data={
     'Value': [min([1.23, 5.32, 8.19]) * 0.2 + max([0.32, -3.2, 4.2555]) * 0.6],
 }))
 
-class TestKPI(TestCase):
+class TestKPI(TestCase, ResultAssertions):
     def test_identity_kpi(self):
         '''Test a KPI that does a NOOP.'''
         d = ID_KPI.run('Identity', DF1, {
@@ -79,11 +80,11 @@ class TestKPI(TestCase):
     def test_default_mappings(self):
         '''The default mappings should match the symbols used in the KPI computation.'''
         d = POWER_KPI.run('Power', DF1)
-        self.assertTrue(d.equals(DF_POWER))
+        self.assertResultEqual(d, DF_POWER)
 
     def test_compound_kpi(self):
         d = COMPOUND_KPI.run('Value', DF1)
-        self.assertTrue(d.equals(DF_COMPOUND_KPI))
+        self.assertResultEqual(d, DF_COMPOUND_KPI)        
 
     def test_average_power(self):
         d = AVG_POWER_KPI.run('Average Power', DF1)

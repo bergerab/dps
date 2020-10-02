@@ -1,5 +1,13 @@
 import pandas as pd
 
+from pandas._testing import assert_frame_equal
+
+class ResultAssertions:
+    def assertResultEqual(self, other):
+        self.assertEquals(type(self), type(other))
+        assert_frame_equal(self.df, other.df)
+        self.assertEquals(self.assertions, other.assertions)
+
 class Result:
     def __init__(self, df=None, aggregations=None):
         self.df = pd.DataFrame() if df is None else df 
