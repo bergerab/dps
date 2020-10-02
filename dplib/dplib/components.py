@@ -32,7 +32,7 @@ def PVInverter():
 def DieselGenerator():
     return Component('Diesel Generator',
             parameters=[]) \
-            .add('Fuel Consumption', 'average(window(FuelConsumption, "1s"))',
+            .add('Fuel Consumption', 'avg(window(FuelConsumption, "1s"))',
                  doc='Average fuel consumption (every second).') \
             .add('Generator Efficiency', '') # TODO: Continue for second Word doc of KPIs
 
@@ -67,4 +67,23 @@ def ExampleSystem():
                  doc='The ratio of the electrical max power output, compared to the current power of the system.') \
             .add('THD Voltage (Percent) at 50% Load',
                  'THD_Va if Load > 40 and Load < 60 else 0',
+                 doc='The total harmonic distortion of the voltage signal when the system is at 50% load.')
+
+
+def ExampleSystemAgg():
+    return Component('Example System',
+                     parameters=['MaxPower', 'VoltageBaseHarmonic']) \
+            .add('Power',
+                 'avg(Vdc * Idc)',
+                 doc='The output power of the system.') \
+            .add('THD Voltage (Percent)',
+                 'avg(thd(window(Va, "1s"), VoltageBaseHarmonic) * 100)',
+                 id='THD_Va',
+                 doc='Total harmonic distortion of the voltage signal (done every one second).') \
+            .add('Load (Percent)',
+                 '(Power / MaxPower) * 100',
+                 id='Load',
+                 doc='The ratio of the electrical max power output, compared to the current power of the system.') \
+            .add('THD Voltage (Percent) at 50% Load',
+                 'max(THD_Va if Load > 40 and Load < 60 else 0)',
                  doc='The total harmonic distortion of the voltage signal when the system is at 50% load.')

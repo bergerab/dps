@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
 
+from .aggregation import *
+
 import numpy as np
 
 class Datapoint:
@@ -191,22 +193,31 @@ class DataSeries:
 
     def __add__(self, other):
         return self.pointwise(other, lambda x, y: x + y)
+
     def __radd__(self, other):
         return self + other
+
     def __sub__(self, other):
         return self.pointwise(other, lambda x, y: x - y)
+
     def __rsub__(self, other):
         return self.pointwise(other, lambda x, y: y - x)        
+
     def __mul__(self, other):
         return self.pointwise(other, lambda x, y: x * y)
+
     def __rmul__(self, other):
         return self * other
+
     def __truediv__(self, other):
         return self.pointwise(other, lambda x, y: x / y)
+
     def __rtruediv__(self, other):
         return self.pointwise(other, lambda x, y: y / x)        
+
     def __floordiv__(self, other):
         return self.pointwise(other, lambda x, y: x // y)
+
     def __rfloordiv__(self, other):
         return self.pointwise(other, lambda x, y: y // x)        
 
@@ -215,19 +226,25 @@ class DataSeries:
 
     def __gt__(self, other):
         return self.pointwise(other, lambda x, y: x > y)
+
     def __lt__(self, other):
         return self.pointwise(other, lambda x, y: x < y)
+
     def __ge__(self, other):
         return self.pointwise(other, lambda x, y: x >= y)
+
     def __le__(self, other):
         return self.pointwise(other, lambda x, y: x <= y)
+
     def __eq__(self, other):
         return self.pointwise(other, lambda x, y: x == y)
+
     def __neq__(self, other):
         return self.pointwise(other, lambda x, y: x != y)
 
     def _and(self, other):
         return self.pointwise(other, lambda x, y: x and y)
+
     def _or(self, other):
         return self.pointwise(other, lambda x, y: x or y)
 
@@ -241,10 +258,44 @@ class DataSeries:
                 ds.add(f(datapoint.value, other), datapoint.time)
         return ds
 
+    def average_aggregation(self, cache):
+        sum = 0
+        count = 0
+        for x in self:
+            sum += x
+            count += 1
+        return AverageAggregation.from_sum_and_count(sum, count)
+
     def average(self):
         return self.aggregate(lambda ds: sum(ds)/len(ds))
+
     def avg(self): return self.average()
+    
     def mean(self): return self.average()
+
+    def min_aggregation(self, cache):
+        local_min = None
+        for x in self:
+            if local_min is None:
+                local_min = x
+            else:
+                local_min = min(x, local_min)
+        return MinAggregation(local_min)
+
+    def min(self):
+        return self.aggregate(lambda ds: min(ds))
+
+    def max_aggregation(self, cache):
+        local_max = None
+        for x in self:
+            if local_max is None:
+                local_max = x
+            else:
+                local_max = max(x, local_max)
+        return MaxAggregation(local_max)
+
+    def max(self):
+        return self.aggregate(lambda ds: max(ds))
 
     def is_windowed(self):
         '''

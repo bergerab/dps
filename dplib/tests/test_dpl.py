@@ -4,6 +4,44 @@ from datetime import datetime, timedelta
 from dplib import DataSeries, DPL
 
 class TestDPL(TestCase):
+    def test_aggregation(self):
+        xs = [1, 2, 3, 4, 5, 6]
+        ds = DataSeries.from_list(xs)
+        self.assertEqual(DPL.eval('avg(a)', {
+            'a': ds,
+        }).get_value(), sum(xs)/len(xs))
+
+        xs = [1, 2, 8, 4, 5, 6]
+        ds = DataSeries.from_list(xs)
+        self.assertEqual(DPL.eval('max(a)', {
+            'a': ds,
+        }).get_value(), max(xs))
+
+        xs = [1, 2, 8, 4, 5, 6]
+        ds = DataSeries.from_list(xs)
+        self.assertEqual(DPL.eval('min(a)', {
+            'a': ds,
+        }).get_value(), min(xs))
+
+        xs = [1, 2, 8, 4, 5, 6]
+        ys = [8, 2, 3, 1, 4, 9]
+        self.assertEqual(DPL.eval('min(a) + max(b)', {
+            'a': DataSeries.from_list(xs),
+            'b': DataSeries.from_list(ys),            
+        }).get_value(), min(xs) + max(ys))
+
+        xs = [1, 2, 8, 4, 5, 6]
+        ys = [8, 2, 3, 1, 4, 9]
+        self.assertEqual(DPL.eval('min(a) * 2 + max(b) / 8.3', {
+            'a': DataSeries.from_list(xs),
+            'b': DataSeries.from_list(ys),            
+        }).get_value(), min(xs) * 2 + max(ys) / 8.3)
+
+        print(DPL.eval('min(a) * 2 + max(b) / 8.3', {
+            'a': DataSeries.from_list(xs),
+            'b': DataSeries.from_list(ys),            
+        }))
+    
     def test_basic(self):
         '''Basic evaluation of literals'''
         self.assertEqual(DPL.eval('1'), 1)
@@ -62,13 +100,13 @@ class TestDPL(TestCase):
         avg3 = (5+6)/2
         avg4 = (7+8)/2
         avg5 = (9+10)/2
-        self.assertEqual(list(DPL.eval('average(window(a, "2s"))', { 'a': ds })),
+        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': ds })),
                          [avg1, avg1, avg2, avg2, avg3, avg3, avg4, avg4, avg5, avg5])
 
         # Should work when window is not a multiple of input size
         ds = DataSeries.from_list([1,2,3,4,5,6,7])
         avg4 = 7/1
-        self.assertEqual(list(DPL.eval('average(window(a, "2s"))', { 'a': ds })),
+        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': ds })),
                          [avg1, avg1, avg2, avg2, avg3, avg3, avg4])
 
     def test_if_exp(self):

@@ -4,6 +4,11 @@ from collections import defaultdict
 
 import pandas as pd
 
+class BatchProcessResult:
+    def __init__(self, df, aggregations):
+        self.df = df
+        self.aggregations = aggregations
+
 class BatchProcessKPI:
     def __init__(self, name, kpi, mapping):
         self.name = name
@@ -77,18 +82,24 @@ class BatchProcess:
         self._connect_graph()
         order = self._get_topological_ordering()
 
-        kpis = pd.DataFrame()
+        df_kpis = pd.DataFrame()
+        dict_kpis = {}
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
-            kpi_df = kpi.run(kpi_name, df.join(kpis), mapping, include_time=False, parameters=parameters)
-            kpis = kpi_df.join(kpis)            
+            kpi_result = kpi.run(kpi_name, df.join(df_kpis), mapping, include_time=False, parameters=parameters)
+            if isinstance(kpi_result, pd.DataFrame):
+                df_kpis = kpi_result.join(df_kpis)
+            elif isinstance(kpi_result, dict):
+                for key in kpi_result:
+                    dict_kpis[key] = kpi_result[key]
+            else:
+                raise Exception('Invalid KPI result type.')
 
-        # Return a DataFrame of only the results
-        return kpis.join(df[time_column])
+        return BatchProcessResult(df_kpis.join(df[time_column]), dict_kpis)
 
     def _get_windows(self):
         '''

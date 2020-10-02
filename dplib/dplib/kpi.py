@@ -3,6 +3,8 @@ import numbers
 import pandas as pd
 
 from .dpl import DPL, DataSeries
+from .aggregation import Aggregation
+from .result import AggregationCache
 
 class MappedKPI:
     '''
@@ -15,24 +17,30 @@ class MappedKPI:
         self.time_column = time_column
 
     def run(self, include_time):
-        ds = self.dpl.run(self.env)
-        return self._dataseries_to_dataframe(ds, include_time)
+        x = self.dpl.run(self.env)
+        return self._to_dataframe(x, include_time)
 
-    def _dataseries_to_dataframe(self, ds, include_time):
-        data = {
-            self.name: ds.to_list(),
-        }
-        if include_time:
-            data[self.time_column] = ds.get_times()
-        return pd.DataFrame(data=data)
+    def _to_dataframe(self, x, include_time):
+        if isinstance(x, DataSeries):
+            data = {
+                self.name: x.to_list(),
+            }
+            if include_time:
+                data[self.time_column] = x.get_times()
+            return pd.DataFrame(data=data)
+        elif isinstance(x, Aggregation):
+            return {
+                self.name: x.get_value(),
+            }
 
 class KPI:
     '''
     A KPI computation.
     '''
-    def __init__(self, code):
+    def __init__(self, code, cache=None):
+        cache = AggregationCache() if cache is None else cache
         self.code = code
-        self.dpl = DPL()
+        self.dpl = DPL(cache)
         self.dpl.compile(code)
 
     def run(self, name, df, mapping={}, time_column='Time', include_time=True, parameters=[]):

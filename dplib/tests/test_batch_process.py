@@ -171,13 +171,13 @@ class TestBatchProcess(TestCase):
 
     def test_batch_process_get_windows(self):
         bp = dplib.BatchProcess() \
-            .add('Window1', dplib.KPI('average(window(Signal, "2s"))'), {
+            .add('Window1', dplib.KPI('avg(window(Signal, "2s"))'), {
                 'Signal': 'Voltage',
             }) \
-            .add('Window2', dplib.KPI('average(window(Signal, "8s"))'), {
+            .add('Window2', dplib.KPI('avg(window(Signal, "8s"))'), {
                 'Signal': 'Current',
             }) \
-            .add('Window3', dplib.KPI('average(window(Signal, "16s")) + average(window(Signal, "32s"))'), {
+            .add('Window3', dplib.KPI('avg(window(Signal, "16s")) + avg(window(Signal, "32s"))'), {
                 'Signal': 'Current',
             })
 
@@ -188,13 +188,13 @@ class TestBatchProcess(TestCase):
 
     def test_batch_process_get_max_window(self):
         bp = dplib.BatchProcess() \
-            .add('Window1', dplib.KPI('average(window(Signal, "2s"))'), {
+            .add('Window1', dplib.KPI('avg(window(Signal, "2s"))'), {
                 'Signal': 'Voltage',
             }) \
-            .add('Window2', dplib.KPI('average(window(Signal, "8s"))'), {
+            .add('Window2', dplib.KPI('avg(window(Signal, "8s"))'), {
                 'Signal': 'Current',
             }) \
-            .add('Window3', dplib.KPI('average(window(Signal, "16s")) + average(window(Signal, "32s"))'), {
+            .add('Window3', dplib.KPI('avg(window(Signal, "16s")) + avg(window(Signal, "32s"))'), {
                 'Signal': 'Current',
             })
 

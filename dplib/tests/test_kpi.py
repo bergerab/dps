@@ -32,6 +32,12 @@ POWER_KPI = KPI('Voltage * Current')
 Does a power computation (voltage times current).
 '''
 
+AVG_POWER_KPI = KPI('avg(Voltage * Current)')
+MAX_POWER_KPI = KPI('max(Voltage * Current)')
+MIN_POWER_KPI = KPI('min(Voltage * Current)')
+
+COMPOUND_KPI = KPI('min(Voltage) * 0.2 + max(Current) * 0.6')
+
 DF_POWER = pd.DataFrame(data={
     'Power': [1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555],
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
@@ -40,8 +46,24 @@ DF_POWER = pd.DataFrame(data={
 The result of multiplying Voltage and Current from DF1 and DF2.
 '''
 
+AVG_DF_POWER = pd.DataFrame(data={
+    'Average Power': [sum([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555]) / 3],
+})
+
+MAX_DF_POWER = pd.DataFrame(data={
+    'Max Power': [max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555])],
+})
+
+MIN_DF_POWER = pd.DataFrame(data={
+    'Min Power': [max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555])],
+})
+
 DF_POWER_WITHOUT_TIME = pd.DataFrame(data={
     'Power': [1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555],
+})
+
+DF_COMPOUND_KPI = pd.DataFrame(data={
+    'Value': [min([1.23, 5.32, 8.19]) * 0.2 + max([0.32, -3.2, 4.2555]) * 0.6],
 })
 
 class TestKPI(TestCase):
@@ -56,6 +78,22 @@ class TestKPI(TestCase):
         '''The default mappings should match the symbols used in the KPI computation.'''
         df = POWER_KPI.run('Power', DF1)
         self.assertTrue(df.equals(DF_POWER))
+
+    def test_compound_kpi(self):
+        d = COMPOUND_KPI.run('Value', DF1)
+        self.assertEquals(d, DF_COMPOUND_KPI)
+
+    def test_average_power(self):
+        d = AVG_POWER_KPI.run('Average Power', DF1)
+        self.assertEquals(d, AVG_DF_POWER)
+
+    def test_max_power(self):
+        d = MAX_POWER_KPI.run('Max Power', DF1)
+        self.assertEquals(d, MAX_DF_POWER)
+
+    def test_min_power(self):
+        d = MAX_POWER_KPI.run('Min Power', DF1)
+        self.assertEquals(d, MIN_DF_POWER)
 
     def test_excluding_time_column(self):
         df = POWER_KPI.run('Power', DF1, include_time=False)

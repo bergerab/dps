@@ -23,7 +23,7 @@ if __name__ == '__main__':
                  # Signal Mappings
                  'Vdc': 'DC_Voltage',
                  'Idc': 'DC_Current',
-                 'Va': 'AC_Voltage',                 
+                 'Va': 'AC_Voltage',             
                 
                  # Parameters
                  'MaxPower': 50000 * 10,

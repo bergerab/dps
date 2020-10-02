@@ -4,13 +4,29 @@ from datetime import timedelta
 
 from .minipy import MiniPy
 from .data_series import DataSeries
+from .result import AggregationCache
 
 class DPL:
-    def __init__(self):
+    def __init__(self, cache=None):
+        cache = AggregationCache() if cache is None else cache
+        
         def window(series, duration):
             return series.time_window(duration)
-        def average(series):
-            return series.average()
+        def average(x):
+            if isinstance(x, DataSeries):
+                if x.is_windowed(): return x.average()
+                else: return x.average_aggregation(cache)
+            else: raise Exception('Unsupported type for average.')                
+        def min(x):
+            if isinstance(x, DataSeries):
+                if x.is_windowed(): return x.min()                
+                else: return x.min_aggregation(cache)
+            else: raise Exception('Unsupported type for min.')
+        def max(x):
+            if isinstance(x, DataSeries):
+                if x.is_windowed(): return x.max()                
+                else: return x.max_aggregation(cache)
+            else: raise Exception('Unsupported type for max.')
         def if_exp(test, body, orelse, env):
             test_value = test.compile().run(env)
             if isinstance(test_value, DataSeries):
@@ -22,9 +38,11 @@ class DPL:
             
         self.mpy = MiniPy(builtins={
             'window': window,
-            'average': average,
+            'avg': average,
+            'max': max,
+            'min': min,                        
             'if': if_exp,
-            'thd': lambda x, base_harmonic: x.thd(base_harmonic),
+            'thd': lambda ds, base_harmonic: ds.thd(base_harmonic),
             'and': lambda x, y: x._and(y),
             'or': lambda x, y: x._or(y),
         })

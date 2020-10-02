@@ -53,10 +53,11 @@ class Component:
             if self.kpis[kpi_name]:
                 kpi_ids.append(self.kpis[kpi_name].id)
         bp = bp.prune(*kpi_ids)
-        df = bp.run(df, time_column, parameters=self.parameters)
+        result = bp.run(df, time_column, parameters=self.parameters)
         
         rename_map = {}
         for kpi_name in kpi_names:
             kpi = self.kpis[kpi_name]
             rename_map[kpi.id] = kpi_name
-        return df.rename(columns=rename_map)[kpi_names + [time_column]]
+        result.df = result.df.rename(columns=rename_map)[kpi_names + [time_column]]
+        return result

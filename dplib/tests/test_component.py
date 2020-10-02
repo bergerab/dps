@@ -27,6 +27,17 @@ DF1_BASIC_RESULT = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
+DF1_AVG_RESULT = pd.DataFrame(data={
+    'KPI One': [sum([7 + 9, 6 + 8, 5 + 7]) / 3],
+    'Time': [NOW],
+})
+
+DF1_AVG_DEP_RESULT = pd.DataFrame(data={
+    'PlusAvgSum': [(sum([7 + 9, 6 + 8, 5 + 7]) / 3) + 2],    
+#    'AvgSum': [sum([7 + 9, 6 + 8, 5 + 7]) / 3],
+    'Time': [NOW],
+})
+
 DF1_DEPENDENT_RESULT = pd.DataFrame(data={
     'KPI Two': [7 + 9 + 9, 6 + 8 + 8, 5 + 7 + 7],
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
@@ -46,17 +57,31 @@ DF2_RESULT = pd.DataFrame(data={
 })
 
 class TestComponent(TestCase):
+    def test_aggregation_with_dependent(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', 'A + B') \
+            .add('AvgSum', 'avg(Sum)') \
+            .add('PlusAvgSum', 'AvgSum + 2') # Why is "AvgSum + 2" not the same as "avg(sum) + 2" ? (adds NaN rows)
+        print(SUT.run(DF1, 'PlusAvgSum'))
+        assert_frame_equal(DF1_AVG_DEP_RESULT, SUT.run(DF1, 'PlusAvgSum').df)
+    
+    def test_aggregation(self):
+        SUT = Component('System Under Test') \
+            .add('KPI One', 'avg(A + B)')
+        print(SUT.run(DF1, 'KPI One'))
+        assert_frame_equal(DF1_AVG_RESULT, SUT.run(DF1, 'KPI One').df)
+
     def test_basic(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'A + B')
-        assert_frame_equal(DF1_BASIC_RESULT, SUT.run(DF1, 'KPI One'))
+        assert_frame_equal(DF1_BASIC_RESULT, SUT.run(DF1, 'KPI One').df)
 
     def test_multiple_basic(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'A + B') \
             .add('KPI Two', 'C + 2') \
             .add('KPI Three', 'D + B')
-        assert_frame_equal(DF2_RESULT, SUT.run(DF2, ['KPI One', 'KPI Two', 'KPI Three']), check_like=True)
+        assert_frame_equal(DF2_RESULT, SUT.run(DF2, ['KPI One', 'KPI Two', 'KPI Three']).df, check_like=True)
 
     def test_dependent(self):
         SUT = Component('System Under Test') \
@@ -66,4 +91,4 @@ class TestComponent(TestCase):
         # Should automatically compute KPI One (but not show it in the output):
         assert_frame_equal(DF1_DEPENDENT_RESULT, SUT.run(DF1, ['KPI Two']))
         
-        assert_frame_equal(DF1_DEPENDENT_RESULT_BOTH, SUT.run(DF1, ['KPI One', 'KPI Two']), check_like=True)
+        assert_frame_equal(DF1_DEPENDENT_RESULT_BOTH, SUT.run(DF1, ['KPI One', 'KPI Two']).df, check_like=True)
