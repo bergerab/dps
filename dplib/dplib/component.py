@@ -56,8 +56,9 @@ class Component:
         result = bp.run(df, time_column, parameters=self.parameters)
         
         rename_map = {}
-        for kpi_name in kpi_names:
+        kpis_in_df = list(filter(lambda x: x not in result.aggregations, kpi_names))
+        for kpi_name in kpis_in_df:
             kpi = self.kpis[kpi_name]
             rename_map[kpi.id] = kpi_name
-        result.df = result.df.rename(columns=rename_map)[kpi_names + [time_column]]
+        result.df = result.df.rename(columns=rename_map)[kpis_in_df + [time_column]]
         return result

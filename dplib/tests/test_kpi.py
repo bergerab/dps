@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from dplib import KPI
+import dplib as dp
+from dplib.result import Result
 
 NOW = datetime.now()
 
@@ -38,71 +40,71 @@ MIN_POWER_KPI = KPI('min(Voltage * Current)')
 
 COMPOUND_KPI = KPI('min(Voltage) * 0.2 + max(Current) * 0.6')
 
-DF_POWER = pd.DataFrame(data={
+DF_POWER = Result(pd.DataFrame(data={
     'Power': [1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555],
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
-})
+}))
 '''
 The result of multiplying Voltage and Current from DF1 and DF2.
 '''
 
-AVG_DF_POWER = pd.DataFrame(data={
+AVG_DF_POWER = Result(pd.DataFrame(data={
     'Average Power': [sum([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555]) / 3],
-})
+}))
 
-MAX_DF_POWER = pd.DataFrame(data={
+MAX_DF_POWER = Result(pd.DataFrame(data={
     'Max Power': [max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555])],
-})
+}))
 
-MIN_DF_POWER = pd.DataFrame(data={
+MIN_DF_POWER = Result(pd.DataFrame(data={
     'Min Power': [max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555])],
-})
+}))
 
-DF_POWER_WITHOUT_TIME = pd.DataFrame(data={
+DF_POWER_WITHOUT_TIME = Result(pd.DataFrame(data={
     'Power': [1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555],
-})
+}))
 
-DF_COMPOUND_KPI = pd.DataFrame(data={
+DF_COMPOUND_KPI = Result(pd.DataFrame(data={
     'Value': [min([1.23, 5.32, 8.19]) * 0.2 + max([0.32, -3.2, 4.2555]) * 0.6],
-})
+}))
 
 class TestKPI(TestCase):
     def test_identity_kpi(self):
         '''Test a KPI that does a NOOP.'''
-        df = ID_KPI.run('Identity', DF1, {
+        d = ID_KPI.run('Identity', DF1, {
             'x': 'Voltage',
         })
-        self.assertTrue(df.equals(DF1[['Voltage', 'Time']].rename(columns={ 'Voltage': 'Identity' })))
+        self.assertTrue(d.equals(Result(DF1[['Voltage', 'Time']].rename(columns={ 'Voltage': 'Identity' }))))
 
     def test_default_mappings(self):
         '''The default mappings should match the symbols used in the KPI computation.'''
-        df = POWER_KPI.run('Power', DF1)
-        self.assertTrue(df.equals(DF_POWER))
+        d = POWER_KPI.run('Power', DF1)
+        self.assertTrue(d.equals(DF_POWER))
 
     def test_compound_kpi(self):
         d = COMPOUND_KPI.run('Value', DF1)
-        self.assertEquals(d, DF_COMPOUND_KPI)
+        self.assertTrue(d.equals(DF_COMPOUND_KPI))
 
     def test_average_power(self):
         d = AVG_POWER_KPI.run('Average Power', DF1)
-        self.assertEquals(d, AVG_DF_POWER)
+        self.assertTrue(d.equals(AVG_DF_POWER))
 
     def test_max_power(self):
         d = MAX_POWER_KPI.run('Max Power', DF1)
-        self.assertEquals(d, MAX_DF_POWER)
+        self.assertTrue(d.equals(MAX_DF_POWER))        
 
     def test_min_power(self):
         d = MAX_POWER_KPI.run('Min Power', DF1)
-        self.assertEquals(d, MIN_DF_POWER)
+        self.assertTrue(d.equals(MIN_DF_POWER))                
 
     def test_excluding_time_column(self):
-        df = POWER_KPI.run('Power', DF1, include_time=False)
-        self.assertTrue(df.equals(DF_POWER_WITHOUT_TIME))
+        d = POWER_KPI.run('Power', DF1, include_time=False)
+        self.assertTrue(d.equals(DF_POWER_WITHOUT_TIME))                        
 
     def test_mappings(self):
         '''The input DataFrame should be able to map its input column names (including the time column name).'''
         df = POWER_KPI.run('Power', DF2, {
             'Voltage': 'volts',
             'Current': 'amps',
-        }, time_column='my_time').rename(columns={ 'my_time': 'Time' })
+        }, time_column='my_time').df.rename(columns={ 'my_time': 'Time' })
         self.assertTrue(df.equals(DF_POWER))

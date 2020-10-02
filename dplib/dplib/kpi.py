@@ -4,7 +4,7 @@ import pandas as pd
 
 from .dpl import DPL, DataSeries
 from .aggregation import Aggregation
-from .result import AggregationCache
+from .result import AggregationCache, Result
 
 class MappedKPI:
     '''
@@ -17,21 +17,25 @@ class MappedKPI:
         self.time_column = time_column
 
     def run(self, include_time):
+        print('env', self.env)
         x = self.dpl.run(self.env)
-        return self._to_dataframe(x, include_time)
+        print('x =', x)
+        return self._to_result(x, include_time)
 
-    def _to_dataframe(self, x, include_time):
+    def _to_result(self, x, include_time):
         if isinstance(x, DataSeries):
             data = {
                 self.name: x.to_list(),
             }
             if include_time:
                 data[self.time_column] = x.get_times()
-            return pd.DataFrame(data=data)
+            return Result.lift(pd.DataFrame(data=data))
         elif isinstance(x, Aggregation):
-            return {
-                self.name: x.get_value(),
-            }
+            return Result.lift({
+                self.name: x,
+            })
+        else:
+            raise Exception(f'KPI has invalid output type {type(x)}')
 
 class KPI:
     '''
@@ -43,21 +47,21 @@ class KPI:
         self.dpl = DPL(cache)
         self.dpl.compile(code)
 
-    def run(self, name, df, mapping={}, time_column='Time', include_time=True, parameters=[]):
+    def run(self, name, input, mapping={}, time_column='Time', include_time=True, parameters=[]):
         '''
         Create a mapping from KPI inputs to DataFrame column names, then execute the KPI immediately.
 
         `include_time` indicates if the resulting DataFrame should also include a time column, or just
         a single column of data (being the KPI).
         '''
-        mapped_kpi = self.map(name, df, mapping, time_column, parameters)
+        mapped_kpi = self.map(name, Result.lift(input), mapping, time_column, parameters)
         return mapped_kpi.run(include_time)
 
-    def map(self, name, df, mapping={}, time_column='Time', parameters=[]):
-        env = self._make_environment_from_dataframe_mapping(df, mapping, time_column, parameters)
+    def map(self, name, input, mapping={}, time_column='Time', parameters=[]):
+        env = self._make_environment_from_dataframe_mapping(input, mapping, time_column, parameters)
         return MappedKPI(name, env, self.dpl, time_column)
 
-    def _make_environment_from_dataframe_mapping(self, df, mapping={}, time_column='Time', parameters=[]):
+    def _make_environment_from_dataframe_mapping(self, input, mapping={}, time_column='Time', parameters=[]):
         '''
         Creates an environment to use with MiniPy from a Pandas DataFrame.
 
@@ -95,20 +99,22 @@ class KPI:
         identifiers = self.dpl.ast.get_case_sensitive_identifier_names()
         for identifier in identifiers:
             if identifier not in mapping:
-                if identifier not in df:
+                if identifier in input.df:
+                    env[identifier] = DataSeries.from_df(input.df, identifier, time_column)
+                elif identifier in input.aggregations:
+                    env[identifier] = input.aggregations[identifier]
+                else:
                     if identifier in parameters:
-                        errors.append(f'You must specify the "{identifier}" parameter.')                        
+                        errors.append(f'You must specify the "{identifier}" parameter.')   
                     else:
                         errors.append(f'Input DataFrame is missing column: "{identifier}".')
-                else:
-                    env[identifier] = DataSeries.from_df(df, identifier, time_column)
             
         for key, value in mapping.items():
             if isinstance(value, str):
-                if value not in df:
+                if value not in input.df:
                     errors.append(f'Input DataFrame has no column named "{value}" (when attempting to map from "{key}" to "{value}").')
                 else:
-                    env[key] = DataSeries.from_df(df, value, time_column)
+                    env[key] = DataSeries.from_df(input.df, value, time_column)
             elif isinstance(value, numbers.Number):
                 env[key] = value
 

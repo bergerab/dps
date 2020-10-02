@@ -27,16 +27,13 @@ DF1_BASIC_RESULT = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
-DF1_AVG_RESULT = pd.DataFrame(data={
-    'KPI One': [sum([7 + 9, 6 + 8, 5 + 7]) / 3],
-    'Time': [NOW],
-})
+DF1_AVG_RESULT = {
+    'KPI One': [sum([7 + 9, 6 + 8, 5 + 7]) / 3]
+}
 
-DF1_AVG_DEP_RESULT = pd.DataFrame(data={
+DF1_AVG_DEP_RESULT = {
     'PlusAvgSum': [(sum([7 + 9, 6 + 8, 5 + 7]) / 3) + 2],    
-#    'AvgSum': [sum([7 + 9, 6 + 8, 5 + 7]) / 3],
-    'Time': [NOW],
-})
+}
 
 DF1_DEPENDENT_RESULT = pd.DataFrame(data={
     'KPI Two': [7 + 9 + 9, 6 + 8 + 8, 5 + 7 + 7],
@@ -61,15 +58,15 @@ class TestComponent(TestCase):
         SUT = Component('System Under Test') \
             .add('Sum', 'A + B') \
             .add('AvgSum', 'avg(Sum)') \
-            .add('PlusAvgSum', 'AvgSum + 2') # Why is "AvgSum + 2" not the same as "avg(sum) + 2" ? (adds NaN rows)
-        print(SUT.run(DF1, 'PlusAvgSum'))
-        assert_frame_equal(DF1_AVG_DEP_RESULT, SUT.run(DF1, 'PlusAvgSum').df)
+            .add('PlusAvgSum', 'AvgSum + 2')
+        result = SUT.run(DF1, 'PlusAvgSum')
+        assert_frame_equal(pd.DataFrame(), result.df)
+        self.assertEquals(DF1_AVG_DEP_RESULT, result.aggregations)
     
     def test_aggregation(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'avg(A + B)')
-        print(SUT.run(DF1, 'KPI One'))
-        assert_frame_equal(DF1_AVG_RESULT, SUT.run(DF1, 'KPI One').df)
+        self.assertEquals(DF1_AVG_RESULT, SUT.run(DF1, 'KPI One').aggregations)
 
     def test_basic(self):
         SUT = Component('System Under Test') \

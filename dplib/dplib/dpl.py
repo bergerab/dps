@@ -12,21 +12,25 @@ class DPL:
         
         def window(series, duration):
             return series.time_window(duration)
+        
         def average(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.average()
                 else: return x.average_aggregation(cache)
-            else: raise Exception('Unsupported type for average.')                
+            else: raise Exception('Unsupported type for average.')
+            
         def min(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.min()                
                 else: return x.min_aggregation(cache)
             else: raise Exception('Unsupported type for min.')
+            
         def max(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.max()                
                 else: return x.max_aggregation(cache)
             else: raise Exception('Unsupported type for max.')
+            
         def if_exp(test, body, orelse, env):
             test_value = test.compile().run(env)
             if isinstance(test_value, DataSeries):

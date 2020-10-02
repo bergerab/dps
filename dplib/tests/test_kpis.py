@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from dplib import POWER
+from dplib.result import Result
 
 NOW = datetime.now()
 
@@ -16,5 +17,5 @@ DF1 = pd.DataFrame(data={
 class TestKPIs(TestCase):
     def test_power(self):
         '''Tests a power KPI'''
-        df = POWER.run('Power', DF1)
-        self.assertTrue(df['Power'].equals(DF1['Voltage'] * DF1['Current']))
+        result = POWER.run('Power', DF1)
+        self.assertTrue(Result(result.df['Power']).equals(Result(DF1['Voltage'] * DF1['Current'])))

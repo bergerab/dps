@@ -137,18 +137,18 @@ class TestBatchProcess(TestCase):
                 'LoadUpperBound': 1.0,
             })
 
-        expected_result = pd.DataFrame(data={
+        expected_result = dplib.result.Result(pd.DataFrame(data={
             'Power': [1*3, 2*4, 3*5, 4*6, 5*7],
             'Load %': [1*3/35, 2*4/35, 3*5/35, 4*6/35, 5*7/35],
             'Power at 50% Load': [0, 0, 3*5, 0, 0],
             'Power above 50% Load': [0, 0, 0, 4*6, 5*7],            
             'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
                           NOW + timedelta(seconds=3), NOW + timedelta(seconds=4)],
-        })
+        }))
             
         result = bp.run(DF2)
 
-        assert_frame_equal(result, expected_result, check_like=True)
+        self.assertTrue(result.equals(expected_result))
 
     def test_batch_process_basic(self):
         bp = dplib.BatchProcess() \
@@ -160,14 +160,15 @@ class TestBatchProcess(TestCase):
                 'X': 'Voltage',
             })
 
-        expected_result = pd.DataFrame(data={
+        expected_result = dplib.result.Result(pd.DataFrame(data={
             'MyVoltage': [1.23, 5.32, 8.19],
             'Power': [0.32 * 1.23, -3.2 * 5.32, 4.2555 * 8.19],
             'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
-        })
+        }))
             
         result = bp.run(DF1)
-        assert_frame_equal(result, expected_result, check_like=True)
+        print(result.df, expected_result.df)
+        self.assertTrue(result.equals(expected_result))
 
     def test_batch_process_get_windows(self):
         bp = dplib.BatchProcess() \

@@ -1,3 +1,33 @@
+import pandas as pd
+
+class Result:
+    def __init__(self, df=None, aggregations=None):
+        self.df = pd.DataFrame() if df is None else df 
+        self.aggregations = {} if aggregations is None else aggregations
+
+    def merge(self, other):
+        aggregations = {}
+        for key in self.aggregations:
+            aggregations[key] = self.aggregations[key]
+        for key in other.aggregations:
+            aggregations[key] = other.aggregations[key]
+        return Result(self.df.join(other.df),
+                      aggregations)
+
+    def equals(self, other):
+        return self.df.equals(other.df) and \
+               self.aggregations == other.aggregations
+
+    @staticmethod
+    def lift(x):
+        if isinstance(x, pd.DataFrame):
+            return Result(x, {})
+        elif isinstance(x, dict):
+            return Result(pd.DataFrame(), x)
+        elif isinstance(x, Result):
+            return x
+        raise Exception(f'Invalid type to lift into a Result type {type(x)}.')
+
 class AggregationCache:
     def __init__(self):
         self.cache = []
@@ -15,37 +45,3 @@ class AggregationCache:
 
     def is_empty(self):
         return bool(self.cache)
-
-class Result:
-    def __init__(self, value):
-        self.value = value
-    
-    def __add__(self, other):
-        return self.value + other.value
-    
-    def __radd__(self, other):
-        return other.value + self.value        
-    
-    def __sub__(self, other):
-        return self.value - other.value
-    
-    def __rsub__(self, other):
-        return other.value - self.value        
-    
-    def __mul__(self, other):
-        return self.value * other.value
-    
-    def __rmul__(self, other):
-        return other.value * self.value
-    
-    def __truediv__(self, other):
-        return self.value / other.value
-    
-    def __rtruediv__(self, other):
-        return other.value / self.value
-    
-    def __floordiv__(self, other):
-        return self.value // other.value
-    
-    def __rfloordiv__(self, other):
-        return other.value // self.value

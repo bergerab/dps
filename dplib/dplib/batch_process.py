@@ -2,12 +2,9 @@ import numbers
 import copy
 from collections import defaultdict
 
-import pandas as pd
+from .result import Result
 
-class BatchProcessResult:
-    def __init__(self, df, aggregations):
-        self.df = df
-        self.aggregations = aggregations
+import pandas as pd
 
 class BatchProcessKPI:
     def __init__(self, name, kpi, mapping):
@@ -74,7 +71,7 @@ class BatchProcess:
         except CyclicGraphException:
             raise Exception('Batch Processes cannot contain recursive KPI computations.')
 
-    def run_all(self, df, time_column='Time', parameters=[]):
+    def run_all(self, input, time_column='Time', parameters=[]):
         '''
         Runs the batch process on the entire DataFrame (without reporting progress, one column at a time)
         '''
@@ -82,24 +79,19 @@ class BatchProcess:
         self._connect_graph()
         order = self._get_topological_ordering()
 
-        df_kpis = pd.DataFrame()
-        dict_kpis = {}
+        input = Result.lift(input)
+        result = Result()
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
+            print('Processing ', kpi_name)
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
-            kpi_result = kpi.run(kpi_name, df.join(df_kpis), mapping, include_time=False, parameters=parameters)
-            if isinstance(kpi_result, pd.DataFrame):
-                df_kpis = kpi_result.join(df_kpis)
-            elif isinstance(kpi_result, dict):
-                for key in kpi_result:
-                    dict_kpis[key] = kpi_result[key]
-            else:
-                raise Exception('Invalid KPI result type.')
-
-        return BatchProcessResult(df_kpis.join(df[time_column]), dict_kpis)
+            kpi_result = kpi.run(kpi_name, input.merge(result), mapping, include_time=False, parameters=parameters)
+            result = result.merge(kpi_result)
+            print(kpi_name, '\n', result, '\n', result.df, '\n', result.aggregations)
+        return result.merge(Result(input.df[time_column])) # BatchProcessResult(df_kpis.join(df[time_column]), dict_kpis)
 
     def _get_windows(self):
         '''
@@ -122,7 +114,7 @@ class BatchProcess:
             if max_window.total_seconds() % window.total_seconds() != 0:
                 raise Exception('All windows in each KPI computation must be multiples of each other.')
 
-    def run(self, df, time_column='Time', parameters=[]):
+    def run(self, input, time_column='Time', parameters=[]):
         '''
         Runs the batch process taking sub batches of the DataFrame (that have a size which is a multiple of the largest window size in the KPIs).
 
@@ -130,7 +122,7 @@ class BatchProcess:
 
         As another example, if there are two KPIs one which is "average(window(Signal, '1s'))" and another which is "average(window(Signal, '2s'))", this will process the DataFrame two second at a time. It will take the two second, process it, then move to the next two second, until all the data has been processed. Notice how all windows must be multiples of each other (otherwise we will get a window which is missing data).
         '''
-        return self.run_all(df, time_column, parameters=parameters)
+        return self.run_all(input, time_column, parameters=parameters)
 
 class Graph:
     def __init__(self):
