@@ -64,25 +64,25 @@ class TestKPI(TestCase, ResultAssertions):
 
     def test_compound_kpi(self):
         result = COMPOUND_KPI.run('Value', DF1)
-        self.assertResultEqual(result.get_aggregations(), {
+        self.assertEqual(result.get_aggregations(), {
             'Value': min([1.23, 5.32, 8.19]) * 0.2 + max([0.32, -3.2, 4.2555]) * 0.6,
         })        
 
     def test_average_power(self):
         result = AVG_POWER_KPI.run('Average Power', DF1)
-        self.assertResultEqual(result.get_aggregations(), {
+        self.assertEqual(result.get_aggregations(), {
             'Average Power': sum([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555]) / 3,
         })
 
     def test_max_power(self):
         result = MAX_POWER_KPI.run('Max Power', DF1)
-        self.assertResultEqual(result.get_aggregations(), {
+        self.assertEqual(result.get_aggregations(), {
             'Max Power': max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555]),
         })  
 
     def test_min_power(self):
         result = MAX_POWER_KPI.run('Min Power', DF1)
-        self.assertResultEqual(result.get_aggregations(), {
+        self.assertEqual(result.get_aggregations(), {
             'Min Power': max([1.23 * 0.32, 5.32 * -3.2, 8.19 * 4.2555]),
         })                
 

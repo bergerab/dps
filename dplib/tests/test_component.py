@@ -5,6 +5,8 @@ from pandas._testing import assert_frame_equal
 import pandas as pd
 
 from dplib.component import Component
+from dplib.result import ResultAssertions, Result
+from dplib.aggregation import AverageAggregation, AddAggregation
 
 NOW = datetime.now()
 
@@ -28,11 +30,11 @@ DF1_BASIC_RESULT = pd.DataFrame(data={
 })
 
 DF1_AVG_RESULT = {
-    'KPI One': [sum([7 + 9, 6 + 8, 5 + 7]) / 3]
+    'KPI One': sum([7 + 9, 6 + 8, 5 + 7]) / 3
 }
 
 DF1_AVG_DEP_RESULT = {
-    'PlusAvgSum': [(sum([7 + 9, 6 + 8, 5 + 7]) / 3) + 2],    
+    'PlusAvgSum': (sum([7 + 9, 6 + 8, 5 + 7]) / 3) + 2,    
 }
 
 DF1_DEPENDENT_RESULT = pd.DataFrame(data={
@@ -53,32 +55,44 @@ DF2_RESULT = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
-class TestComponent(TestCase):
+class TestComponent(TestCase, ResultAssertions):
+    def test_df_and_aggregation_result(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', 'A + B') \
+            .add('AvgSum', 'avg(Sum)') \
+            .add('PlusAvgSum', 'AvgSum + 2')
+        result = SUT.run(DF1, ['PlusAvgSum', 'Sum'])
+        self.assertResultEqual(Result(pd.DataFrame(data={
+            'Sum': [7 + 9, 6 + 8, 5 + 7],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+        }), {
+            'PlusAvgSum': AddAggregation(AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7]) / 3, 3), 2),    
+        }), result)
+    
     def test_aggregation_with_dependent(self):
         SUT = Component('System Under Test') \
             .add('Sum', 'A + B') \
             .add('AvgSum', 'avg(Sum)') \
             .add('PlusAvgSum', 'AvgSum + 2')
         result = SUT.run(DF1, 'PlusAvgSum')
-        assert_frame_equal(pd.DataFrame(), result.df)
-        self.assertEquals(DF1_AVG_DEP_RESULT, result.aggregations)
+        self.assertResultEqual(DF1_AVG_DEP_RESULT, result.get_aggregations())
     
     def test_aggregation(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'avg(A + B)')
-        self.assertEquals(DF1_AVG_RESULT, SUT.run(DF1, 'KPI One').aggregations)
+        self.assertResultEqual(DF1_AVG_RESULT, SUT.run(DF1, 'KPI One').get_aggregations())
 
     def test_basic(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'A + B')
-        assert_frame_equal(DF1_BASIC_RESULT, SUT.run(DF1, 'KPI One').df)
+        self.assertResultEqual(DF1_BASIC_RESULT, SUT.run(DF1, 'KPI One'))
 
     def test_multiple_basic(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'A + B') \
             .add('KPI Two', 'C + 2') \
             .add('KPI Three', 'D + B')
-        assert_frame_equal(DF2_RESULT, SUT.run(DF2, ['KPI One', 'KPI Two', 'KPI Three']).df, check_like=True)
+        self.assertResultEqual(DF2_RESULT, SUT.run(DF2, ['KPI One', 'KPI Two', 'KPI Three']))
 
     def test_dependent(self):
         SUT = Component('System Under Test') \
@@ -86,6 +100,6 @@ class TestComponent(TestCase):
             .add('KPI Two', 'KPI1 + B')
 
         # Should automatically compute KPI One (but not show it in the output):
-        assert_frame_equal(DF1_DEPENDENT_RESULT, SUT.run(DF1, ['KPI Two']))
+        self.assertResultEqual(DF1_DEPENDENT_RESULT, SUT.run(DF1, ['KPI Two']))
         
-        assert_frame_equal(DF1_DEPENDENT_RESULT_BOTH, SUT.run(DF1, ['KPI One', 'KPI Two']).df, check_like=True)
+        self.assertResultEqual(DF1_DEPENDENT_RESULT_BOTH, SUT.run(DF1, ['KPI One', 'KPI Two']).df)

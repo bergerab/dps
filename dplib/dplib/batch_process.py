@@ -89,7 +89,9 @@ class BatchProcess:
             mapping = bpkpi.mapping
             kpi_result = kpi.run(kpi_name, input.merge(result), mapping, include_time=False, parameters=parameters)
             result = kpi_result.merge(result)
-        return result.merge(Result(input.df[time_column])) # BatchProcessResult(df_kpis.join(df[time_column]), dict_kpis)
+
+        return result.merge(Result(input.df[time_column].to_frame()))
+
 
     def _get_windows(self):
         '''

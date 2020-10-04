@@ -31,7 +31,14 @@ class Aggregation:
         return FloorDivAggregation(self, other)        
     
     def __rfloordiv__(self, other):
-        return FloorDivAggregation(other, self)                
+        return FloorDivAggregation(other, self)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and \
+               self.value == other.value
+
+    def __repr__(self):
+        return f'Aggregation({self.name}, {self.value})'
 
     def merge(self, other):
         return other
@@ -91,6 +98,14 @@ class OperatorAggregation(Aggregation):
     def merge(self, other):
         return other
 
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and \
+               self.lhs == other.lhs and \
+               self.rhs == other.rhs
+
+    def __repr__(self):
+        return f'Operator({self.name}, {self.lhs}, {self.rhs})'
+
     def get_value(self):
         return self.op(self.lhs.get_value(), self.rhs.get_value())
 
@@ -131,6 +146,14 @@ class AverageAggregation(Aggregation):
     def __init__(self, average, count):
         self.average = average
         self.count = count
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and \
+               self.average == other.average and \
+               self.count == other.count
+
+    def __repr__(self):
+        return f'AverageAggregation({self.average}, {self.count})'
 
     @staticmethod
     def from_list(xs):

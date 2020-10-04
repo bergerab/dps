@@ -8,6 +8,16 @@ def make_dict(name, rest):
     return rest
 
 class TestAggregation(TestCase):
+    def test_eq(self):
+        self.assertEqual(agg.MinAggregation(2),
+                         agg.MinAggregation(2))
+        self.assertNotEqual(agg.MinAggregation(8),
+                            agg.MinAggregation(2))
+        self.assertEqual(agg.AddAggregation(8, 2),
+                         agg.AddAggregation(8, 2))
+        self.assertNotEqual(agg.AddAggregation(80, 32),
+                         agg.AddAggregation(80, 2))
+    
     def test_overrides(self):
         self.assertEqual((1 + agg.Aggregation(3)).get_value(), 1 + 3)
         self.assertEqual((agg.Aggregation(7) + 3).get_value(), 7 + 3)

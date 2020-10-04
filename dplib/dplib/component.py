@@ -60,5 +60,18 @@ class Component:
         for kpi_name in kpis_in_df:
             kpi = self.kpis[kpi_name]
             rename_map[kpi.id] = kpi_name
-        result.df = result.df.rename(columns=rename_map)[kpis_in_df + [time_column]]
+
+        # Filter the DataFrame so only KPIs in `kpi_names` are included
+        if len(rename_map) == 0:
+            result.df = None
+        else:
+            result.df = result.df.rename(columns=rename_map)[kpis_in_df + [time_column]]
+
+        # Filter the aggregation dictionary so only KPIs in `kpi_names` are included
+        d = {}
+        for kpi_name in kpi_names:
+            if kpi_name in result.aggregations:
+                d[kpi_name] = result.aggregations[kpi_name]
+        result.aggregations = d
+
         return result
