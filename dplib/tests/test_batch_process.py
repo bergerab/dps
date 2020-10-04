@@ -67,7 +67,7 @@ def make_power_bp():
                 'LoadUpperBound': 1.0,
             })
 
-class TestBatchProcess(TestCase):
+class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
     def test_batch_process_get_required_inputs(self):
         bp = make_power_bp()
         inputs = bp.get_required_inputs()
@@ -148,7 +148,7 @@ class TestBatchProcess(TestCase):
             
         result = bp.run(DF2)
 
-        self.assertTrue(result.equals(expected_result))
+        self.assertResultEqual(result, expected_result)
 
     def test_batch_process_basic(self):
         bp = dplib.BatchProcess() \
@@ -168,7 +168,7 @@ class TestBatchProcess(TestCase):
             
         result = bp.run(DF1)
         print(result.df, expected_result.df)
-        self.assertTrue(result.equals(expected_result))
+        self.assertResultEqual(result, expected_result)
 
     def test_batch_process_get_windows(self):
         bp = dplib.BatchProcess() \

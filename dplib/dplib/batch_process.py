@@ -84,13 +84,11 @@ class BatchProcess:
 
         # Compute each KPI in order, adding them to the DataFrame
         for kpi_name in order:
-            print('Processing ', kpi_name)
             bpkpi = self.kpis[kpi_name]
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
             kpi_result = kpi.run(kpi_name, input.merge(result), mapping, include_time=False, parameters=parameters)
-            result = result.merge(kpi_result)
-            print(kpi_name, '\n', result, '\n', result.df, '\n', result.aggregations)
+            result = kpi_result.merge(result)
         return result.merge(Result(input.df[time_column])) # BatchProcessResult(df_kpis.join(df[time_column]), dict_kpis)
 
     def _get_windows(self):

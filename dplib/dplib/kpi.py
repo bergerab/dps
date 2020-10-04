@@ -17,9 +17,7 @@ class MappedKPI:
         self.time_column = time_column
 
     def run(self, include_time):
-        print('env', self.env)
         x = self.dpl.run(self.env)
-        print('x =', x)
         return self._to_result(x, include_time)
 
     def _to_result(self, x, include_time):
@@ -105,7 +103,7 @@ class KPI:
                     env[identifier] = input.aggregations[identifier]
                 else:
                     if identifier in parameters:
-                        errors.append(f'You must specify the "{identifier}" parameter.')   
+                        errors.append(f'You must specify the "{identifier}" parameter.')
                     else:
                         errors.append(f'Input DataFrame is missing column: "{identifier}".')
             
