@@ -96,7 +96,7 @@ class OperatorAggregation(Aggregation):
         raise Exception('Unimplemented `op` for OperatorAggregation.')
 
     def merge(self, other):
-        return other
+        return self.__class__(self.lhs.merge(other.lhs), self.rhs.merge(other.rhs))
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \

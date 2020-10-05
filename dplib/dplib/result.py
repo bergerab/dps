@@ -66,21 +66,3 @@ class Result:
         elif isinstance(x, Result):
             return x
         raise Exception(f'Invalid type to lift into a Result type {type(x)}.')
-
-class AggregationCache:
-    def __init__(self):
-        self.cache = []
-        self.precache = []
-    
-    def add(self, x):
-        self.precache.append(x)
-
-    def commit(self):
-        self.cache = self.precache
-        self.precache = []
-
-    def pop(self):
-        return self.cache.pop()
-
-    def is_empty(self):
-        return bool(self.cache)

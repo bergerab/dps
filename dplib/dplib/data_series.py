@@ -258,7 +258,7 @@ class DataSeries:
                 ds.add(f(datapoint.value, other), datapoint.time)
         return ds
 
-    def average_aggregation(self, cache):
+    def average_aggregation(self):
         sum = 0
         count = 0
         for x in self:
@@ -273,7 +273,7 @@ class DataSeries:
     
     def mean(self): return self.average()
 
-    def min_aggregation(self, cache):
+    def min_aggregation(self):
         local_min = None
         for x in self:
             if local_min is None:
@@ -285,7 +285,7 @@ class DataSeries:
     def min(self):
         return self.aggregate(lambda ds: min(ds))
 
-    def max_aggregation(self, cache):
+    def max_aggregation(self):
         local_max = None
         for x in self:
             if local_max is None:

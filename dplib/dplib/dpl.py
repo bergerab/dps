@@ -4,11 +4,9 @@ from datetime import timedelta
 
 from .minipy import MiniPy
 from .data_series import DataSeries
-from .result import AggregationCache
 
 class DPL:
-    def __init__(self, cache=None):
-        cache = AggregationCache() if cache is None else cache
+    def __init__(self):
         
         def window(series, duration):
             return series.time_window(duration)
@@ -16,19 +14,19 @@ class DPL:
         def average(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.average()
-                else: return x.average_aggregation(cache)
+                else: return x.average_aggregation()
             else: raise Exception('Unsupported type for average.')
             
         def min(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.min()                
-                else: return x.min_aggregation(cache)
+                else: return x.min_aggregation()
             else: raise Exception('Unsupported type for min.')
             
         def max(x):
             if isinstance(x, DataSeries):
                 if x.is_windowed(): return x.max()                
-                else: return x.max_aggregation(cache)
+                else: return x.max_aggregation()
             else: raise Exception('Unsupported type for max.')
             
         def if_exp(test, body, orelse, env):

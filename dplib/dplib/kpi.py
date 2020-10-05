@@ -4,7 +4,7 @@ import pandas as pd
 
 from .dpl import DPL, DataSeries
 from .aggregation import Aggregation
-from .result import AggregationCache, Result
+from .result import Result
 
 class MappedKPI:
     '''
@@ -42,10 +42,9 @@ class KPI:
     '''
     A KPI computation.
     '''
-    def __init__(self, code, cache=None):
-        cache = AggregationCache() if cache is None else cache
+    def __init__(self, code):
         self.code = code
-        self.dpl = DPL(cache)
+        self.dpl = DPL()
         self.dpl.compile(code)
 
     def run(self, name, input, mapping={}, time_column='Time', include_time=True, parameters=[], previous_result=None):
