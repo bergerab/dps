@@ -31,10 +31,10 @@ class Component:
         if errors:
             raise Exception('\n'.join(errors))
 
-    def run(self, df, kpi_names=[], mapping={}, time_column='Time'):
-        return self.run_all(df, kpi_names, mapping, time_column)
+    def run(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
+        return self.run_all(df, kpi_names, mapping, time_column, previous_result)
 
-    def run_all(self, df, kpi_names=[], mapping={}, time_column='Time'):
+    def run_all(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
         if isinstance(kpi_names, str):
             kpi_names = [kpi_names]
 
@@ -53,7 +53,7 @@ class Component:
             if self.kpis[kpi_name]:
                 kpi_ids.append(self.kpis[kpi_name].id)
         bp = bp.prune(*kpi_ids)
-        result = bp.run(df, time_column, parameters=self.parameters)
+        result = bp.run(df, time_column, parameters=self.parameters, previous_result=previous_result)
         
         rename_map = {}
         kpis_in_df = list(filter(lambda x: x not in result.aggregations, kpi_names))

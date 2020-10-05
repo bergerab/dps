@@ -16,6 +16,12 @@ DF1 = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
+DF1_PART_2 = pd.DataFrame(data={
+    'A': [11, 23, 9],
+    'B': [27, 38, 4],
+    'Time': [NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)],
+})
+
 DF2 = pd.DataFrame(data={
     'A': [1, 2, 3],
     'B': [4, 5, 6],
@@ -56,7 +62,42 @@ DF2_RESULT = pd.DataFrame(data={
 })
 
 class TestComponent(TestCase, ResultAssertions):
+    def test_aggregation_continue_advanced_merge(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', 'A + B') \
+            .add('AvgSum', 'avg(Sum)') \
+            .add('PlusAvgSum', 'AvgSum + 2')            
+        result = SUT.run(DF1, ['Sum', 'PlusAvgSum'])
+        result = SUT.run(DF1_PART_2, ['Sum', 'PlusAvgSum'], previous_result=result)
+
+        expected_result = Result(pd.DataFrame(data={
+            'Sum': [7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
+                     NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)],
+        }), {
+            'PlusAvgSum': AddAggregation(AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6), 2),    
+        })
+        self.assertResultEqual(expected_result, result)
+    
+    def test_aggregation_continue(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', 'A + B') \
+            .add('AvgSum', 'avg(Sum)')
+        result = SUT.run(DF1, ['AvgSum', 'Sum'])
+        result = SUT.run(DF1_PART_2, ['AvgSum', 'Sum'], previous_result=result)
+
+        expected_result = Result(pd.DataFrame(data={
+            'Sum': [7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
+                     NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)],
+        }), {
+            'AvgSum': AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6),    
+        })
+        self.assertResultEqual(expected_result, result)
+
     def test_df_and_aggregation_result(self):
+        # Component.run can return both a DataFrame of KPIs (time-series data),
+        # and aggregations of data.
         SUT = Component('System Under Test') \
             .add('Sum', 'A + B') \
             .add('AvgSum', 'avg(Sum)') \

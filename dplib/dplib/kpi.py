@@ -16,11 +16,11 @@ class MappedKPI:
         self.dpl = dpl
         self.time_column = time_column
 
-    def run(self, include_time):
+    def run(self, include_time, previous_result):
         x = self.dpl.run(self.env)
-        return self._to_result(x, include_time)
+        return self._to_result(x, include_time, previous_result)
 
-    def _to_result(self, x, include_time):
+    def _to_result(self, x, include_time, previous_result):
         if isinstance(x, DataSeries):
             data = {
                 self.name: x.to_list(),
@@ -29,6 +29,9 @@ class MappedKPI:
                 data[self.time_column] = x.get_times()
             return Result.lift(pd.DataFrame(data=data))
         elif isinstance(x, Aggregation):
+            if previous_result and self.name in previous_result.aggregations:
+                y = previous_result.aggregations[self.name]
+                x = y.merge(x)
             return Result.lift({
                 self.name: x,
             })
@@ -45,7 +48,7 @@ class KPI:
         self.dpl = DPL(cache)
         self.dpl.compile(code)
 
-    def run(self, name, input, mapping={}, time_column='Time', include_time=True, parameters=[]):
+    def run(self, name, input, mapping={}, time_column='Time', include_time=True, parameters=[], previous_result=None):
         '''
         Create a mapping from KPI inputs to DataFrame column names, then execute the KPI immediately.
 
@@ -53,7 +56,7 @@ class KPI:
         a single column of data (being the KPI).
         '''
         mapped_kpi = self.map(name, Result.lift(input), mapping, time_column, parameters)
-        return mapped_kpi.run(include_time)
+        return mapped_kpi.run(include_time, previous_result)
 
     def map(self, name, input, mapping={}, time_column='Time', parameters=[]):
         env = self._make_environment_from_dataframe_mapping(input, mapping, time_column, parameters)

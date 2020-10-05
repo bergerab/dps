@@ -167,7 +167,6 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
         }))
             
         result = bp.run(DF1)
-        print(result.df, expected_result.df)
         self.assertResultEqual(result, expected_result)
 
     def test_batch_process_get_windows(self):

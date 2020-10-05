@@ -18,12 +18,16 @@ class Result:
         self.df = df
         self.aggregations = {} if aggregations is None else aggregations
 
-    def merge(self, other):
+    def _merge_aggregations(self, agg):
         aggregations = {}
         for key in self.aggregations:
             aggregations[key] = self.aggregations[key]
-        for key in other.aggregations:
-            aggregations[key] = other.aggregations[key]
+        for key in agg:
+            aggregations[key] = agg[key]
+        return aggregations
+
+    def merge(self, other):
+        aggregations = self._merge_aggregations(other.aggregations)
         if other.df is None and self.df is None:
             return Result(aggregations=aggregations)
         if other.df is None and self.df is not None:
@@ -31,6 +35,15 @@ class Result:
         if other.df is not None and self.df is None:
             return Result(other.df, aggregations=aggregations)
         return Result(self.df.join(other.df),
+                      aggregations)
+
+    def append(self, other):
+        aggregations = self._merge_aggregations(other.aggregations)
+        if other.df is None and self.df is not None:
+            return Result(self.df, aggregations=aggregations)
+        if other.df is not None and self.df is None:
+            return Result(other.df, aggregations=aggregations)
+        return Result(self.df.append(other.df, ignore_index=True),
                       aggregations)
 
     def equals(self, other):
