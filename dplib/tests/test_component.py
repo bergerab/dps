@@ -62,6 +62,15 @@ DF2_RESULT = pd.DataFrame(data={
 })
 
 class TestComponent(TestCase, ResultAssertions):
+    def test_aggregation_continue_advanced_merge_weighted_eff(self):
+        SUT = Component('System Under Test') \
+            .add('WeightedEfficiencyTest', 'max(A) * 0.02 + avg(B) * 0.25')
+        result = SUT.run(DF1, 'WeightedEfficiencyTest')
+        result = SUT.run(DF1_PART_2, 'WeightedEfficiencyTest', previous_result=result)
+        self.assertResultEqual(result.get_aggregations(), {
+            'WeightedEfficiencyTest': max([7, 6, 5, 11, 23, 9]) * 0.02 + (sum([9, 8, 7, 27, 38, 4])/6) * 0.25,
+        })
+    
     def test_aggregation_continue_advanced_merge(self):
         SUT = Component('System Under Test') \
             .add('Sum', 'A + B') \
