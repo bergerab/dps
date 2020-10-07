@@ -1,6 +1,26 @@
 from datetime import datetime
 import unittest
 
+KPI1 = {
+    'name': 'KPI1',
+    'computation': 'A + B',
+}
+
+KPI2 = {
+    'name': 'KPI2',
+    'computation': 'C',
+    'description': 'Just C',
+    'hidden': True,
+}
+PARAM1 = {
+    'name': 'Ioc',
+    'default': '2',
+}
+PARAM2 = {
+    'name': 'Voc',
+    'description': 'Blah',
+}
+
 def make_test_case(client):
     class TestDPSManager(unittest.TestCase):
         def __init__(self, *args, **kwargs):
@@ -49,10 +69,6 @@ def make_test_case(client):
             self.delete_object('system', 'system_id', r)
 
             # Test with one KPI
-            KPI1 = {
-                'name': 'KPI1',
-                'computation': 'A + B',
-            }
             r = client.POST('system', {
                 'name': 'System With KPIs',
                 'kpis': [ KPI1 ]
@@ -75,20 +91,6 @@ def make_test_case(client):
             self.delete_object('system', 'system_id', r)
 
             # Test with KPIs and parameters
-            KPI2 = {
-                'name': 'KPI2',
-                'computation': 'C',
-                'description': 'Just C',
-                'hidden': True,
-            }
-            PARAM1 = {
-                'name': 'Ioc',
-                'default': '2',
-            }
-            PARAM2 = {
-                'name': 'Voc',
-                'description': 'Blah',
-            }
             r = client.POST('system', {
                 'name': 'System With KPIs and parameters',
                 'kpis': [
@@ -162,28 +164,42 @@ def make_test_case(client):
         def test_get_and_post_batch_processes(self):
             datetime_string1 = '2023-10-06 14:00:04.002000'
             datetime_string2 = '2023-10-08 14:00:04.002000'
-            r = client.POST('batch_process', {
-                'interval': {
-                    'start': datetime_string1,
-                    'end': datetime_string2,
+            KPIS = [
+                KPI1, KPI2,
+            ]
+            INTERVAL = {
+                'start': datetime_string1,
+                'end': datetime_string2,
+            }
+            MAPPINGS = [
+                {
+                    'key': 'A',
+                    'value': 'My A',
+                },
+                {
+                    'key': 'B',
+                    'value': 'My B',
                 }
+            ]
+            r = client.POST('batch_process', {
+                'interval': INTERVAL,
+                'kpis': KPIS,
+                'mappings': MAPPINGS,                                     
             })
             self.validate_status_code(r)            
             id = r.json()['batch_process_id']                                                
             self.assertObjectEqual('batch_process_id', r.json(), {
-                'interval': {
-                    'start': datetime_string1,
-                    'end': datetime_string2,
-                },
+                'interval': INTERVAL,
+                'kpis': KPIS,
+                'mappings': MAPPINGS,                
             })
             get_r = client.GET('batch_process/' + str(id))
             self.validate_status_code(get_r)
             self.assertEqual(get_r.json(), {
-                'batch_process_id': id,                
-                'interval': {
-                    'start': datetime_string1,
-                    'end': datetime_string2,
-                },
+                'batch_process_id': id,
+                'interval': INTERVAL,
+                'kpis': KPIS,
+                'mappings': MAPPINGS,                     
             })
             self.delete_object('batch_process', 'batch_process_id', r)
 
