@@ -1,7 +1,7 @@
 from unittest import TestCase
 from datetime import datetime, timedelta
 
-from .models import System, SystemSerializer, KPI, KPISerializer, Parameter, ParameterSerializer
+from .models import SystemSerializer
 from .util import Diff
 
 class TestSerializers(TestCase):
