@@ -113,6 +113,6 @@ class TestUtil(TestCase):
                 validator.require('1', datetime_format_string=DATETIME_FORMAT_STRING)
 
     def test_make_api_url(self):
-        self.assertEqual(util.make_api_url('a'), '/api/v1/a')
-        self.assertEqual(util.make_api_url('a', version=2), '/api/v2/a')
-        self.assertEqual(util.make_api_url('boop', version=3), '/api/v3/boop')
+        self.assertEqual(util.make_api_url('a'), 'api/v1/a')
+        self.assertEqual(util.make_api_url('a', version=2), 'api/v2/a')
+        self.assertEqual(util.make_api_url('boop', version=3), 'api/v3/boop')
