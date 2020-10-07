@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render
 from django.http import Http404, HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import viewsets
 from rest_framework import status
@@ -16,59 +17,84 @@ from .serializers import \
 
 from .models import Object
 
-class SystemView(APIView):
-    def get_object(self, pk):
-        try:
-            return Snippet.objects.get(pk=pk)
-        except Snippet.DoesNotExist:
-            raise Http404    
+def extract_obj_value(obj):
+    return json.loads(obj.value)
 
-    def list(self, request):
-        def add_object_id(x):
-            data = json.loads(x.value)
-            data['system_id'] = x.object_id
-            return data
-        queryset = map(add_object_id,
-                       Object.objects.filter(kind='System').all())
-        serializer = SystemSerializer(queryset, many=True)
-        return Response(serializer.data)
+def make_api(Serializer, kind, id_name, plural_name, ref_name=None):
+    @csrf_exempt
+    def api(request, id=None):
+        if request.method == 'GET':
+            if id:
+                obj = get_object_or_404(Object, pk=id)
+                serializer = Serializer(extract_obj_value(obj))
+                data = serializer.data
+                data[id_name] = obj.object_id
+                return JsonResponse(data)
+            else:
+                # If no id was provided, list all objects
+                objs = Object.objects.filter(kind=kind).all()
+                q = map(extract_obj_value, objs)
+                serializer = Serializer(q, many=True)
+                datas = serializer.data
+                for i, data in enumerate(datas):
+                    data[id_name] = objs[i].object_id
+                return JsonResponse({
+                    plural_name.lower(): datas,
+                })
+        elif request.method == 'POST':
+            if id:
+                return HttpResponse(400)
+            
+            serializer = Serializer(data=json.loads(request.body))
+            if not serializer.is_valid():
+                return JsonResponse(serializer.errors, status=400)
+            data = serializer.validated_data
+            
+            kwargs = {}
+            if 'name' in data:
+                kwargs['name'] = data['name']
+            kwargs['kind'] = kind
+            if ref_name:
+                kwargs['ref'] = data[ref_name]
+            kwargs['value'] = json.dumps(data)
+            
+            obj = Object.objects.create(**kwargs)
+            
+            data[id_name] = obj.object_id
+            
+            return JsonResponse(data, status=201)
+        elif request.method == 'DELETE':
+            if id:
+                obj = get_object_or_404(Object, pk=id)
+                obj.delete()
+                return HttpResponse(204)
+            else:
+                # Only allow for deleting all Objects in debug mode (could be malicious)
+                if settings.DEBUG:
+                    Object.objects.filter(kind=kind).delete()
+                    return HttpResponse(204)
+                else:
+                    return HttpResponse(400)
+        elif request.method == 'PUT':
+            obj = get_object_or_404(Object, pk=id)
+            
+            serializer = Serializer(data=json.loads(request.body))
+            if not serializer.is_valid():
+                return JsonResponse(serializer.errors, status=400)
+            data = serializer.validated_data
 
-    def post(self, request):
-        
-        return Response()        
+            obj.value = json.dumps(data)
+            obj.save()
 
-    def get(self, request, pk=None):
-        o = Object.objects.filter(object_id=pk).first()
-        data = json.loads(o.value)
-        data['system_id'] = o.object_id
-        serializer = SystemSerializer(data)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        return Response()
-
-    def partial_update(self, request, pk=None):
-        return Response()                        
-
-    def destroy(self, request, pk=None):
-        q = Object.objects.filter(object_id=pk)        
-        if not q.count():
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        q.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-def system(request, system_id=None):
-    if request.method == 'GET':
-        pass
-    elif request.method == 'POST':
-        pass
-    elif request.method == 'DELETE':
-        pass
-    elif request.method == 'PUT':
-        pass
-    else:
+            data[id_name] = obj.object_id
+            
+            return JsonResponse(data)
         raise MethodNotAllowed()
-    return HttpResponse(request.method + str(system_id))
+    return api
+
+system = make_api(SystemSerializer, 'System', 'system_id', 'systems')
+batch_process = make_api(BatchProcessSerializer, 'BatchProcess', 'batch_process_id', 'batch_processes')
+progress = make_api(ProgressSerializer, 'Progress', 'progress_id', 'progresses')
 
 def info(request):
     return JsonResponse({

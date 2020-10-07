@@ -18,6 +18,12 @@ class APIClient:
     def POST(self, endpoint, jo={}):
         return requests.post(self._make_url(endpoint), json=jo)
 
+    def PUT(self, endpoint, jo={}):
+        return requests.put(self._make_url(endpoint), json=jo)
+
+    def DELETE(self, endpoint, jo={}):
+        return requests.delete(self._make_url(endpoint), json=jo)
+
     def GET(self, endpoint, jo={}):
         return requests.get(self._make_url(endpoint))
 

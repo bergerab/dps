@@ -19,7 +19,6 @@ DF1 = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
-
 DF2 = pd.DataFrame(data={
     'Voltage': [1, 2, 3, 4, 5],
     'Current': [3, 4, 5, 6, 7],

@@ -26,4 +26,4 @@ def make_error_response(e, status_code):
     return make_response(jsonify({ 'error': traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__) }), status_code)    
     
 def make_api_url(name, version=1):
-    return f'/api/v{version}/{name}'
+    return f'api/v{version}/{name}'

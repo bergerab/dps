@@ -4,43 +4,38 @@ from rest_framework import serializers, viewsets
 
 from .models import Object
 
+from dplib import DPL
+
 # System
 class KPISerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
-    identifier = serializers.CharField(max_length=200)
-    description = serializers.CharField()
+    identifier = serializers.CharField(max_length=200, required=False)
+    description = serializers.CharField(required=False)
     computation = serializers.CharField()
-    hidden = serializers.BooleanField()
+    hidden = serializers.BooleanField(required=False)
 
     def validate(self, data):
-        # Make sure computation parses and is valid
-        # Make sure it doesn't reference itself
-        # Make sure identifier doesn't have spaces
-        return data    
+        # TODO: Make sure computation parses and is valid
+        # TODO: Make sure it doesn't reference itself
+        # TODO: Make sure identifier doesn't have spaces
+        DPL().parse(data['computation'])
+        return data
 
 class ParameterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
-    identifier = serializers.CharField(max_length=200)
-    description = serializers.CharField()
-    hidden = serializers.BooleanField()
-    default = serializers.CharField(max_length=200)
+    identifier = serializers.CharField(max_length=200, required=False)
+    description = serializers.CharField(required=False)
+    hidden = serializers.BooleanField(required=False)
+    default = serializers.CharField(max_length=200, required=False)
 
     def validate(self, data):
-        # Make sure identifier doesn't have spaces
+        # TODO: Make sure identifier doesn't have spaces
         return data
     
 class SystemSerializer(serializers.Serializer):
-    system_id = serializers.IntegerField(default=0)
     name = serializers.CharField(max_length=200)
-    kpis = KPISerializer(many=True)
-    parameters = ParameterSerializer(many=True)
-
-    def create(self, data):
-        return Object.objects.create(
-            name=data['name'],
-            kind='System',
-            value=json.dumps(data),
-        )
+    kpis = KPISerializer(many=True, default=[])
+    parameters = ParameterSerializer(many=True, default=[])
 
 # Batch Process
 class MappingSerializer(serializers.Serializer):
@@ -48,18 +43,25 @@ class MappingSerializer(serializers.Serializer):
     value = serializers.CharField(max_length=200)
     
 class IntervalSerializer(serializers.Serializer):
-    start = serializers.DateTimeField()
-    end = serializers.DateTimeField()    
+    start = serializers.CharField()
+    end = serializers.CharField()    
+
+    def validate(self, data):
+        # TODO: Make sure times are in correct format
+        return data
 
 class BatchProcessSerializer(serializers.Serializer):
-    batch_process_id = serializers.IntegerField(default=0)
-    mappings = MappingSerializer(many=True)
-    kpis = KPISerializer(many=True)
+    mappings = MappingSerializer(many=True, required=False)
+    kpis = KPISerializer(many=True, required=False)
     interval = IntervalSerializer()
 
 # Batch Process Progress
 class ProgressSerializer(serializers.Serializer):
-    progress_id = serializers.IntegerField(default=0)
     batch_process_id = serializers.IntegerField()
     state = serializers.CharField()
-    time = serializers.DateTimeField()
+    time = serializers.CharField()
+
+    def validate(self, data):
+        # TODO: Make sure batch_process_id refers to a valid object
+        # TODO: Validate time
+        return data
