@@ -9,7 +9,7 @@ if __name__ == '__main__':
     print('Running batch process...')
     
     # Compute desired KPIs, and return the KPIs in a new DataFrame object    
-    kpi_df = dplib.ExampleSystem() \
+    result = dplib.ExampleSystem() \
         .run(df,
              # Specify which KPIs you want to compute (out of the ones the component supports):
              kpi_names=[
@@ -29,7 +29,7 @@ if __name__ == '__main__':
                  'MaxPower': 50000 * 10,
                  'VoltageBaseHarmonic': 60,
              })
-    
+    kpi_df = result.df
     print('Batch process complete!')
     print('Writing to kpis.csv...')
     kpi_df.to_csv('kpis.csv')
