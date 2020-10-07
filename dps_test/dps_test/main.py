@@ -8,6 +8,7 @@ import click
 from .client import APIClient
 from .test_database_manager import make_test_case as make_database_manager_test
 from .test_labview_integration import make_test_case as make_labview_integration_test
+from .test_dps_manager import make_test_case as make_dps_manager_test
 
 @click.command()
 @click.option('--url', required=True, help='The URL of the server to test.')
@@ -35,6 +36,8 @@ the server's DataStore only supports {', '.join(capabilities)}''')
         send_threshold = client.server_info['send_threshold']        
         print('Connecting to LabVIEW Integration Server\'s Database Manager...')
         run_all_tests(make_labview_integration_test(url, APIClient(dbm_url), send_threshold))        
+    elif client.server_type == 'dps-manager':
+        run_all_tests(make_dps_manager_test(client))
     else:
         error(f'Server has invalid server type of "{client.server_type}"')
 

@@ -7,6 +7,10 @@ import pandas as pd
 
 import dplib
 
+POWER = dplib.KPI('Voltage * Current')
+LOAD = dplib.KPI('CurrentValue / MaxValue')
+AT_LOAD = dplib.KPI('Value if (Load >= LoadLowerBound and Load <= LoadUpperBound) else 0')
+
 NOW = datetime.now()
 
 DF1 = pd.DataFrame(data={
@@ -49,18 +53,18 @@ def normalize_listdict(d):
 
 def make_power_bp():
     return dplib.BatchProcess() \
-            .add('Power', dplib.POWER) \
-            .add('Load %', dplib.LOAD, {
+            .add('Power', POWER) \
+            .add('Load %', LOAD, {
                 'CurrentValue': 'Power',
                 'MaxValue': 'MaxPower',
             }) \
-            .add('Power at 50% Load', dplib.AT_LOAD, {
+            .add('Power at 50% Load', AT_LOAD, {
                 'Load': 'Load %',
                 'Value': 'Power',
                 'LoadLowerBound': 0.4,
                 'LoadUpperBound': 0.6,
             }) \
-            .add('Power above 50% Load', dplib.AT_LOAD, {
+            .add('Power above 50% Load', AT_LOAD, {
                 'Load': 'Load %',
                 'Value': 'Power',
                 'LoadLowerBound': 0.5,  
@@ -74,13 +78,13 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
         self.assertEqual(inputs, set(['Voltage', 'Current', 'MaxPower']))
         
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER) \
+            .add('Power', POWER) \
             .add('Other', dplib.KPI('Thing * Ding'))
         inputs = bp.get_required_inputs()
         self.assertEqual(inputs, set(['Voltage', 'Current', 'Thing', 'Ding']))
 
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'MyVoltage',
             })
         inputs = bp.get_required_inputs()
@@ -116,21 +120,21 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
             
     def test_batch_process_dependent_kpis(self):
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'Voltage',
                 'Current': 'Current',
             }) \
-            .add('Load %', dplib.LOAD, {
+            .add('Load %', LOAD, {
                 'CurrentValue': 'Power',
                 'MaxValue': 35,
             }) \
-            .add('Power at 50% Load', dplib.AT_LOAD, {
+            .add('Power at 50% Load', AT_LOAD, {
                 'Load': 'Load %',
                 'Value': 'Power',
                 'LoadLowerBound': 0.4,  
                 'LoadUpperBound': 0.6,
             }) \
-            .add('Power above 50% Load', dplib.AT_LOAD, {
+            .add('Power above 50% Load', AT_LOAD, {
                 'Load': 'Load %',
                 'Value': 'Power',
                 'LoadLowerBound': 0.5,
@@ -152,7 +156,7 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
 
     def test_batch_process_basic(self):
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'Voltage',
                 'Current': 'Current',
             }) \
@@ -202,7 +206,7 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
 
     def test_batch_process_graph_topological_order(self):
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'volts',
                 'Current': 'amps',
             })
@@ -211,15 +215,15 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
         self.assertEqual(order, ['Power'])
 
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'volts',
                 'Current': 'amps',
             }) \
-            .add('Load %', dplib.LOAD, {
+            .add('Load %', LOAD, {
                 'CurrentValue': 'Power',
                 'MaxValue': 10000,
             }) \
-            .add('Power at 50% Load', dplib.AT_LOAD, {
+            .add('Power at 50% Load', AT_LOAD, {
                 'X': 'Power',
                 'Load': 'Load %',
                 'LoadLowerBound': 40,
@@ -233,7 +237,7 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
         ERR_MSG = 'Batch Processes cannot contain recursive KPI computations.'
 
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'Power', # Cycle
                 'Current': 'amps',
             })
@@ -242,15 +246,15 @@ class TestBatchProcess(TestCase, dplib.result.ResultAssertions):
             bp._get_topological_ordering()
             
         bp = dplib.BatchProcess() \
-            .add('Power', dplib.POWER, {
+            .add('Power', POWER, {
                 'Voltage': 'volts',
                 'Current': 'Power at 50% Load', # Cycle
             }) \
-            .add('Load %', dplib.LOAD, {
+            .add('Load %', LOAD, {
                 'CurrentValue': 'Power',
                 'MaxValue': 10000,
             }) \
-            .add('Power at 50% Load', dplib.AT_LOAD, {
+            .add('Power at 50% Load', AT_LOAD, {
                 'X': 'Power',
                 'Load': 'Load %',
                 'LoadLowerBound': 40,
