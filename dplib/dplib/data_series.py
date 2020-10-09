@@ -178,6 +178,35 @@ class DataSeries:
 
         return thd;
 
+    def thd2(self, base_harmonic,fs):
+        return self.aggregate(lambda ds: ds.thd_series(base_harmonic))
+
+    def thd2_series(self, base_harmonic,fs):
+        fv = np.fft.fft(list(self))
+        f_abs = np.abs(fv)
+        N = len(v)
+        f = np.linspace(0, 0.5 * fs, N // 2)
+
+        all_freqs = np.argsort(-f_abs[:N // 2])
+        all_peaks = f_abs[:N // 2]
+        fund_freq = f[all_freqs[0]]
+        v_rms_0 = all_peaks[all_freqs[0]]
+        offset = 10 * abs((fund_freq - base_harmonic) / base_harmonic)
+
+        # Identify harmonics peaks within in 25% range of harmonics
+        harmonic = fund_freq + base_harmonic
+        v_rms_harmonics = 0
+        while harmonic < f[-1]:
+            ind = [indx for indx, x in enumerate(f) if x >= harmonic * (1 - offset) and x < harmonic * (1 + offset)]
+            ind = ind[np.argmax(all_peaks[ind])]
+            harmonic = f[ind]
+            peak = np.max(all_peaks[ind])
+            v_rms_harmonics = v_rms_harmonics + (peak * peak)
+            harmonic = harmonic + base_harmonic
+
+        thd2 = np.sqrt(v_rms_harmonics) / v_rms_0
+        return thd2
+
     def windows_to_list(self):
         '''
         Takes a nested DataSeries of DataSeries and returns just a List of Lists
