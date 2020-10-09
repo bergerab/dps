@@ -9,7 +9,7 @@ from dplib import DPL
 # System
 class KPISerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
-    identifier = serializers.CharField(max_length=200, required=False)
+    identifier = serializers.CharField(max_length=200, required=False, allow_null=True)
     description = serializers.CharField(required=False)
     computation = serializers.CharField()
     hidden = serializers.BooleanField(required=False)
@@ -23,7 +23,7 @@ class KPISerializer(serializers.Serializer):
 
 class ParameterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
-    identifier = serializers.CharField(max_length=200, required=False)
+    identifier = serializers.CharField(max_length=200, required=False, allow_null=True)
     description = serializers.CharField(required=False)
     hidden = serializers.BooleanField(required=False)
     default = serializers.CharField(max_length=200, required=False)

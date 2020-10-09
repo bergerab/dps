@@ -24,7 +24,11 @@ export default class EntityEdit extends React.Component {
       const jo = {};
       for (const el of e.target) {
         if (el.name) {
-          jo[el.name] = el.value;
+          if (el.dataset.type === 'json') {
+            jo[el.name] = JSON.parse(el.value);            
+          } else {
+            jo[el.name] = el.value;
+          }
         }
       }
       

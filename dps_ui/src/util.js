@@ -1,4 +1,4 @@
-export function nameNeedsIdentifier(name) {
+function nameNeedsIdentifier(name) {
   name = name.trim();
   const illegalChars = ' !@#$%^&*<>?,./][{}\'"\\=+|-~`()';
   for (const illegalChar of illegalChars) {
@@ -14,3 +14,7 @@ export function nameNeedsIdentifier(name) {
   }
   return false;
 }
+
+export default {
+  nameNeedsIdentifier,
+};

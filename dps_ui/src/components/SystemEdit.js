@@ -31,10 +31,37 @@ export default class KPIEdit extends React.Component {
 
       // State controls for dialog boxes
       kpiDialogOpen: false,
+      kpiToEdit: null,
+      
       parameterDialogOpen: false,      
     };
   }
-   
+
+  handleCloseKPIDialog() {
+    this.setState({ kpiDialogOpen: false });
+  }
+
+  handleSaveKPIDialog(kpi) {
+    this.setState({
+      kpiDialogOpen: false
+    });
+    
+    const edit = kpi.edit;
+    delete kpi.edit;
+
+    if (!edit) {
+      this.setState({
+        kpis: this.state.kpis.concat([kpi]),
+      });
+    }
+
+    console.log(kpi);
+  }
+
+  handleOpenKPIDialog() {
+    this.setState({ kpiDialogOpen: true });
+  }
+  
   render () {
     const props = this.props;
     
@@ -69,8 +96,21 @@ export default class KPIEdit extends React.Component {
           <Grid item xs={12}>
             <FormLabel>KPIs</FormLabel>
             <PrettyTable
-              header={['Name', 'Computation', '']}
-              rows={this.state.kpis.map(kpi => [kpi.name, kpi.computation, (<EditAndDelete/>)])}
+              header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
+              rows={this.state.kpis.map(kpi =>
+                                        [kpi.name,
+                                         kpi.identifier,
+                                         kpi.computation,
+                                         kpi.description,
+                                         kpi.hidden ? 'Yes' : 'No',
+                                         (<EditAndDeleteLocal
+                                            onClickEdit={() => {
+                                              this.setState({
+                                                kpiDialogOpen: true,
+                                                kpiToEdit: kpi,
+                                              });
+                                            }}
+                                          />)])}
             />
             <Button variant="contained"
                     color="primary"
@@ -98,8 +138,15 @@ export default class KPIEdit extends React.Component {
             </Button>
           </Grid>
 
+          <input name="kpis"
+                 value={JSON.stringify(this.state.kpis)}
+                 data-type="json"
+                 type="hidden" />
           <KPIDialog
             open={this.state.kpiDialogOpen}
+            handleClose={this.handleCloseKPIDialog.bind(this)}
+            handleSave={this.handleSaveKPIDialog.bind(this)}
+            kpiToEdit={this.state.kpiToEdit}                    
           />
           <ParameterDialog
             open={this.state.parameterDialogOpen}
@@ -109,13 +156,18 @@ export default class KPIEdit extends React.Component {
       </EntityEdit>
     );
     
-    }
+  }
 }
 
-function EditAndDelete(props) {
+function EditAndDeleteLocal(props) {
   return (
     <div style={{ display: 'inline-flex' }}>
-      <Button variant="outlined" color="primary" style={{ marginRight: '10px' }}>
+      <Button
+        variant="outlined"
+        color="primary"
+        style={{ marginRight: '10px' }}
+        onClick={props.onClickEdit}
+      >
         <EditIcon/>
       </Button>
       <ConfirmationDialog
