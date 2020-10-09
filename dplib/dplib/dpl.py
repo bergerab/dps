@@ -37,7 +37,7 @@ class DPL:
             if test_value:
                 return body.compile().run(env)
             return orelse.compile().run(env)
-            
+
         self.mpy = MiniPy(builtins={
             'window': window,
             'avg': average,

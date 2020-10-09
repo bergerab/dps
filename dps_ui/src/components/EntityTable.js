@@ -19,20 +19,19 @@ export default class extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      rows: [],
+      entities: [],
     };
   }
 
   async componentDidMount() {
-    list(this.props.entityUrl).then(r => r.json())
-      .then(rows => {
-	this.setState({ rows });
-      });
+    list(this.props.entityUrl).then(entities => {
+      this.setState({ entities });
+    });
   }
 
   render () {
     const props = this.props;
-    const rows = this.state.rows.map(row => (
+    const entities = this.state.entities.map(row => (
       <TableRow key={row.id}>
 	{props.header.map(h =>
 	                  <TableCell
@@ -72,7 +71,7 @@ export default class extends React.Component {
 	    </TableRow>
 	  </TableHead>
 	  <TableBody>
-            {this.state.rows.length > 0 ? rows : empty}
+            {this.state.entities.length > 0 ? entities : empty}
           </TableBody>
         </Table>
       </TableContainer>

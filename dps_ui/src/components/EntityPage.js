@@ -19,7 +19,6 @@ export default class EntityPage extends React.Component {
              entityUrl={props.entityUrl}
              entityName={props.entityName}
              header={props.fields}
-             rows={[[0, 1, 2, 3]]}
            />);
     
     const deleteAll = () => {
@@ -46,13 +45,16 @@ export default class EntityPage extends React.Component {
           <Box header={props.entityName + 's'}>
             {table}
             <Row>
-              <Link to={props.entityUrl + 'add'} style={{ color: 'white' }}>              
+              <Link to={props.entityUrl + '/add'} style={{ color: 'white' }}>              
                 <Button variant="contained" color="primary">
                   Add {props.entityName}
                 </Button>
               </Link>          
 
-              <Button variant="contained" color="primary" onClick={deleteAll} style={{ marginLeft: '20px' }}>
+              <Button variant="contained"
+                      color="primary"
+                      onClick={deleteAll}
+                      style={{ marginLeft: '20px' }}>
                 Delete All {props.entityName}s
               </Button>          
             </Row>
