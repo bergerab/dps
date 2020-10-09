@@ -21,12 +21,10 @@ export default function AlertDialog(props) {
         setOpen(false);
     };
 
-    const deleteEntity = () => {
-        del(props.entityUrl, props.entity.id).then(() => {
-            setOpen(false);
-            window.location.reload(); // goes against everything react stands for
-        });
-    };
+  const deleteObj = props.deleteObj !== undefined ? props.deleteObj : () => {
+    // Assume the ID is always the name used in the URl plus "_id"
+    return del(props.entityUrl, props.entity[props.entityUrl + '_id']);
+  };
 
   return (
     <div>
@@ -49,7 +47,18 @@ export default function AlertDialog(props) {
           <Button onClick={handleClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={deleteEntity} color="primary" autoFocus>
+          <Button onClick={() => {
+            const ret = deleteObj();
+            if (ret instanceof Promise) {
+              ret.then(() => {
+                setOpen(false);            
+                window.location.reload(); // goes against everything react stands for
+              });
+            } else {
+              setOpen(false);            
+              window.location.reload(); // goes against everything react stands for
+            }
+          }} color="primary" autoFocus>
             Delete
           </Button>
         </DialogActions>

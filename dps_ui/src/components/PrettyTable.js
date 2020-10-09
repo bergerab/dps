@@ -17,6 +17,25 @@ const useStyles = makeStyles({
 
 export default function PrettyTable(props) {
   const classes = useStyles();
+
+  const empty = (<TableRow>
+                   <TableCell>
+                     <i style={{whiteSpace: 'pre'}}>No data to display.</i>
+                   </TableCell>
+                 </TableRow>);
+
+  const rows = props.rows.map((row, i) => (
+    <TableRow key={i}>
+      {row.map(item => (
+        <TableCell
+          component="th"
+          scope="row"
+        >
+          {item}
+        </TableCell>
+      ))}
+    </TableRow>
+  ));
   
   return (
     <TableContainer component={Paper}>
@@ -29,18 +48,7 @@ export default function PrettyTable(props) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {props.rows.map((row, i) => (
-            <TableRow key={i}>
-              {row.map(item => (
-                <TableCell
-                  component="th"
-                  scope="row"
-                >
-                  {item}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
+          {props.rows.length > 0 ? rows : empty}
         </TableBody>
       </Table>
     </TableContainer>

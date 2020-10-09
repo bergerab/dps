@@ -176,28 +176,10 @@ export default function MiniDrawer(props) {
 	  </List>
 	  <Divider />
 	  <List>
-	    <Link to="/data-connector" style={linkStyle}>
-	      <ListItem button key="Data Connectors">
-		<ListItemIcon><InputIcon/></ListItemIcon>
-		<ListItemText primary="Data Connectors" />
-	      </ListItem>
-	    </Link>
 	    <Link to="/system" style={linkStyle}>
 	      <ListItem button key="Systems">
 		<ListItemIcon><MemoryIcon/></ListItemIcon>
 		<ListItemText primary="Systems" />
-	      </ListItem>
-	    </Link>
-	    <Link to="/data-set" style={linkStyle}>
-	      <ListItem button key="Data Sets">
-		<ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
-		<ListItemText primary="Data Sets" />
-	      </ListItem>
-	    </Link>
-	    <Link to="/kpi" style={linkStyle}>
-	      <ListItem button key="Compute">
-		<ListItemIcon><FunctionsIcon/></ListItemIcon>
-		<ListItemText primary="Compute" />
 	      </ListItem>
 	    </Link>
 	  </List>
@@ -218,62 +200,18 @@ export default function MiniDrawer(props) {
 	      <Home />
 	    </Route>
 	    <Route
-	      path="/data-connector/:action?/:id?"
-	      component={props =>
-			 (<EntityPage
-			    {...props}
-			    fields={[['Name', 'displayName'],
-				     ['URL', 'url']]}
-			    entityUrl="/data-connector/"
-			    entityName="Data Connector"
-			    editComponent={DataConnectionEdit}
-			  />)}
-	    />
-	    <Route
 	      path="/system/:action?/:id?"
 	      component={props =>
 			 (<EntityPage
 			    {...props}
-			    fields={[['Name', 'displayName'],
+			    fields={[['Name', 'name'],
 				     ['Signals', 'signals'],
 				     ['Constants', 'constants']]}
-			    entityUrl="/system/"
+			    entityUrl="system"
 			    entityName="System"
 			    editComponent={SystemEdit}
 			  />)}
 	    />
-	    <Route
-	      path="/data-set/:action?/:id?"
-	      component={props =>
-			 (<EntityPage
-			    {...props}
-			    fields={[
-			      ['Name', 'displayName'],
-			      ['Table', 'table'],
-			      ['Mappings', 'mappings'],
-			    ]}
-			    entityUrl="/data-set/"
-
-			    entityName="Data Set"
-			    editComponent={DataSetEdit}
-			  />)}
-	    />
-	    <Route
-	      path="/kpi/:action?/:id?"
-	      component={props =>
-			 (<EntityPage
-			    {...props}
-			    fields={[
-			      ['Name', 'displayName'],
-			      ['Input Signals', 'signals'],
-			      ['Input Constants', 'constants'],
-			    ]}
-			    entityUrl="/kpi/"
-			    entityName="KPI"
-			    editComponent={KPIEdit}
-			  />)}
-	    />
-
 	    <Route
 	      path="/batch-process"
 	      component={BatchProcessPage}
