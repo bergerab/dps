@@ -20,29 +20,13 @@ export default class KPIDialog extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      open: props.open,
+      open: true,
       name: '',
       code: '',
       hidden: false, 
     }
   }
 
-  nameNeedsIdentifier() {
-    const illegalChars = ' !@#$%^&*<>?,./][{}\'"\\=+|-~`()';
-    for (const illegalChar of illegalChars) {
-      if (this.state.name.includes(illegalChar)) {
-        return true;
-      }
-    }
-    const illegalStartingChars = '1234567890';
-    for (const illegalStartingChar of illegalStartingChars) {
-      if (this.state.name.startsWith(illegalStartingChar)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  
   render() {
     const handleClickOpen = () => {
       this.setState({ open: true });
@@ -52,7 +36,7 @@ export default class KPIDialog extends React.Component {
       this.setState({ open: false });
     };
 
-    const identifierField = this.nameNeedsIdentifier() ? (
+    const identifierField = util.nameNeedsIdentifier(this.name) ? (
       <Grid item xs={12}>
         <TextField
           id="identifier"

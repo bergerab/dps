@@ -37,16 +37,6 @@ export default class BatchProcessPage extends React.Component {
         header="Batch Analysis"
       >
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <EntitySelect
-              header="System"
-              fullWidth={true}
-              name="system"
-              value={JSON.parse(this.state.test)}
-              onChange={x => this.setState({ test: JSON.stringify(x.target.value) })}
-              entityUrl={'/system/'}/>
-          </Grid>
-          
           <Grid item xs={12}>
             <PrettyTable
               header={['', 'Computation', 'Description', 'Last Run', 'Result']}
