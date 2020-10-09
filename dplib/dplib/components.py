@@ -64,8 +64,7 @@ def ExampleSystem():
                  id='THD_Va',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('THD2 Voltage (Percent)',
-                 'thd(window(Va, "1s"), VoltageBaseHarmonic,SamplingFrequency) * 100',
-                 id='THD_Va',
+                 'thd(window(Va, "1s"), VoltageBaseHarmonic, SamplingFrequency) * 100',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('Load (Percent)',
                  '(Power / MaxPower) * 100',
@@ -87,7 +86,7 @@ def ExampleSystemAgg():
                  id='THD_Va',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('THD2 Voltage (Percent)',
-                 'avg(thd(window(Va, "1s"), VoltageBaseHarmonic,SamplingFrequency) * 100)',
+                 'avg(thd(window(Va, "1s"), VoltageBaseHarmonic, SamplingFrequency) * 100)',
                  id='THD_Va',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('Load (Percent)',
