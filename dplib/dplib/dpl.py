@@ -38,13 +38,19 @@ class DPL:
                 return body.compile().run(env)
             return orelse.compile().run(env)
 
+        def thd(ds, base_harmonic, fs=None):
+            if fs:
+                return ds.thd2(base_harmonic, fs)
+            else:
+                return ds.thd(base_harmonic)
+            
         self.mpy = MiniPy(builtins={
             'window': window,
             'avg': average,
             'max': max,
             'min': min,                        
             'if': if_exp,
-            'thd': lambda ds, base_harmonic: ds.thd(base_harmonic),
+            'thd': thd,
             'and': lambda x, y: x._and(y),
             'or': lambda x, y: x._or(y),
         })

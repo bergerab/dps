@@ -43,6 +43,8 @@ def add_thds(component, *names):
     for name in names:
         component.add(f'THD_{name}', f'thd(window({name}, "1s"), THDBaseHarmonic)',
                       display_name=f'THD {name}')
+        component.add(f'THD2_{name}', f'thd(window({name}, "1s"), THDBaseHarmonic,SamplingFrequency)',
+                      display_name=f'THD {name}')
         component.add(f'THD {name} at 25% Load', f'THD_{name} if LOAD >= 20 and LOAD <= 30 else 0')
         component.add(f'THD {name} at 50% Load', f'THD_{name} if LOAD >= 45 and LOAD <= 55 else 0')
         component.add(f'THD {name} at 75% Load', f'THD_{name} if LOAD >= 70 and LOAD <= 80 else 0')
@@ -61,6 +63,9 @@ def ExampleSystem():
                  'thd(window(Va, "1s"), VoltageBaseHarmonic) * 100',
                  id='THD_Va',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
+            .add('THD2 Voltage (Percent)',
+                 'thd(window(Va, "1s"), VoltageBaseHarmonic, SamplingFrequency) * 100',
+                 doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('Load (Percent)',
                  '(Power / MaxPower) * 100',
                  id='Load',
@@ -78,6 +83,10 @@ def ExampleSystemAgg():
                  doc='The output power of the system.') \
             .add('THD Voltage (Percent)',
                  'avg(thd(window(Va, "1s"), VoltageBaseHarmonic) * 100)',
+                 id='THD_Va',
+                 doc='Total harmonic distortion of the voltage signal (done every one second).') \
+            .add('THD2 Voltage (Percent)',
+                 'avg(thd(window(Va, "1s"), VoltageBaseHarmonic, SamplingFrequency) * 100)',
                  id='THD_Va',
                  doc='Total harmonic distortion of the voltage signal (done every one second).') \
             .add('Load (Percent)',

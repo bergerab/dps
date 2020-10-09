@@ -16,6 +16,7 @@ if __name__ == '__main__':
                  'Power',
                  'Load (Percent)',
                  'THD Voltage (Percent)',
+                 'THD2 Voltage (Percent)',
                  'THD Voltage (Percent) at 50% Load'
              ],
              # Specify signal mappings and parameter values (constants)
@@ -28,6 +29,7 @@ if __name__ == '__main__':
                  # Parameters
                  'MaxPower': 50000 * 10,
                  'VoltageBaseHarmonic': 60,
+                 'SamplingFrequency': 1000,
              })
     kpi_df = result.df
     print('Batch process complete!')
