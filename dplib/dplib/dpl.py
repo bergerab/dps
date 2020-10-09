@@ -45,6 +45,7 @@ class DPL:
             'min': min,                        
             'if': if_exp,
             'thd': lambda ds, base_harmonic: ds.thd(base_harmonic),
+            'thd2': lambda ds, base_harmonic,fs: ds.thd(base_harmonic,fs),
             'and': lambda x, y: x._and(y),
             'or': lambda x, y: x._or(y),
         })
