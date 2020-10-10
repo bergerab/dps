@@ -12,6 +12,7 @@ import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Grid from '@material-ui/core/Grid';
+import Chip from '@material-ui/core/Chip';
 import List from '@material-ui/core/List';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
@@ -205,8 +206,12 @@ export default function MiniDrawer(props) {
 			 (<EntityPage
 			    {...props}
 			    fields={[['Name', 'name'],
-				     ['Signals', 'signals'],
-				     ['Constants', 'constants']]}
+				     ['KPIs', system => {
+                                       return (<span>{system.kpis.map(kpi => <Chip label={kpi.name}/>)}</span>)
+                                     }],
+				     ['Parameters', system => {
+                                       return (<span>{system.parameters.map(parameter => <Chip label={parameter.name}/>)}</span>)                                       
+                                     }]]}
 			    entityUrl="system"
 			    entityName="System"
 			    editComponent={SystemEdit}

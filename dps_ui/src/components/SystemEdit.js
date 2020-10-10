@@ -186,10 +186,10 @@ export default class KPIEdit extends React.Component {
                     color="primary"
                     style={{ marginTop: '10px' }}
                     onClick={() => {
+                      this.clearKpi();
                       this.setState({
-                        kpiToEdit: null,                        
-                        kpiDialogOpen: true
-                      })
+                          kpiDialogOpen: true
+                        })
                     }}>
               Add KPI
             </Button>
@@ -228,6 +228,7 @@ export default class KPIEdit extends React.Component {
                     color="primary"
                     style={{ marginTop: '10px' }}
                     onClick={() => {
+                      this.clearParam();
                       this.setState({ paramDialogOpen: true })
                     }}>
               Add Parameter

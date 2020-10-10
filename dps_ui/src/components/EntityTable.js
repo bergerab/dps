@@ -31,30 +31,35 @@ export default class extends React.Component {
 
   render () {
     const props = this.props;
-    const entities = this.state.entities.map(row => (
-      <TableRow key={row.id}>
-	{props.header.map(h =>
-	                  <TableCell
-                            key={row[h[1]]}
-                          >
-                            {row[h[1]]}
-                          </TableCell>
-			 )}
-	<TableCell align="right">
-	  <EditAndDelete {...props}
-			 entity={row}
-			 entityName={props.entityName}
-			 entityUrl={props.entityUrl}
-	  />
-	</TableCell>
-      </TableRow>));
+    const entities = this.state.entities.map(row => {
+      const cells = props.header.map(h => {
+        const value = typeof h[1] === 'function' ? h[1](row) : row[h[1]];        
+	return(<TableCell
+                 key={value}
+                      >
+                 {value}
+               </TableCell>)
+      });
+      
+      return (
+        <TableRow key={row.id}>
+	  {cells}
+	  <TableCell align="right">
+	    <EditAndDelete {...props}
+			   entity={row}
+			   entityName={props.entityName}
+			   entityUrl={props.entityUrl}
+	    />
+	  </TableCell>
+        </TableRow>);
+    });
 
     const empty = (<TableRow>
                      <TableCell>
                        <i style={{whiteSpace: 'pre'}}>No data to display.</i>
                      </TableCell>
                    </TableRow>);
-                                     
+    
     return (
       <TableContainer component={Paper}>
         <Table aria-label="simple table">
