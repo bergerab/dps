@@ -23,7 +23,9 @@ export default function AlertDialog(props) {
 
   const deleteObj = props.deleteObj !== undefined ? props.deleteObj : () => {
     // Assume the ID is always the name used in the URl plus "_id"
-    return del(props.entityUrl, props.entity[props.entityUrl + '_id']);
+    return del(props.entityUrl, props.entity[props.entityUrl + '_id']).then(() => {
+      window.location.reload(); // goes against everything react stands for
+    });
   };
 
   return (
@@ -52,14 +54,12 @@ export default function AlertDialog(props) {
             if (ret instanceof Promise) {
               ret.then(() => {
                 setOpen(false);            
-                window.location.reload(); // goes against everything react stands for
               });
             } else {
               setOpen(false);            
-              window.location.reload(); // goes against everything react stands for
             }
           }} color="primary" autoFocus>
-            Delete
+            {props.deleteText !== undefined ? props.deleteText : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

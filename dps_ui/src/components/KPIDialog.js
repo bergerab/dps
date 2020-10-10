@@ -21,49 +21,30 @@ import util from '../util.js';
 export default class KPIDialog extends React.Component {
   constructor(props) {
     super(props);
-    this.clear();
-  }
-
-  clear() {
-    if (this.props.kpiToEdit === null) {
-      this.state = {
-        name: '',
-        identifier: null,
-        computation: '',
-        description: '',
-        hidden: false, 
-      }
-    } else {
-      const kpi = this.props.kpiToEdit;
-      this.state = {
-        name: kpi.name,
-        identifier: kpi.identifier,
-        computation: kpi.computation,
-        description: kpi.description,
-        hidden: kpi.hidden,
-      }
-    }
   }
 
   render() {
-    const identifierField = util.nameNeedsIdentifier(this.state.name) ? (
+    const identifierField = util.nameNeedsIdentifier(this.props.name) ? (
       <Grid item xs={12}>
         <TextField
           id="identifier"
           label="Identifier"
           type="text"
+          value={this.props.identifier}                    
           onChange={event => {
-            this.setState({ identifier: event.target.value.trim() });
+            this.props.handleIdentifier(event.target.value);
           }}
           fullWidth
         />
       </Grid>) : (<span/>);
 
-    const addOrEdit = this.kpiToEdit === null ? 'Add' : 'Edit';
-    
+    const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
+
     return (
       <Dialog open={this.props.open}
-              onClose={this.props.handleClose}
+              onClose={() => {
+                this.props.handleClose();
+              }}
               aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">{addOrEdit} KPI</DialogTitle>
         <DialogContent>
@@ -73,10 +54,11 @@ export default class KPIDialog extends React.Component {
                 autoFocus
                 id="name"
                 label="Name"
+                value={this.props.name}                    
                 type="text"
-                onChange={event => {
-                  this.setState({ name: event.target.value.trim() });
-                }}
+                  onChange={event => {
+                  this.props.handleName(event.target.value);
+                  }}
                 fullWidth
                 required
               />
@@ -85,28 +67,15 @@ export default class KPIDialog extends React.Component {
             {identifierField}
             
             <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    color="primary"
-                    checked={this.state.hidden}
-                    onChange={event => this.setState({ hidden: event.target.checked })}
-                    name="checkedF"
-                  />
-                }
-                label="Hidden"
-              />              
-            </Grid>
-
-            <Grid item xs={12}>
               <TextField
                 id="description"
                 label="Description"
                 type="text"
+                value={this.props.description}
                 fullWidth
                 multiline
                 onChange={event => {
-                  this.setState({ description: event.target.value.trim() });
+                  this.props.handleDescription(event.target.value);
                 }}
                 rows={2}
                 rowsMax={4}
@@ -116,30 +85,46 @@ export default class KPIDialog extends React.Component {
             <Grid item xs={12}>
               <FormLabel>Computation *</FormLabel>
               <KPIEditor
-              	value={this.state.computation}
+              	value={this.props.computation}
 	        onBeforeChange={(editor, data, value) => {
-		  this.setState({ computation: value });
+                  this.props.handleComputation(value);
 	        }}
               />
             </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    color="primary"
+                    checked={this.props.hidden}
+                    onChange={event =>
+                              this.props.handleHidden(event.target.checked)}
+                    name="checkedF"
+                  />
+                }
+                label="Hidden"
+              />              
+            </Grid>
+
+
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={this.props.handleClose}
+            onClick={() => {
+              this.props.handleClose();
+            }}
             color="primary">
-            Undo
+            Cancel
           </Button>
           <Button
             onClick={() => {
-              this.props.handleSave(Object.assign({
-                edit: this.props.kpiToEdit !== null,
-              }, this.state));
-              this.clear();
+              this.props.handleSave();
             }}
             color="primary"
           >
-            Keep
+            Save
           </Button>
         </DialogActions>
       </Dialog>

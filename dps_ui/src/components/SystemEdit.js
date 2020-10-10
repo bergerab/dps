@@ -31,35 +31,94 @@ export default class KPIEdit extends React.Component {
 
       // State controls for dialog boxes
       kpiDialogOpen: false,
-      kpiToEdit: null,
-      
-      parameterDialogOpen: false,      
+      paramDialogOpen: false,      
     };
+    this.clearKpi();
+    this.clearParam();
+  }
+
+  clearKpi() {
+    Object.assign(this.state, {
+      kpiId: -1,
+      kpiName: '',
+      kpiDescription: '',
+      kpiIdentifier: '',
+      kpiHidden: false,
+      kpiComputation: '',                  
+    });
+  }    
+
+  clearParam() {
+    Object.assign(this.state, {
+      paramId: -1,
+      paramName: '',
+      paramDescription: '',
+      paramIdentifier: '',
+      paramHidden: false,
+      paramDefault: '',
+    });
+  }
+
+  handleCloseParamDialog() {
+    this.setState({ paramDialogOpen: false });
+  }
+
+  handleSaveParamDialog() {
+    this.setState({
+      paramDialogOpen: false
+    });
+
+    const param = {
+      name: this.state.paramName,
+      identifier: this.state.paramIdentifier,
+      description: this.state.paramDescription,
+      hidden: this.state.paramHidden,
+      default: this.state.paramDefault,
+    };
+
+    // Add
+    if (this.state.paramId === -1) {
+      this.setState({
+        parameters: this.state.parameters.concat([param]),
+      });
+      this.clearParam();      
+    } else { // Edit
+      this.state.parameters[this.state.paramId] = param;
+    }
   }
 
   handleCloseKPIDialog() {
     this.setState({ kpiDialogOpen: false });
   }
 
-  handleSaveKPIDialog(kpi) {
+  handleSaveKPIDialog() {
     this.setState({
       kpiDialogOpen: false
     });
-    
-    const edit = kpi.edit;
-    delete kpi.edit;
 
-    if (!edit) {
+    const kpi = {
+      name: this.state.kpiName,
+      identifier: this.state.kpiIdentifier,
+      description: this.state.kpiDescription,
+      hidden: this.state.kpiHidden,
+      computation: this.state.kpiComputation,
+    };
+
+    // Add
+    if (this.state.kpiId === -1) {
       this.setState({
         kpis: this.state.kpis.concat([kpi]),
       });
+      this.clearKpi();      
+    } else { // Edit
+      this.state.kpis[this.state.kpiId] = kpi;
     }
-
-    console.log(kpi);
   }
 
   handleOpenKPIDialog() {
-    this.setState({ kpiDialogOpen: true });
+    this.setState({
+      kpiDialogOpen: true
+    });
   }
   
   render () {
@@ -97,18 +156,29 @@ export default class KPIEdit extends React.Component {
             <FormLabel>KPIs</FormLabel>
             <PrettyTable
               header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
-              rows={this.state.kpis.map(kpi =>
+              rows={this.state.kpis.map((kpi, i) =>
                                         [kpi.name,
                                          kpi.identifier,
                                          kpi.computation,
                                          kpi.description,
                                          kpi.hidden ? 'Yes' : 'No',
                                          (<EditAndDeleteLocal
+                                            entityName={kpi.name}
+                                            entityType="KPI"
                                             onClickEdit={() => {
                                               this.setState({
                                                 kpiDialogOpen: true,
-                                                kpiToEdit: kpi,
+                                                
+                                                kpiId: i,
+                                                kpiName: kpi.name,
+                                                kpiIdentifier: kpi.identifier,
+                                                kpiDescription: kpi.description,
+                                                kpiHidden: kpi.hidden,
+                                                kpiComputation: kpi.computation,
                                               });
+                                            }}
+                                            onClickDelete={x => {
+                                              this.setState({ kpis: this.state.kpis.filter((x, j) => i !== j) });                                              
                                             }}
                                           />)])}
             />
@@ -116,7 +186,10 @@ export default class KPIEdit extends React.Component {
                     color="primary"
                     style={{ marginTop: '10px' }}
                     onClick={() => {
-                      this.setState({ kpiDialogOpen: true })
+                      this.setState({
+                        kpiToEdit: null,                        
+                        kpiDialogOpen: true
+                      })
                     }}>
               Add KPI
             </Button>
@@ -125,14 +198,37 @@ export default class KPIEdit extends React.Component {
           <Grid item xs={12}>
             <FormLabel>Parameters</FormLabel>
             <PrettyTable
-              header={['Name']}
-              rows={this.state.parameters.map(parameter => [parameter.name])}              
+              header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
+              rows={this.state.parameters.map((parameter, i) => [parameter.name,
+                                                                 parameter.identifier,
+                                                                 parameter.default,
+                                                                 parameter.description,
+                                                                 parameter.hidden ? 'Yes' : 'No',
+                                                                 (<EditAndDeleteLocal
+                                                                    entityName={parameter.name}
+                                                                    entityType="parameter"
+                                                                    onClickEdit={() => {
+                                                                      this.setState({
+                                                                        paramDialogOpen: true,
+                                                                        
+                                                                        paramId: i,
+                                                                        paramName: parameter.name,
+                                                                        paramIdentifier: parameter.identifier,
+                                                                        paramDescription: parameter.description,
+                                                                        paramHidden: parameter.hidden,
+                                                                        paramComputation: parameter.computation,
+                                                                      });
+                                                                    }}
+                                                                    onClickDelete={x => {
+                                                                      this.setState({ parameters: this.state.parameters.filter((x, j) => i !== j) });
+                                                                    }}
+                                                                  />)])}              
             />
             <Button variant="contained"
                     color="primary"
                     style={{ marginTop: '10px' }}
                     onClick={() => {
-                      this.setState({ parameterDialogOpen: true })
+                      this.setState({ paramDialogOpen: true })
                     }}>
               Add Parameter
             </Button>
@@ -146,10 +242,40 @@ export default class KPIEdit extends React.Component {
             open={this.state.kpiDialogOpen}
             handleClose={this.handleCloseKPIDialog.bind(this)}
             handleSave={this.handleSaveKPIDialog.bind(this)}
-            kpiToEdit={this.state.kpiToEdit}                    
+            
+            id={this.state.kpiId}
+            name={this.state.kpiName}
+            handleName={name => this.setState({ kpiName: name })}
+            identifier={this.state.kpiIdentifier}
+            handleIdentifier={identifier => this.setState({ kpiIdentifier: identifier })}
+            description={this.state.kpiDescription}
+            handleDescription={description => this.setState({ kpiDescription: description })}
+            hidden={this.state.kpiHidden}
+            handleHidden={hidden => this.setState({ kpiHidden: hidden })}
+            computation={this.state.kpiComputation}
+            handleComputation={computation => this.setState({ kpiComputation: computation })}
           />
+
+          <input name="parameters"
+                 value={JSON.stringify(this.state.parameters)}
+                 data-type="json"
+                 type="hidden" />
           <ParameterDialog
-            open={this.state.parameterDialogOpen}
+            open={this.state.paramDialogOpen}
+            handleClose={this.handleCloseParamDialog.bind(this)}
+            handleSave={this.handleSaveParamDialog.bind(this)}
+            
+            id={this.state.paramId}
+            name={this.state.paramName}
+            handleName={name => this.setState({ paramName: name })}
+            identifier={this.state.paramIdentifier}
+            handleIdentifier={identifier => this.setState({ paramIdentifier: identifier })}
+            description={this.state.paramDescription}
+            handleDescription={description => this.setState({ paramDescription: description })}
+            hidden={this.state.paramHidden}
+            handleHidden={hidden => this.setState({ paramHidden: hidden })}
+            _default={this.state.paramDefault}
+            handleDefault={_default => this.setState({ paramDefault: _default })}
           />          
           
         </Grid>
@@ -171,12 +297,11 @@ function EditAndDeleteLocal(props) {
         <EditIcon/>
       </Button>
       <ConfirmationDialog
-        deleteObj={() => {
-          console.log("TODO: Delete KPI");
-        }}
-	header={`Delete "" ?`}
+        deleteText='Remove'
+        deleteObj={props.onClickDelete}
+	header={`Remove "${props.entityName}" ${props.entityType}?`}
       >
-	Are you sure you want to delete this? This action is irreversible.
+	Are you sure you want to remove this {props.entityType}?
       </ConfirmationDialog>
     </div>
   );
