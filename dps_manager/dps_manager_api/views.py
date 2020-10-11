@@ -1,11 +1,17 @@
+import json
+
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from .object_api import ObjectAPI
 from .serializers import \
     SystemSerializer, \
     BatchProcessSerializer, \
-    ProgressSerializer
+    ProgressSerializer, \
+    RequiredMappingsRequestSerializer
+
+from dplib import BatchProcess, KPI
 
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer
@@ -34,6 +40,37 @@ class ProgressAPI(ObjectAPI):
     id_name = 'progress_id'
     api_name = 'progress'
     plural_api_name = 'progresses'
+
+@csrf_exempt
+def get_required_mappings(request):
+    serializer = RequiredMappingsRequestSerializer(data=json.loads(request.body))
+    if not serializer.is_valid():
+        return JsonResponse(serializer.errors, status=400)
+    data = serializer.validated_data
+    
+    parameter_names = []
+    for parameter in data['parameters']:
+        if parameter['identifier']:
+            parameter_names.append(parameter['identifier'])
+        else:
+            parameter_names.append(parameter['name'])            
+
+    bp = BatchProcess()
+    for kpi in data['kpis']:
+        bp.add(kpi['identifier'] or kpi['name'], KPI(kpi['computation']))
+
+    signals = []
+    parameters = []
+    for name in bp.get_required_inputs():
+        if name in parameter_names:
+            parameters.append(name)
+        else:
+            signals.append(name)
+        
+    return JsonResponse({
+        'signals': signals,
+        'parameters': parameters,
+    })
 
 def info(request):
     return JsonResponse({

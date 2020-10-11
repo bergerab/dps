@@ -53,3 +53,16 @@ export function del(entityUrl, id) {
     },
   });
 }
+
+export function get_required_mappings(system, kpi_names) {
+  return fetch(API_PREFIX + 'get_required_mappings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      kpis: system.kpis.filter(x => kpi_names.includes(x.name)),
+      parameters: system.parameters,
+    }),
+  }).then(r => r.json());
+}

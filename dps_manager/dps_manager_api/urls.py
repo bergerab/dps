@@ -11,4 +11,5 @@ router.add(views.ProgressAPI)
 
 urlpatterns = router.get_urls() + [
     path('', views.info),
+    path('api/v1/get_required_mappings', views.get_required_mappings),
 ]

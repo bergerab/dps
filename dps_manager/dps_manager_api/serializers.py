@@ -9,8 +9,8 @@ from dplib import DPL
 # System
 class KPISerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
-    identifier = serializers.CharField(max_length=200, required=False, allow_null=True)
-    description = serializers.CharField(required=False)
+    identifier = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
     computation = serializers.CharField()
     hidden = serializers.BooleanField(required=False)
 
@@ -65,3 +65,8 @@ class ProgressSerializer(serializers.Serializer):
         # TODO: Make sure batch_process_id refers to a valid object
         # TODO: Validate time
         return data
+
+# RequiredMappingsRequestSerializer
+class RequiredMappingsRequestSerializer(serializers.Serializer):
+    kpis = KPISerializer(many=True)
+    parameters = ParameterSerializer(many=True, default=[])

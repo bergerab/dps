@@ -41,7 +41,7 @@ class BatchProcess:
             for id in kpi.kpi.dpl.ast.get_identifiers():
                 name = id.original_name
                 value = mapping.get(name)
-                if name not in mapping:
+                if name not in mapping and name not in self.kpis:
                     s.add(id.original_name)
                 elif isinstance(value, str) and value not in self.kpis:
                     s.add(value)

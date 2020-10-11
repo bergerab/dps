@@ -7,7 +7,7 @@ import {
   Link
 } from "react-router-dom";
 
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { withStyles, useTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -44,9 +44,11 @@ import EntityMultiSelect from './EntityMultiSelect';
 
 import EntityPage from './EntityPage';
 
+import { list } from '../api';
+
 const drawerWidth = 240;
 
-const useStyles = makeStyles((theme) => ({
+const styles = theme => ({
   root: {
     display: 'flex',
   },
@@ -106,124 +108,145 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     padding: theme.spacing(3),
   },
-}));
+});
 
-export default function MiniDrawer(props) {
-  const classes = useStyles();
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+class MiniDrawer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false,
+      systems: [],
+    };
+  }
+  
+  async componentDidMount() {
+    list('system').then(systems => {
+      this.setState({ systems });
+    });
+  }
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
+  render() {
+    const { classes } = this.props;
+    const handleDrawerOpen = () => {
+      this.setState({ open: true });
+    };
 
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
+    const handleDrawerClose = () => {
+      this.setState({ open: false });
+    };
 
-  const linkStyle = { textDecoration: 'none', color: 'initial' };
+    const linkStyle = { textDecoration: 'none', color: 'initial' };
 
-  return (
-    <Router>
-      <div className={classes.root}>
-	<CssBaseline />
-	<AppBar
-	  position="fixed"
-	  className={clsx(classes.appBar, {
-	    [classes.appBarShift]: open,
-	  })}
-	>
-	  <Toolbar>
-	    <IconButton
-	      color="inherit"
-	      aria-label="open drawer"
-	      onClick={handleDrawerOpen}
-	      edge="start"
-	      className={clsx(classes.menuButton, {
-		[classes.hide]: open,
-	      })}>
-	      <MenuIcon />
-	    </IconButton>
-	    <Typography variant="h6" noWrap>
-	      Data Processing System
-	    </Typography>
-	  </Toolbar>
-	</AppBar>
-	<Drawer
-	  variant="permanent"
-	  className={clsx(classes.drawer, {
-	    [classes.drawerOpen]: open,
-	    [classes.drawerClose]: !open,
-	  })}
-	  classes={{
-	    paper: clsx({
-	      [classes.drawerOpen]: open,
-	      [classes.drawerClose]: !open,
-	    }),
-	  }}>
-	  <div className={classes.toolbar}>
-	    <IconButton onClick={handleDrawerClose}>
-	      {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-	    </IconButton>
-	  </div>
-	  <Divider />
-	  <List>
-	    <Link to="/home" style={linkStyle}>
-	      <ListItem button key="Home">
-		<ListItemIcon><HomeIcon/></ListItemIcon>
-		<ListItemText primary="Home" />
-	      </ListItem>
-	    </Link>
-	  </List>
-	  <Divider />
-	  <List>
-	    <Link to="/system" style={linkStyle}>
-	      <ListItem button key="Systems">
-		<ListItemIcon><MemoryIcon/></ListItemIcon>
-		<ListItemText primary="Systems" />
-	      </ListItem>
-	    </Link>
-	  </List>
-	  <Divider />
-	  <List>
-	    <Link to="batch-process" style={linkStyle}>
-	      <ListItem button key="Batch Process">
-		<ListItemIcon><TableChartIcon /></ListItemIcon>
-		<ListItemText primary="Batch Process" />
-	      </ListItem>
-	    </Link>
-	  </List>
-	</Drawer>
-	<main className={classes.content}>
-	  <div className={classes.toolbar} />
-	  <Switch>
-	    <Route path="/home">
-	      <Home />
-	    </Route>
-	    <Route
-	      path="/system/:action?/:id?"
-	      component={props =>
-			 (<EntityPage
-			    {...props}
-			    fields={[['Name', 'name'],
-				     ['KPIs', system => {
-                                       return (<span>{system.kpis.map(kpi => <Chip label={kpi.name}/>)}</span>)
-                                     }],
-				     ['Parameters', system => {
-                                       return (<span>{system.parameters.map(parameter => <Chip label={parameter.name}/>)}</span>)                                       
-                                     }]]}
-			    entityUrl="system"
-			    entityName="System"
-			    editComponent={SystemEdit}
-			  />)}
-	    />
-	    <Route
-	      path="/batch-process"
-	      component={BatchProcessPage}
-	    />
-	  </Switch>
-	</main>
-      </div>
-    </Router>
-  );
-}
+    return (
+      <Router>
+        <div className={classes.root}>
+          <CssBaseline />
+          <AppBar
+            position="fixed"
+            className={clsx(classes.appBar, {
+	      [classes.appBarShift]: this.state.open,
+            })}
+          >
+            <Toolbar>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={handleDrawerOpen}
+                edge="start"
+                className={clsx(classes.menuButton, {
+	          [classes.hide]: this.state.open,
+                })}>
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" noWrap>
+                Data Processing System
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          <Drawer
+            variant="permanent"
+            className={clsx(classes.drawer, {
+	      [classes.drawerOpen]: this.state.open,
+	      [classes.drawerClose]: !this.state.open,
+            })}
+            classes={{
+	      paper: clsx({
+	        [classes.drawerOpen]: this.state.open,
+	        [classes.drawerClose]: !this.state.open,
+	      }),
+            }}>
+            <div className={classes.toolbar}>
+              <IconButton onClick={handleDrawerClose}>
+                {/* {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />} */}
+                {<ChevronLeftIcon/>}
+              </IconButton>
+            </div>
+            <Divider />
+            <List>
+              <Link to="/home" style={linkStyle}>
+                <ListItem button key="Home">
+                  <ListItemIcon><HomeIcon/></ListItemIcon>
+                  <ListItemText primary="Home" />
+                </ListItem>
+              </Link>
+            </List>
+            <Divider />
+            <List>
+              <Link to="/system" style={linkStyle}>
+                <ListItem button key="Systems">
+                  <ListItemIcon><MemoryIcon/></ListItemIcon>
+                  <ListItemText primary="Systems" />
+                </ListItem>
+              </Link>
+            </List>
+            <Divider />
+            <List>
+              {this.state.systems.map(system => (
+                <Link to={"/batch-process/" + system.system_id} style={linkStyle}>
+                  <ListItem button key={system.name}>
+                    <ListItemIcon><TableChartIcon /></ListItemIcon>
+                    <ListItemText primary={system.name} />
+                  </ListItem>
+                </Link>
+              ))}
+            </List>
+          </Drawer>
+          <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Switch>
+              <Route path="/home">
+                <Home />
+              </Route>
+              <Route
+                path="/system/:action?/:id?"
+                component={props =>
+		           (<EntityPage
+		  {...props}
+		  fields={[['Name', 'name'],
+			   ['KPIs', system => {
+                             return (<span>{system.kpis.filter(kpi => !kpi.hidden).map(kpi => <Chip label={kpi.name}/>)}</span>)
+                           }],
+			   ['Parameters', system => {
+                             return (<span>{system.parameters.filter(param => !param.hidden).map(parameter => <Chip label={parameter.name}/>)}</span>)                                       
+                           }]]}
+		  entityUrl="system"
+		  entityName="System"
+		  editComponent={SystemEdit}
+      />)}
+	      />
+              {this.state.systems.map(system => (
+                <Route
+                  path="/batch-process"
+
+                /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
+                
+                  render={(props) => (<BatchProcessPage key={Date.now()} {...props} />)} />
+              ))}
+            </Switch>
+          </main>
+        </div>
+      </Router>
+    );
+  }
+                            }
+export default withStyles(styles)(MiniDrawer);
