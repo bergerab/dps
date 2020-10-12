@@ -8,16 +8,12 @@ import FormLabel from '@material-ui/core/FormLabel';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 import util from '../util.js';
+import KPIEditor from './KPIEditor';
 
 export default class ParameterDialog extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-  
   render() {
     const identifier = util.getIdentifier(this.props.name, this.props.identifier);    
     const identifierField =
@@ -39,7 +35,7 @@ export default class ParameterDialog extends React.Component {
 
     return (
       <Dialog open={this.props.open} onClose={this.props.handleClose} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Add Parameter</DialogTitle>
+        <DialogTitle id="form-dialog-title">{addOrEdit} Parameter</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -61,19 +57,6 @@ export default class ParameterDialog extends React.Component {
 
             <Grid item xs={12}>
               <TextField
-                id="default"
-                label="Default"
-                value={this.props._default}                    
-                type="text"
-                onChange={event => {
-                  this.props.handleDefault(event.target.value);
-                }}
-                fullWidth
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
                 id="description"
                 label="Description"
                 type="text"
@@ -88,6 +71,16 @@ export default class ParameterDialog extends React.Component {
               />
             </Grid>
 
+            <Grid item xs={12}>
+              <FormLabel>Default</FormLabel>              
+              <KPIEditor
+              	value={this.props._default}
+	        onBeforeChange={(editor, data, value) => {
+                  this.props.handleDefault(value);
+	        }}
+              />
+            </Grid>
+            
             <Grid item xs={12}>
               <FormControlLabel
                 control={

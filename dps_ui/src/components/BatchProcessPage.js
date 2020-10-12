@@ -12,7 +12,7 @@ import {
 
 import Box from './Box';
 import PrettyTable from './PrettyTable';
-import EntitySelect from './EntitySelect';
+
 
 import { get, get_required_mappings } from '../api';
 
@@ -20,6 +20,10 @@ export default class BatchProcessPage extends React.Component {
   constructor(props) {
     super(props);
 
+
+    var defaultStartDate = new Date();
+    defaultStartDate.setMonth(defaultStartDate.getMonth()-1);
+    
     this.state = {
       system: {
         name: '',
@@ -33,7 +37,7 @@ export default class BatchProcessPage extends React.Component {
       signals: [],
       signalInputs: {},
 
-      startDate: new Date(),
+      startDate: defaultStartDate,
       endDate: new Date(),
     };
   }
@@ -46,8 +50,6 @@ export default class BatchProcessPage extends React.Component {
   }
 
   render () {
-    const props = this.props;
-
     const updateMappings = () => {
       get_required_mappings(this.state.system, Array.from(this.state.kpis))
         .then(resp => {
@@ -119,7 +121,7 @@ export default class BatchProcessPage extends React.Component {
                                      });
                                    }
                                  }}
-                       />, 'Computation', 'Description', 'Last Run', 'Result']}
+                       />, 'KPI', 'Description', 'Last Run', 'Result']}
               rows={rows}
             />
           </Grid>

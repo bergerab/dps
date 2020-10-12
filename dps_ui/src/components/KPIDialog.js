@@ -8,17 +8,12 @@ import FormLabel from '@material-ui/core/FormLabel';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 import util from '../util.js';
 import KPIEditor from './KPIEditor';
 
 export default class KPIDialog extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     const identifier = util.getIdentifier(this.props.name, this.props.identifier);
     const identifierField =

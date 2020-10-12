@@ -7,11 +7,10 @@ import {
   Link
 } from "react-router-dom";
 
-import { withStyles, useTheme } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import Grid from '@material-ui/core/Grid';
 import Chip from '@material-ui/core/Chip';
 import List from '@material-ui/core/List';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -20,27 +19,18 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 
-import FunctionsIcon from '@material-ui/icons/Functions';
+
 import HomeIcon from '@material-ui/icons/Home';
 import MemoryIcon from '@material-ui/icons/Memory';
-import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
-import InputIcon from '@material-ui/icons/Input';
 import TableChartIcon from '@material-ui/icons/TableChart';
 
-import DataConnectionEdit from './DataConnectionEdit';
-import KPIEdit from './KPIEdit';
 import SystemEdit from './SystemEdit';
-import DataSetEdit from './DataSetEdit';
 import BatchProcessPage from './BatchProcessPage';
 import Home from './Home';
-
-import EntitySelect from './EntitySelect';
-import EntityMultiSelect from './EntityMultiSelect';
 
 import EntityPage from './EntityPage';
 
@@ -202,7 +192,10 @@ class MiniDrawer extends React.Component {
             <Divider />
             <List>
               {this.state.systems.map(system => (
-                <Link to={"/batch-process/" + system.system_id} style={linkStyle}>
+                <Link
+                  key={system.system_id}
+                  to={"/batch-process/" + system.system_id}
+                  style={linkStyle}>
                   <ListItem button key={system.name}>
                     <ListItemIcon><TableChartIcon /></ListItemIcon>
                     <ListItemText primary={system.name} />
@@ -221,27 +214,29 @@ class MiniDrawer extends React.Component {
                 path="/system/:action?/:id?"
                 component={props =>
 		           (<EntityPage
-		  {...props}
-		  fields={[['Name', 'name'],
-			   ['KPIs', system => {
-                             return (<span>{system.kpis.filter(kpi => !kpi.hidden).map(kpi => <Chip label={kpi.name} style={{
-                               margin: '5px' }}/>)}</span>)
-                           }],
-			   ['Parameters', system => {
-                             return (<span>{system.parameters.filter(param => !param.hidden).map(parameter => <Chip label={parameter.name}
-                                                                                                                    style={{ margin: '5px' }}/>)}</span>)                                       
-                           }]]}
-		  entityUrl="system"
-		  entityName="System"
-		  editComponent={SystemEdit}
+                              key={'System'}
+		              {...props}
+		              fields={[['Name', 'name'],
+			               ['KPIs', system => {
+                                         return (<span>{system.kpis.filter(kpi => !kpi.hidden).map(kpi => <Chip label={kpi.name} style={{
+                                           margin: '5px' }}/>)}</span>)
+                                       }],
+			               ['Parameters', system => {
+                                         return (<span>{system.parameters.filter(param => !param.hidden).map(parameter => <Chip label={parameter.name}
+                                                       style={{ margin: '5px' }}/>)}</span>)                                       
+                                       }]]}
+		              entityUrl="system"
+		              entityName="System"
+		              editComponent={SystemEdit}
       />)}
 	      />
               {this.state.systems.map(system => (
                 <Route
+                  key={system.system_id}
                   path="/batch-process"
 
                 /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
-                
+                  
                   render={(props) => (<BatchProcessPage key={Date.now()} {...props} />)} />
               ))}
             </Switch>

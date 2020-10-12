@@ -1,21 +1,17 @@
 import React from 'react';
 import Grid from '@material-ui/core/Grid';
 
-import ChipInput from 'material-ui-chip-input';
 import FormLabel from '@material-ui/core/FormLabel';
 import Button from '@material-ui/core/Button';
 
 import EntityEdit from './EntityEdit';
-import KeyValueInput from './KeyValueInput';
 import TextField from './TextField';
-import EntityMultiSelect from './EntityMultiSelect';
 import KPIDialog from './KPIDialog';
 import ParameterDialog from './ParameterDialog';
 import PrettyTable from './PrettyTable';
 
 import EditIcon from '@material-ui/icons/Edit';
 
-import Link from './Link';
 import KPIEditor from './KPIEditor';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -225,7 +221,14 @@ export default class KPIEdit extends React.Component {
                                                                    }}
                                                                    readonly={true}
                                                                    value={parameter.identifier}/>,
-                                                                 parameter.default,
+                                                                 <KPIEditor
+                                                                   className="code"
+                                                                   options={{
+                                                                     lineNumbers: false,
+                                                                     readOnly: true,
+                                                                   }}
+                                                                   readonly={true}
+                                                                   value={parameter.default}/>,
                                                                  parameter.description,
                                                                  parameter.hidden ? 'Yes' : 'No',
                                                                  (<EditAndDeleteLocal
@@ -238,6 +241,7 @@ export default class KPIEdit extends React.Component {
                                                                         paramId: i,
                                                                         paramName: parameter.name,
                                                                         paramIdentifier: parameter.identifier,
+                                                                        paramDefault: parameter.default,                                                                        
                                                                         paramDescription: parameter.description,
                                                                         paramHidden: parameter.hidden,
                                                                         paramComputation: parameter.computation,

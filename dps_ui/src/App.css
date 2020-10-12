@@ -1,5 +1,6 @@
 .CodeMirror {
     font-size: 16pt;
+    max-height: 150pt;
 }
 
 .code .CodeMirror {

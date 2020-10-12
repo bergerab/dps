@@ -7,7 +7,7 @@ import Row from './Row';
 import Link from './Link';
 import EntityTable from './EntityTable';
 
-import { API_PREFIX } from '../api';
+// import { API_PREFIX } from '../api';
 
 export default class EntityPage extends React.Component {
   render () {
@@ -15,23 +15,22 @@ export default class EntityPage extends React.Component {
     
     const table =
           (<EntityTable
-             key={0}
              entityUrl={props.entityUrl}
              entityName={props.entityName}
              header={props.fields}
            />);
     
-    const deleteAll = () => {
-      fetch(API_PREFIX + props.entityUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-      }).then(r => {
-        // TODO: how to make EntityTable refresh contents after?
-        window.location.reload(); // goes against everything react stands for            
-      });
-    };
+    // const deleteAll = () => {
+    //   fetch(API_PREFIX + props.entityUrl, {
+    //     method: 'DELETE',
+    //     headers: {
+    //       'Content-Type': 'application/json'
+    //     },
+    //   }).then(r => {
+    //     // TODO: how to make EntityTable refresh contents after?
+    //     window.location.reload(); // goes against everything react stands for            
+    //   });
+    // };
     
     // Router parameters
     const { match: { params } } = props;
@@ -51,12 +50,12 @@ export default class EntityPage extends React.Component {
                 </Button>
               </Link>          
 
-              <Button variant="contained"
-                      color="primary"
-                      onClick={deleteAll}
-                      style={{ marginLeft: '20px' }}>
-                Delete All {props.entityName}s
-              </Button>          
+              {/* <Button variant="contained" */}
+              {/*         color="primary" */}
+              {/*         onClick={deleteAll} */}
+              {/*         style={{ marginLeft: '20px' }}> */}
+              {/*   Delete All {props.entityName}s */}
+              {/* </Button>           */}
             </Row>
           </Box>
         );
