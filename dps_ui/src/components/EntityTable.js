@@ -34,22 +34,29 @@ export default class extends React.Component {
   }
 
   render () {
+    let rowId = 0;
     const props = this.props;
     const entities = this.state.entities.map(row => {
+      let cellId = 0;        
       const cells = props.header.map(h => {
-        const value = typeof h[1] === 'function' ? h[1](row) : row[h[1]];        
+        const value = typeof h[1] === 'function' ? h[1](row) : row[h[1]];
+        
 	return(<TableCell
-                       key={value}
-             >
-               {value}
-             </TableCell>)
+                 key={'cell' + cellId++}
+               >
+                 {value}
+               </TableCell>)
       });
-      
+
       return (
-        <TableRow key={row.id}>
+        <TableRow key={'row' + rowId++}>
 	  {cells}
-	  <TableCell align="right">
+	  <TableCell
+            align="right"
+            key={'editcell' + rowId}
+          >
 	    <EditAndDelete {...props}
+                           key={'edit' + rowId}
 			   entity={row}
 			   entityName={props.entityName}
 			   entityUrl={props.entityUrl}

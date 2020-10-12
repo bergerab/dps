@@ -43,7 +43,7 @@ export default class EntityPage extends React.Component {
 	return (
           <Box header={props.entityName + 's'}>
             {table}
-            <Row>
+            <Row key>
               <Link to={props.entityUrl + '/add'} style={{ color: 'white' }}>              
                 <Button variant="contained" color="primary">
                   Add {props.entityName}

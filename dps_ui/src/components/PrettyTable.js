@@ -25,8 +25,9 @@ export default function PrettyTable(props) {
 
   const rows = props.rows.map((row, i) => (
     <TableRow key={i}>
-      {row.map(item => (
+      {row.map((item, j) => (
         <TableCell
+          key={j}
           component="th"
           scope="row"
         >
@@ -41,8 +42,8 @@ export default function PrettyTable(props) {
       <Table className={classes.table} aria-label="simple table">
         <TableHead>
           <TableRow>
-            {props.header.map(header => (
-              <TableCell>{header}</TableCell>
+            {props.header.map((header, i) => (
+              <TableCell key={i}>{header}</TableCell>
             ))}
           </TableRow>
         </TableHead>
