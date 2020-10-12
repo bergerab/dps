@@ -51,11 +51,15 @@ def get_required_mappings(request):
     kpi_names = data['kpi_names']
     
     parameter_names = []
+    parameter_id_to_parameter = {}
     for parameter in system['parameters']:
+        name = None
         if parameter['identifier']:
-            parameter_names.append(parameter['identifier'])
+            name = parameter['identifier']
         else:
-            parameter_names.append(parameter['name'])            
+            name = parameter['name']
+        parameter_names.append(name)
+        parameter_id_to_parameter[name] = parameter
 
     c = Component('Temp', parameters=parameter_names)
     for kpi in system['kpis']:
@@ -68,7 +72,9 @@ def get_required_mappings(request):
     parameters = []
     for name in c.get_required_inputs(kpi_names):
         if name in parameter_names:
-            parameters.append(name)
+            parameter = parameter_id_to_parameter[name]
+            if not parameter['hidden']:
+                parameters.append(parameter['name'])
         else:
             signals.append(name)
         

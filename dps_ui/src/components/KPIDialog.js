@@ -12,6 +12,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 import util from '../util.js';
 import KPIEditor from './KPIEditor';
+import HTMLEditor from './HTMLEditor';
 
 export default class KPIDialog extends React.Component {
   render() {
@@ -59,19 +60,12 @@ export default class KPIDialog extends React.Component {
             {identifierField}
             
             <Grid item xs={12}>
-              <TextField
-                id="description"
-                label="Description"
-                type="text"
+              <FormLabel>Description</FormLabel>              
+              <HTMLEditor
                 value={this.props.description}
-                fullWidth
-                multiline
-                onChange={event => {
-                  this.props.handleDescription(event.target.value);
-                }}
-                rows={2}
-                rowsMax={4}
-              />
+                onChange={value => {
+                  this.props.handleDescription(value);                  
+                }}/>
             </Grid>
 
             <Grid item xs={12}>

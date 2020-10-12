@@ -8,3 +8,7 @@
     max-height: 40pt;
     max-width: 400pt;
 }
+
+.quill .ql-editor {
+    min-height: 6em;
+}

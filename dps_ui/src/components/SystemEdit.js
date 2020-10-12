@@ -13,6 +13,7 @@ import PrettyTable from './PrettyTable';
 import EditIcon from '@material-ui/icons/Edit';
 
 import KPIEditor from './KPIEditor';
+import HTMLEditor from './HTMLEditor';
 import ConfirmationDialog from './ConfirmationDialog';
 
 import util from '../util';
@@ -25,6 +26,7 @@ export default class KPIEdit extends React.Component {
       // Defaults for System fields
       // (used before the onEntity GET request returns)
       name: '',
+      description: '',
       kpis: [],
       parameters: [],
 
@@ -127,6 +129,7 @@ export default class KPIEdit extends React.Component {
       const name = entity.name;
       this.setState({
         name: entity.name,
+        description: entity.description,
         kpis: entity.kpis,
         parameters: entity.parameters,
       });
@@ -152,7 +155,20 @@ export default class KPIEdit extends React.Component {
           </Grid>
 
           <Grid item xs={12}>
-            <FormLabel>KPIs</FormLabel>
+            <h3 style={{ marginTop: 0 }}>Description</h3>
+            <input name="description"
+                   value={this.state.description}
+                   type="hidden" />
+            <HTMLEditor
+              value={this.state.description}
+              onChange={value => {
+                this.setState({ description: value });
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <h3 style={{ marginTop: 0 }}>KPIs</h3>            
             <PrettyTable
               header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
               rows={this.state.kpis.map((kpi, i) =>
@@ -173,7 +189,7 @@ export default class KPIEdit extends React.Component {
                                            }}
                                            readonly={true}
                                            value={kpi.computation}/>,
-                                         kpi.description,
+                                         <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
                                          kpi.hidden ? 'Yes' : 'No',
                                          (<EditAndDeleteLocal
                                             entityName={kpi.name}
@@ -209,7 +225,7 @@ export default class KPIEdit extends React.Component {
           </Grid>
           
           <Grid item xs={12}>
-            <FormLabel>Parameters</FormLabel>
+            <h3 style={{ marginTop: 0 }}>Parameters</h3>                        
             <PrettyTable
               header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
               rows={this.state.parameters.map((parameter, i) => [parameter.name,

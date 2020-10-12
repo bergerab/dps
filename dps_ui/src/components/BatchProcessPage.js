@@ -6,6 +6,8 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import FormLabel from '@material-ui/core/FormLabel';
 
+import Skeleton from '@material-ui/lab/Skeleton';
+
 import {
   DateTimePicker,
 } from '@material-ui/pickers';
@@ -27,9 +29,12 @@ export default class BatchProcessPage extends React.Component {
     this.state = {
       system: {
         name: '',
+        description: '',
         kpis: [],
         parameters: [],
       },
+
+      loading: true,
 
       kpis: new Set(),
       parameters: [],
@@ -45,7 +50,10 @@ export default class BatchProcessPage extends React.Component {
   async componentDidMount() {
     const id = window.location.href.split('/').pop();
     get('system', id).then(system => {
-      this.setState({ system });
+      this.setState({
+        system,
+        loading: false,
+      });
     });
   }
 
@@ -88,83 +96,116 @@ export default class BatchProcessPage extends React.Component {
                     handleKPICheck(kpi, checked);
                   }}/>,
         kpi.name,
-        kpi.description,
+        <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
         '',
         '',
       ]
     });
+
+    const name = this.state.loading ?
+          (<Skeleton width="150pt"/>) :
+          this.state.system.name;
+
+    const makeKPITableHeader = loading => [loading ? <CheckBox color="primary"/> :
+                                           <CheckBox color="primary"
+                                                 checked={JSON.stringify(this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort()) ===
+                                                          JSON.stringify(Array.from(this.state.kpis).sort())}
+                                      onChange={e => {
+                                        const checked = e.target.checked;
+                                        if (checked) {
+                                          const s = new Set();
+                                          for (const kpi of this.state.system.kpis) {
+                                            const name = kpi.name;
+                                            s.add(name);
+                                          }
+                                          this.setState({ kpis: s }, () => {
+                                            updateMappings();
+                                          });
+                                        } else {
+                                          this.setState({ kpis: new Set() }, () => {
+                                            updateMappings();
+                                          });
+                                        }
+                                      }}
+                            />, 'KPI', 'Description', 'Last Run', 'Result'];
+
+    const kpiTable = this.state.loading ?
+          (<PrettyTable
+             header={makeKPITableHeader(true)}
+             rows={[1,2,3,4,5].map((_, i) => [
+               <CheckBox color="primary" key={'cb' + i} />,
+               <Skeleton key={'s1' + i} />,
+               <Skeleton key={'s2' + i} />,
+               <Skeleton key={'s3' + i} />,
+               <Skeleton key={'s4' + i} />,
+             ])}/>) :
+          (<PrettyTable
+             header={makeKPITableHeader(false)}
+             rows={rows}
+           />);
+
+    const description =
+          this.state.system.description !== '' &&
+          this.state.system.description !== null &&
+          this.state.system.description !== undefined ?
+          (<Grid item xs={12}>
+             <div dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
+           </Grid>) :
+    null;
+
+    console.log(this.state.system.description);
+    
     return (
       <Box
-        header={this.state.system.name}
+        header={name}
       >
-        <Grid container spacing={2}>
+        <Grid container spacing={2} style={{maxWidth: '1500px'}}>
+          {description}
+          
           <Grid item xs={12}>
-            <FormLabel>KPIs</FormLabel>
-            <PrettyTable
-              header={[<CheckBox color="primary"
-                                 checked={JSON.stringify(this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort()) ===
-                                          JSON.stringify(Array.from(this.state.kpis).sort())}
-                                 onChange={e => {
-                                   const checked = e.target.checked;
-                                   if (checked) {
-                                     const s = new Set();
-                                     for (const kpi of this.state.system.kpis) {
-                                       const name = kpi.name;
-                                       s.add(name);
-                                     }
-                                     this.setState({ kpis: s }, () => {
-                                       updateMappings();
-                                     });
-                                   } else {
-                                     this.setState({ kpis: new Set() }, () => {
-                                       updateMappings();
-                                     });
-                                   }
-                                 }}
-                       />, 'KPI', 'Description', 'Last Run', 'Result']}
-              rows={rows}
-            />
+            <h3 style={{ marginTop: 0 }}>KPIs</h3>
+            {kpiTable}
           </Grid>
 
           <Grid item xs={6}>
-            <FormLabel>Signals</FormLabel>
+            <h3 style={{ marginTop: 0 }}>Signals</h3>
             <PrettyTable
-              header={['Name', 'Value']}
+              header={['KPI Input', 'Signal Name']}
               rows={this.state.signals.map(signal => {
                 return [
                   signal,
                   (<TextField
-            fullWidth={true}
-            name="name"
-            value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
-            onChange={e => {
-              this.state.signalInputs[signal] = e.target.value;
-              // Force an update
-              this.setState({ signals: this.state.signals });
-            }}
-                      />)
+                                                     fullWidth={true}
+                                                     name="name"
+                                                     value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
+                                                     onChange={e => {
+                                                       this.state.signalInputs[signal] = e.target.value;
+                                                       // Force an update
+                                                       this.setState({ signals: this.state.signals });
+                                                     }}
+                         />)
                 ];
               })}
             />
           </Grid>
           
           <Grid item xs={6}>
-            <FormLabel>Parameters</FormLabel>
+            <h3 style={{ marginTop: 0 }}>Parameters</h3>
             <PrettyTable
-              header={['Name', 'Value']}
+              header={['KPI Input', 'Signal Name']}
               rows={this.state.parameters.map(parameter => {
                 return [
                   parameter,
                   (<TextField
-                      fullWidth={true}
-                      name="name"
-                      value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
-                      onChange={e => {
-                        this.state.parameterInputs[parameter] = e.target.value;
-                        // Force an update
-                        this.setState({ parameters: this.state.parameters });
-                      }}
-            />)
+                                                  fullWidth={true}
+                                                  name="name"
+                                                  value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
+                                                  onChange={e => {
+                                                    this.state.parameterInputs[parameter] = e.target.value;
+                                                    // Force an update
+                                                    this.setState({ parameters: this.state.parameters });
+                                                  }}
+                    />)
                 ];
               })}
             />
@@ -186,26 +227,23 @@ export default class BatchProcessPage extends React.Component {
           {/*           </Grid> */}
 
 
-          <Grid container>
-            <Grid item xs={12} sm={12} md={6}>
-              <DateTimePicker value={this.state.startDate}
-                              onChange={date => this.setState({ startDate: date })}
-                              label="Start Time"
-                              required />
-              
-            </Grid>
 
-            <Grid item xs={12} sm={12} md={6}>
-              <DateTimePicker value={this.state.endDate}
-                              onChange={date => this.setState({ endDate: date })}
-                              label="End Time"
-                              required />
-            </Grid>
+          <Grid item xs={12}>
+            <h3 style={{ marginTop: 0 }}>Date Range</h3>            
+            <DateTimePicker value={this.state.startDate}
+                            onChange={date => this.setState({ startDate: date })}
+                            label="Start Time"
+                            style={{marginRight: '20px'}}
+                            required />
+            <DateTimePicker value={this.state.endDate}
+                            onChange={date => this.setState({ endDate: date })}
+                            label="End Time"
+                            required />
+          </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Button style={{'marginRight': '10px'}} variant="contained" color="primary">Run</Button>
-              <Button variant="contained" color="primary">Export</Button>            
-            </Grid>
+          <Grid item xs={12} sm={6}>
+            <Button style={{'marginRight': '10px'}} variant="contained" color="primary">Run</Button>
+            <Button variant="contained" color="primary">Export</Button>            
           </Grid>
         </Grid>
       </Box>

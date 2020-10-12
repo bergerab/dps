@@ -34,6 +34,7 @@ class ParameterSerializer(serializers.Serializer):
     
 class SystemSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
+    description = serializers.CharField(required=False, allow_blank=True)    
     kpis = KPISerializer(many=True, default=[])
     parameters = ParameterSerializer(many=True, default=[])
 

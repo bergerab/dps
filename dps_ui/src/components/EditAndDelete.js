@@ -18,7 +18,7 @@ export default function EditAndDelete(props) {
       </Link>
       <ConfirmationDialog
 	{...props}
-	header={`Delete "${props.entity.displayName}" ${props.entityName}?`}
+	header={`Delete "${props.entity.name}" ${props.entityName}?`}
       >
 	Are you sure you want to delete this {props.entityName}? This action is irreversible.
       </ConfirmationDialog>

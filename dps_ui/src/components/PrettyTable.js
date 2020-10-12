@@ -38,7 +38,7 @@ export default function PrettyTable(props) {
   ));
   
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} style={props.style}>
       <Table className={classes.table} aria-label="simple table">
         <TableHead>
           <TableRow>
