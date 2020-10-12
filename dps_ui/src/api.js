@@ -61,8 +61,8 @@ export function get_required_mappings(system, kpi_names) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      kpis: system.kpis.filter(x => kpi_names.includes(x.name)),
-      parameters: system.parameters,
+      system: system,
+      kpi_names: kpi_names,
     }),
   }).then(r => r.json());
 }

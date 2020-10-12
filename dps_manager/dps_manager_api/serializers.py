@@ -68,5 +68,5 @@ class ProgressSerializer(serializers.Serializer):
 
 # RequiredMappingsRequestSerializer
 class RequiredMappingsRequestSerializer(serializers.Serializer):
-    kpis = KPISerializer(many=True)
-    parameters = ParameterSerializer(many=True, default=[])
+    system = SystemSerializer()
+    kpi_names = serializers.ListField(child=serializers.CharField())

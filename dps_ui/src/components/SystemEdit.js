@@ -16,7 +16,10 @@ import PrettyTable from './PrettyTable';
 import EditIcon from '@material-ui/icons/Edit';
 
 import Link from './Link';
+import KPIEditor from './KPIEditor';
 import ConfirmationDialog from './ConfirmationDialog';
+
+import util from '../util';
 
 export default class KPIEdit extends React.Component {
   constructor(props) {
@@ -158,8 +161,22 @@ export default class KPIEdit extends React.Component {
               header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
               rows={this.state.kpis.map((kpi, i) =>
                                         [kpi.name,
-                                         kpi.identifier,
-                                         kpi.computation,
+                                         <KPIEditor
+                                           className="code"
+                                           options={{
+                                             lineNumbers: false,
+                                             readOnly: true,
+                                           }}
+                                           readonly={true}
+                                           value={util.getIdentifier(kpi.name, kpi.identifier)}/>,
+                                         <KPIEditor
+                                           className="code"
+                                           options={{
+                                             lineNumbers: false,
+                                             readOnly: true,
+                                           }}
+                                           readonly={true}
+                                           value={kpi.computation}/>,
                                          kpi.description,
                                          kpi.hidden ? 'Yes' : 'No',
                                          (<EditAndDeleteLocal
@@ -200,7 +217,14 @@ export default class KPIEdit extends React.Component {
             <PrettyTable
               header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
               rows={this.state.parameters.map((parameter, i) => [parameter.name,
-                                                                 parameter.identifier,
+                                                                 <KPIEditor
+                                                                   className="code"
+                                                                   options={{
+                                                                     lineNumbers: false,
+                                                                     readOnly: true,
+                                                                   }}
+                                                                   readonly={true}
+                                                                   value={parameter.identifier}/>,
                                                                  parameter.default,
                                                                  parameter.description,
                                                                  parameter.hidden ? 'Yes' : 'No',

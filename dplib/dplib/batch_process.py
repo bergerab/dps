@@ -35,16 +35,30 @@ class BatchProcess:
         return bp
 
     def get_required_inputs(self):
+        SEEN = set()
         s = set()
-        for kpi_name, kpi in self.kpis.items():
+        kpis = list(self.kpis.items())
+        while kpis:# kpi_name, kpi in self.kpis.items():
+            kpi_name, kpi = kpis.pop()
+            SEEN.add(kpi_name)
             mapping = kpi.mapping
             for id in kpi.kpi.dpl.ast.get_identifiers():
                 name = id.original_name
                 value = mapping.get(name)
+                
+                input = None
                 if name not in mapping and name not in self.kpis:
-                    s.add(id.original_name)
+                    input = id.original_name
                 elif isinstance(value, str) and value not in self.kpis:
-                    s.add(value)
+                    input = value
+
+                print('Adding ', input, self.kpis)
+
+                if input in self.kpis and input not in SEEN:
+                    kpis.push((input, self.kpis[input]))
+
+                if input:
+                    s.add(input)
         return s
 
     def _connect_graph(self):

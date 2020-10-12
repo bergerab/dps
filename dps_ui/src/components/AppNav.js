@@ -224,10 +224,12 @@ class MiniDrawer extends React.Component {
 		  {...props}
 		  fields={[['Name', 'name'],
 			   ['KPIs', system => {
-                             return (<span>{system.kpis.filter(kpi => !kpi.hidden).map(kpi => <Chip label={kpi.name}/>)}</span>)
+                             return (<span>{system.kpis.filter(kpi => !kpi.hidden).map(kpi => <Chip label={kpi.name} style={{
+                               margin: '5px' }}/>)}</span>)
                            }],
 			   ['Parameters', system => {
-                             return (<span>{system.parameters.filter(param => !param.hidden).map(parameter => <Chip label={parameter.name}/>)}</span>)                                       
+                             return (<span>{system.parameters.filter(param => !param.hidden).map(parameter => <Chip label={parameter.name}
+                                                                                                                    style={{ margin: '5px' }}/>)}</span>)                                       
                            }]]}
 		  entityUrl="system"
 		  entityName="System"

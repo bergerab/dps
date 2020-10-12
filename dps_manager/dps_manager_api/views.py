@@ -11,7 +11,7 @@ from .serializers import \
     ProgressSerializer, \
     RequiredMappingsRequestSerializer
 
-from dplib import BatchProcess, KPI
+from dplib import Component, KPI
 
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer
@@ -47,21 +47,26 @@ def get_required_mappings(request):
     if not serializer.is_valid():
         return JsonResponse(serializer.errors, status=400)
     data = serializer.validated_data
+    system = data['system']
+    kpi_names = data['kpi_names']
     
     parameter_names = []
-    for parameter in data['parameters']:
+    for parameter in system['parameters']:
         if parameter['identifier']:
             parameter_names.append(parameter['identifier'])
         else:
             parameter_names.append(parameter['name'])            
 
-    bp = BatchProcess()
-    for kpi in data['kpis']:
-        bp.add(kpi['identifier'] or kpi['name'], KPI(kpi['computation']))
+    c = Component('Temp', parameters=parameter_names)
+    for kpi in system['kpis']:
+        identifier = kpi.get('identifier')
+        if identifier == '':
+            identifier = None
+        c.add(kpi['name'], kpi['computation'], id=identifier)
 
     signals = []
     parameters = []
-    for name in bp.get_required_inputs():
+    for name in c.get_required_inputs(kpi_names):
         if name in parameter_names:
             parameters.append(name)
         else:

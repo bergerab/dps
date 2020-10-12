@@ -11,12 +11,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/theme/material.css';
-import 'codemirror/mode/python/python.js';
-import { Controlled as CodeMirror } from "react-codemirror2";
-
 import util from '../util.js';
+import KPIEditor from './KPIEditor';
 
 export default class KPIDialog extends React.Component {
   constructor(props) {
@@ -24,19 +20,20 @@ export default class KPIDialog extends React.Component {
   }
 
   render() {
-    const identifierField = util.nameNeedsIdentifier(this.props.name) ? (
-      <Grid item xs={12}>
-        <TextField
-          id="identifier"
-          label="Identifier"
-          type="text"
-          value={this.props.identifier}                    
-          onChange={event => {
-            this.props.handleIdentifier(event.target.value);
-          }}
-          fullWidth
-        />
-      </Grid>) : (<span/>);
+    const identifier = util.getIdentifier(this.props.name, this.props.identifier);
+    const identifierField =
+          (<Grid item xs={12}>
+             <TextField
+               id="identifier"
+               label="Identifier"
+               type="text"
+               value={identifier === null ? '' : identifier}                    
+               onChange={event => {
+                 this.props.handleIdentifier(event.target.value);
+               }}
+               fullWidth
+             />
+           </Grid>);
 
     const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
 
@@ -128,26 +125,6 @@ export default class KPIDialog extends React.Component {
           </Button>
         </DialogActions>
       </Dialog>
-    );
-  }
-}
-
-class KPIEditor extends React.Component {
-  render() {
-    let option = {
-      mode: 'python',
-      theme: 'material',
-      lineNumbers: true,
-    };
-
-    return (
-      <div>
-	<CodeMirror
-	  {...this.props}
-	  style={{ fontSize: '12pt' }}
-	  options={option}
-        />
-      </div>
     );
   }
 }

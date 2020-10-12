@@ -15,6 +15,17 @@ function nameNeedsIdentifier(name) {
   return false;
 }
 
+function getIdentifier(kpiName, kpiIdentifier) {
+  if (kpiIdentifier) {
+    return kpiIdentifier;
+  }
+  if (nameNeedsIdentifier(kpiName)) {
+    return null;
+  }
+  return kpiName;
+}
+
 export default {
   nameNeedsIdentifier,
+  getIdentifier,
 };

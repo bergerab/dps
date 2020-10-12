@@ -19,19 +19,21 @@ export default class ParameterDialog extends React.Component {
   }
   
   render() {
-    const identifierField = util.nameNeedsIdentifier(this.props.name) ? (
-      <Grid item xs={12}>
-        <TextField
-          id="identifier"
-          label="Identifier"
-          type="text"
-          value={this.props.identifier}                    
-          onChange={event => {
-            this.props.handleIdentifier(event.target.value);
-          }}
-          fullWidth
-        />
-      </Grid>) : (<span/>);
+    const identifier = util.getIdentifier(this.props.name, this.props.identifier);    
+    const identifierField =
+          (
+            <Grid item xs={12}>
+              <TextField
+                id="identifier"
+                label="Identifier"
+                type="text"
+                value={identifier === null ? '' : identifier}                    
+                onChange={event => {
+                  this.props.handleIdentifier(event.target.value);
+                }}
+                fullWidth
+              />
+            </Grid>);
 
     const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
 

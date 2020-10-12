@@ -62,6 +62,15 @@ DF2_RESULT = pd.DataFrame(data={
 })
 
 class TestComponent(TestCase, ResultAssertions):
+    def test_get_required_inputs(self):
+        SUT = Component('System Under Test') \
+            .add('KPI One', 'A + B', id='K1') \
+            .add('KPI Two', 'C + D', id='K2') \
+            .add('KPI Three', 'K1 + K2')
+        self.assertEqual(SUT.get_required_inputs(['KPI Three']), {
+            'A', 'B', 'C', 'D'
+        })
+    
     def test_aggregation_continue_advanced_merge_weighted_eff(self):
         SUT = Component('System Under Test') \
             .add('WeightedEfficiencyTest', 'max(A) * 0.02 + avg(B) * 0.25')
