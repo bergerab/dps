@@ -13,13 +13,6 @@ export default class EntityPage extends React.Component {
   render () {
     const props = this.props;
     
-    const table =
-          (<EntityTable
-             entityUrl={props.entityUrl}
-             entityName={props.entityName}
-             header={props.fields}
-           />);
-    
     // const deleteAll = () => {
     //   fetch(API_PREFIX + props.entityUrl, {
     //     method: 'DELETE',
@@ -42,7 +35,11 @@ export default class EntityPage extends React.Component {
     if (view) {
 	return (
           <Box header={props.entityName + 's'}>
-            {table}
+            <EntityTable
+              entityUrl={props.entityUrl}
+              entityName={props.entityName}
+              header={props.fields}
+            />            
             <Row key>
               <Link to={props.entityUrl + '/add'} style={{ color: 'white' }}>              
                 <Button variant="contained" color="primary">

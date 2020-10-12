@@ -23,7 +23,6 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 
-
 import HomeIcon from '@material-ui/icons/Home';
 import MemoryIcon from '@material-ui/icons/Memory';
 import TableChartIcon from '@material-ui/icons/TableChart';
@@ -212,27 +211,27 @@ class MiniDrawer extends React.Component {
               </Route>
               <Route
                 path="/system/:action?/:id?"
-                component={props =>
-		           (<EntityPage
-                              key={'System'}
-		              {...props}
-		              fields={[['Name', 'name'],
-			               ['KPIs', system => {
-                                         return (<span>{system.kpis.filter(kpi => !kpi.hidden)
-                                                        .map(kpi => <Chip
+                render={props =>
+		        (<EntityPage
+                           key={'System'}
+		           {...props}
+		           fields={[['Name', 'name'],
+			            ['KPIs', system => {
+                                      return (<span>{system.kpis.filter(kpi => !kpi.hidden)
+                                                     .map(kpi => <Chip
                                                                       key={kpi.name}
                                                                       label={kpi.name}
                                                                       style={{ margin: '5px' }}/>)}
-                                                 </span>)
-                                       }],
-			               ['Parameters', system => {
-                                         return (<span>{system.parameters.filter(param => !param.hidden)
-                                                        .map(parameter => <Chip
+                                                    </span>)
+                                    }],
+			            ['Parameters', system => {
+                                      return (<span>{system.parameters.filter(param => !param.hidden)
+                                                     .map(parameter => <Chip
                                                                             key={parameter.name}
                                                                             label={parameter.name}
                                                                             style={{ margin: '5px' }}/>)}
-                                                 </span>)                                       
-                                       }]]}
+                                                             </span>)                                       
+                                    }]]}
 		              entityUrl="system"
 		              entityName="System"
 		              editComponent={SystemEdit}

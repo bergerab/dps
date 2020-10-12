@@ -21,18 +21,22 @@ export default class extends React.Component {
     super(props);
     this.state = {
       entities: [],
-      
       loading: true,
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     console.log('did mount');
     list(this.props.entityUrl).then(entities => {
-      this.setState({ entities, loading: false });
+      console.log('before');
+      this.setState({
+        entities,
+        loading: false
+      });
+      console.log('after');
     });
   }
-
+  
   render () {
     let rowId = 0;
     const props = this.props;
@@ -49,14 +53,14 @@ export default class extends React.Component {
       });
 
       return (
-        <TableRow key={'row' + rowId++}>
+        <TableRow key={rowId++}>
 	  {cells}
 	  <TableCell
             align="right"
-            key={'editcell' + rowId}
+            key={rowId}
           >
 	    <EditAndDelete {...props}
-                           key={'edit' + rowId}
+                           key={rowId}
 			   entity={row}
 			   entityName={props.entityName}
 			   entityUrl={props.entityUrl}
