@@ -32,6 +32,9 @@ export default class extends React.Component {
         entities,
         loading: false
       });
+      if (typeof this.props.onLoad === 'function') {
+        this.props.onLoad();
+      }
     });
   }
 

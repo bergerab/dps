@@ -14,6 +14,7 @@ import {
 
 import Box from './Box';
 import PrettyTable from './PrettyTable';
+import InputLabel from './InputLabel';
 
 
 import { get, get_required_mappings } from '../api';
@@ -21,7 +22,6 @@ import { get, get_required_mappings } from '../api';
 export default class BatchProcessPage extends React.Component {
   constructor(props) {
     super(props);
-
 
     var defaultStartDate = new Date();
     defaultStartDate.setMonth(defaultStartDate.getMonth()-1);
@@ -74,60 +74,60 @@ export default class BatchProcessPage extends React.Component {
         });
     };
 
-    const handleKPICheck = (kpi, checked) => {
-      if (checked) {
-        this.state.kpis.add(kpi.name);
-      } else {
-        this.state.kpis.delete(kpi.name);
-      }
+      const handleKPICheck = (kpi, checked) => {
+        if (checked) {
+          this.state.kpis.add(kpi.name);
+        } else {
+          this.state.kpis.delete(kpi.name);
+        }
 
-      // Force an update
-      this.setState({ kpis: this.state.kpis });
-      updateMappings();
-    };
+        // Force an update
+        this.setState({ kpis: this.state.kpis });
+        updateMappings();
+      };
 
-    const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
-      return [
-        <CheckBox color="primary"
-                  className="kpi-cb"
-                  checked={this.state.kpis.has(kpi.name)}
-                  onChange={e => {
-                    const checked = e.target.checked
-                    handleKPICheck(kpi, checked);
-                  }}/>,
-        kpi.name,
-        <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
-        '',
-        '',
-      ]
-    });
+      const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
+        return [
+          <CheckBox color="primary"
+                    className="kpi-cb"
+                    checked={this.state.kpis.has(kpi.name)}
+                    onChange={e => {
+                      const checked = e.target.checked
+                      handleKPICheck(kpi, checked);
+                    }}/>,
+          kpi.name,
+          <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
+          '',
+          '',
+        ]
+      });
 
-    const name = this.state.loading ?
-          (<Skeleton width="150pt"/>) :
-          this.state.system.name;
+      const name = this.state.loading ?
+            (<Skeleton width="150pt"/>) :
+            this.state.system.name;
 
-    const makeKPITableHeader = loading => [loading ? <CheckBox color="primary"/> :
-                                           <CheckBox color="primary"
-                                                 checked={JSON.stringify(this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort()) ===
-                                                          JSON.stringify(Array.from(this.state.kpis).sort())}
-                                      onChange={e => {
-                                        const checked = e.target.checked;
-                                        if (checked) {
-                                          const s = new Set();
-                                          for (const kpi of this.state.system.kpis) {
-                                            const name = kpi.name;
-                                            s.add(name);
-                                          }
-                                          this.setState({ kpis: s }, () => {
-                                            updateMappings();
-                                          });
-                                        } else {
-                                          this.setState({ kpis: new Set() }, () => {
-                                            updateMappings();
-                                          });
-                                        }
-                                      }}
-                            />, 'KPI', 'Description', 'Last Run', 'Result'];
+      const makeKPITableHeader = loading => [loading ? <CheckBox color="primary"/> :
+                                             <CheckBox color="primary"
+                                                       checked={JSON.stringify(this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort()) ===
+                                                                JSON.stringify(Array.from(this.state.kpis).sort())}
+                                                       onChange={e => {
+                                                         const checked = e.target.checked;
+                                                         if (checked) {
+                                                           const s = new Set();
+                                                           for (const kpi of this.state.system.kpis) {
+                                                             const name = kpi.name;
+                                                             s.add(name);
+                                                           }
+                                                           this.setState({ kpis: s }, () => {
+                                                             updateMappings();
+                                                           });
+                                                         } else {
+                                                           this.setState({ kpis: new Set() }, () => {
+                                                             updateMappings();
+                                                           });
+                                                         }
+                                                       }}
+                                             />, 'KPI', 'Description', 'Last Run', 'Result'];
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
@@ -151,102 +151,100 @@ export default class BatchProcessPage extends React.Component {
           (<Grid item xs={12}>
              <div dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
            </Grid>) :
-    null;
+          null;
 
-    console.log(this.state.system.description);
-    
     return (
-      <Box
-        header={name}
-      >
-        <Grid container spacing={2} style={{maxWidth: '1500px'}}>
-          {description}
-          
-          <Grid item xs={12}>
-            <h3 style={{ marginTop: 0 }}>KPIs</h3>
-            {kpiTable}
-          </Grid>
+          <Box
+            header={name}
+            loading={this.state.loading}
+          >
+            <Grid container spacing={2}
+                  style={{maxWidth: '1500px'}}>
+              {description}
+              
+              <Grid item xs={12}>
+                <InputLabel>KPIs</InputLabel>
+                {kpiTable}
+              </Grid>
 
-          <Grid item xs={6}>
-            <h3 style={{ marginTop: 0 }}>Signals</h3>
-            <PrettyTable
-              header={['KPI Input', 'Signal Name']}
-              rows={this.state.signals.map(signal => {
-                return [
-                  signal,
-                  (<TextField
-                                                     fullWidth={true}
-                                                     name="name"
-                                                     value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
-                                                     onChange={e => {
-                                                       this.state.signalInputs[signal] = e.target.value;
-                                                       // Force an update
-                                                       this.setState({ signals: this.state.signals });
-                                                     }}
-                         />)
-                ];
-              })}
-            />
-          </Grid>
-          
-          <Grid item xs={6}>
-            <h3 style={{ marginTop: 0 }}>Parameters</h3>
-            <PrettyTable
-              header={['KPI Input', 'Signal Name']}
-              rows={this.state.parameters.map(parameter => {
-                return [
-                  parameter,
-                  (<TextField
-                                                  fullWidth={true}
-                                                  name="name"
-                                                  value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
-                                                  onChange={e => {
-                                                    this.state.parameterInputs[parameter] = e.target.value;
-                                                    // Force an update
-                                                    this.setState({ parameters: this.state.parameters });
-                                                  }}
-                    />)
-                ];
-              })}
-            />
-          </Grid>
+              <Grid item xs={6}>
+                <InputLabel>Signals</InputLabel>
+                <PrettyTable
+                  header={['KPI Input', 'Signal Name']}
+                  rows={this.state.signals.map(signal => {
+                    return [
+                      signal,
+                      (<TextField
+                         fullWidth={true}
+                         name="name"
+                         value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
+                         onChange={e => {
+                           this.state.signalInputs[signal] = e.target.value;
+                           // Force an update
+                           this.setState({ signals: this.state.signals });
+                         }}
+                       />)
+                    ];
+                  })}
+                />
+              </Grid>
+              
+              <Grid item xs={6}>
+                <InputLabel>Parameters</InputLabel>
+                <PrettyTable
+                  header={['KPI Input', 'Signal Name']}
+                  rows={this.state.parameters.map(parameter => {
+                    return [
+                      parameter,
+                      (<TextField
+                         fullWidth={true}
+                         name="name"
+                         value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
+                         onChange={e => {
+                           this.state.parameterInputs[parameter] = e.target.value;
+                           // Force an update
+                           this.setState({ parameters: this.state.parameters });
+                         }}
+                       />)
+                    ];
+                  })}
+                />
+              </Grid>
 
-          {/*           <Grid item xs={12}> */}
-          {/*             <TextField */}
-          {/*               label="Warning Log" */}
-          {/*               multiline={true} */}
-          {/*               fullWidth={true} */}
-          {/*               rows={10} */}
-          {/*               variant="outlined" */}
-          {/*               disabled={true} */}
-          {/*               value={`8/20/2020 13:23:93.4234: THD Va above 10% */}
-          {/* 8/21/2020 11:43:32.4353: Efficiency below 20% */}
-          {/* `} */}
-          {/*             > */}
-          {/*             </TextField> */}
-          {/*           </Grid> */}
+              {/*           <Grid item xs={12}> */}
+              {/*             <TextField */}
+              {/*               label="Warning Log" */}
+              {/*               multiline={true} */}
+              {/*               fullWidth={true} */}
+              {/*               rows={10} */}
+              {/*               variant="outlined" */}
+              {/*               disabled={true} */}
+              {/*               value={`8/20/2020 13:23:93.4234: THD Va above 10% */}
+              {/* 8/21/2020 11:43:32.4353: Efficiency below 20% */}
+              {/* `} */}
+              {/*             > */}
+              {/*             </TextField> */}
+              {/*           </Grid> */}
 
+              <Grid item xs={12}>
+                <InputLabel>Date Range</InputLabel>            
+                <DateTimePicker value={this.state.startDate}
+                                onChange={date => this.setState({ startDate: date })}
+                                label="Start Time"
+                                style={{marginRight: '20px'}}
+                                required />
+                <DateTimePicker value={this.state.endDate}
+                                onChange={date => this.setState({ endDate: date })}
+                                label="End Time"
+                                required />
+              </Grid>
 
-
-          <Grid item xs={12}>
-            <h3 style={{ marginTop: 0 }}>Date Range</h3>            
-            <DateTimePicker value={this.state.startDate}
-                            onChange={date => this.setState({ startDate: date })}
-                            label="Start Time"
-                            style={{marginRight: '20px'}}
-                            required />
-            <DateTimePicker value={this.state.endDate}
-                            onChange={date => this.setState({ endDate: date })}
-                            label="End Time"
-                            required />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Button style={{'marginRight': '10px'}} variant="contained" color="primary">Run</Button>
-            <Button variant="contained" color="primary">Export</Button>            
-          </Grid>
-        </Grid>
-      </Box>
+              <Grid item xs={12} sm={6}>
+                <Button style={{'marginRight': '10px'}} variant="contained" color="primary">Run</Button>
+                <Button variant="contained" color="primary">Export</Button>            
+              </Grid>
+            </Grid>
+          </Box>
     );
   }
 }

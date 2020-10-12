@@ -14,6 +14,7 @@ import EditIcon from '@material-ui/icons/Edit';
 
 import KPIEditor from './KPIEditor';
 import HTMLEditor from './HTMLEditor';
+import InputLabel from './InputLabel';
 import ConfirmationDialog from './ConfirmationDialog';
 
 import util from '../util';
@@ -32,8 +33,9 @@ export default class KPIEdit extends React.Component {
 
       // State controls for dialog boxes
       kpiDialogOpen: false,
-      paramDialogOpen: false,      
+      paramDialogOpen: false,
     };
+    
     this.clearKpi();
     this.clearParam();
   }
@@ -155,7 +157,7 @@ export default class KPIEdit extends React.Component {
           </Grid>
 
           <Grid item xs={12}>
-            <h3 style={{ marginTop: 0 }}>Description</h3>
+            <InputLabel>Description</InputLabel>
             <input name="description"
                    value={this.state.description}
                    type="hidden" />
@@ -168,7 +170,7 @@ export default class KPIEdit extends React.Component {
           </Grid>
 
           <Grid item xs={12}>
-            <h3 style={{ marginTop: 0 }}>KPIs</h3>            
+            <InputLabel>KPIs</InputLabel>            
             <PrettyTable
               header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
               rows={this.state.kpis.map((kpi, i) =>
@@ -225,7 +227,7 @@ export default class KPIEdit extends React.Component {
           </Grid>
           
           <Grid item xs={12}>
-            <h3 style={{ marginTop: 0 }}>Parameters</h3>                        
+            <InputLabel>Parameters</InputLabel>                        
             <PrettyTable
               header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
               rows={this.state.parameters.map((parameter, i) => [parameter.name,
