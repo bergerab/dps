@@ -149,7 +149,7 @@ export default class BatchProcessPage extends React.Component {
           this.state.system.description !== null &&
           this.state.system.description !== undefined ?
           (<Grid item xs={12}>
-             <div dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
+             <div className="system-description" dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
            </Grid>) :
           null;
 

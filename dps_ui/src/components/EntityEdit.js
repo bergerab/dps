@@ -26,7 +26,11 @@ export default class EntityEdit extends React.Component {
       this.setState({ loading: false });
     }
   }
-  
+
+  finishSubmit() {
+    window.history.back();
+  }
+
   render () {
     const props = this.props;
     const headerText = (props.edit ? 'Edit' : 'Add') + ' ' + props.entityName;
@@ -45,16 +49,15 @@ export default class EntityEdit extends React.Component {
       
       if (props.edit) {
         put(props.entityUrl, props.entityId, jo).then(o => {
-	  window.history.back();		
+          this.finishSubmit();
         }).catch(error => {
           error.then(jo => {
             this.props.onError(jo);
           });
-      });
-
-  } else {
-    post(props.entityUrl, jo).then(o => {
-      window.history.back();
+        });
+      } else {
+        post(props.entityUrl, jo).then(o => {
+          this.finishSubmit();          
         }).catch(error => {
           error.then(jo => {
             this.props.onError(jo);
@@ -67,22 +70,23 @@ export default class EntityEdit extends React.Component {
 
     let form =
         (<form
-           onSubmit={onSubmit}
-           noValidate
-           autoComplete="off"
-           style={{ width: '100%'}}
-         >
-           {props.children}
-           <Row>
-             <Button
-               type="submit"
-               variant="contained"
-               color="primary"
-             >
-               Save
-             </Button>          
-           </Row>
-         </form>);
+         className="edit-form"
+         onSubmit={onSubmit}
+         noValidate
+         autoComplete="off"
+         style={{ width: '100%'}}
+    >
+      {props.children}
+      <Row>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+        >
+          Save
+        </Button>          
+      </Row>
+    </form>);
 
     return (
       <Grid container spacing={2}>

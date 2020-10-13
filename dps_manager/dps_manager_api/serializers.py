@@ -4,6 +4,7 @@ from rest_framework import serializers, viewsets
 
 from .models import Object
 
+import dps_services.util as util
 from dplib import DPL
 
 # System
@@ -15,10 +16,19 @@ class KPISerializer(serializers.Serializer):
     hidden = serializers.BooleanField(required=False)
 
     def validate(self, data):
-        # TODO: Make sure computation parses and is valid
         # TODO: Make sure it doesn't reference itself
-        # TODO: Make sure identifier doesn't have spaces
-        DPL().parse(data['computation'])
+
+        try:
+            DPL().parse(data['computation'])
+        except Exception as e:
+            raise serializers.ValidationError({ 'computation': e })
+
+        if data['identifier']:
+            if not data['identifier'].isidentifier():
+                raise serializers.ValidationError({
+                    'identifier': 'Illegal identifier (must be a valid Python identifier).',
+                })
+        
         return data
 
 class ParameterSerializer(serializers.Serializer):
@@ -29,7 +39,16 @@ class ParameterSerializer(serializers.Serializer):
     default = serializers.CharField(max_length=200, required=False, allow_blank=True)
 
     def validate(self, data):
-        # TODO: Make sure identifier doesn't have spaces
+        if data['identifier']:
+            if not data['identifier'].isidentifier():
+                raise serializers.ValidationError({
+                    'identifier': 'Illegal identifier (must be a valid Python identifier).',
+                })
+        else:
+            if not data['name'].isidentifier():
+                raise serializers.ValidationError({
+                    'name': 'Illegal identifier (the name is used as an identifier when no identifier is given).\nMust be a valid Python identifier.',
+                })
         return data
     
 class SystemSerializer(serializers.Serializer):
@@ -48,7 +67,16 @@ class IntervalSerializer(serializers.Serializer):
     end = serializers.CharField()    
 
     def validate(self, data):
-        # TODO: Make sure times are in correct format
+        if not util.validate_datetime(data['start']):
+            raise serializers.ValidationError({
+                'start': f'Start time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
+            })
+
+        if not util.validate_datetime(data['end']):
+            raise serializers.ValidationError({
+                'end': f'End time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
+            })
+
         return data
 
 class BatchProcessSerializer(serializers.Serializer):
@@ -64,7 +92,11 @@ class ProgressSerializer(serializers.Serializer):
 
     def validate(self, data):
         # TODO: Make sure batch_process_id refers to a valid object
-        # TODO: Validate time
+        if not util.validate_datetime(data['time']):
+            raise serializers.ValidationError({
+                'time': f'Time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
+            })
+
         return data
 
 # RequiredMappingsRequestSerializer

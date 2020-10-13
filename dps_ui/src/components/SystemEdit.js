@@ -19,6 +19,7 @@ import InputLabel from './InputLabel';
 import ConfirmationDialog from './ConfirmationDialog';
 
 import util from '../util';
+import { put, post } from '../api';
 
 export default class KPIEdit extends React.Component {
   constructor(props) {
@@ -26,6 +27,8 @@ export default class KPIEdit extends React.Component {
     
     this.state = {
       errors: null, // leftover errors which have not been handled by inputs
+
+      system_id: -1,
       
       // Defaults for System fields
       // (used before the onEntity GET request returns)
@@ -38,6 +41,7 @@ export default class KPIEdit extends React.Component {
       kpiErrors: null,
       
       parameters: [],
+      paramErrors: null,
 
       // State controls for dialog boxes
       kpiDialogOpen: false,
@@ -75,10 +79,6 @@ export default class KPIEdit extends React.Component {
   }
 
   handleSaveParamDialog() {
-    this.setState({
-      paramDialogOpen: false
-    });
-
     const param = {
       name: this.state.paramName,
       identifier: this.state.paramIdentifier,
@@ -89,12 +89,35 @@ export default class KPIEdit extends React.Component {
 
     // Add
     if (this.state.paramId === -1) {
-      this.setState({
-        parameters: this.state.parameters.concat([param]),
-      });
-      this.clearParam();      
+      const newParams = this.state.parameters.concat([param]);
+      this.save({ parameters: newParams }).then(o => {
+        this.setState({
+          paramDialogOpen: false,
+          paramId: newParams.length,
+          parameters: newParams,
+        });
+        this.clearParam();              
+      }).catch(() => {});
     } else { // Edit
-      this.state.parameters[this.state.paramId] = param;
+      const newParams = [];
+      let i = 0;
+      for (const oldParam of this.state.parameters) {
+        if (i === this.state.paramId) {
+          newParams[i] = param;
+        } else {
+          newParams[i] = oldParam;
+        }
+        ++i;
+      }
+      this.setState({
+        parameters: newParams,
+      }, () => {
+        this.save().then(o => {
+          this.setState({
+            paramDialogOpen: false,
+          });
+        }).catch(() => {});
+      });
     }
   }
 
@@ -103,10 +126,6 @@ export default class KPIEdit extends React.Component {
   }
 
   handleSaveKPIDialog() {
-    this.setState({
-      kpiDialogOpen: false
-    });
-
     const kpi = {
       name: this.state.kpiName,
       identifier: this.state.kpiIdentifier,
@@ -117,12 +136,67 @@ export default class KPIEdit extends React.Component {
 
     // Add
     if (this.state.kpiId === -1) {
-      this.setState({
-        kpis: this.state.kpis.concat([kpi]),
-      });
-      this.clearKpi();      
+      const newKpis = this.state.kpis.concat([kpi]);
+      this.save({ kpis: newKpis }).then(o => {
+        this.setState({
+          kpiDialogOpen: false,
+          kpiId: newKpis.length,
+          kpis: newKpis,
+        });
+        this.clearKpi();              
+      }).catch(() => {});
     } else { // Edit
-      this.state.kpis[this.state.kpiId] = kpi;
+      const newKpis = [];
+      let i = 0;
+      for (const oldKpi of this.state.kpis) {
+        if (i === this.state.kpiId) {
+          newKpis[i] = kpi;
+        } else {
+          newKpis[i] = oldKpi;
+        }
+        ++i;
+      }
+      this.setState({
+        kpis: newKpis,
+      }, () => {
+        this.save().then(o => {
+          this.setState({
+            kpiDialogOpen: false,
+          });
+        }).catch(() => {});
+      });
+    }
+  }
+
+  save(overrides) {
+    this.setState({
+      nameErrors: null,
+      kpiErrors: null,
+      paramErrors: null,      
+      errors: null,
+    });
+
+    const o = Object.assign({
+      name: this.state.name,
+      description: this.state.description,
+      kpis: this.state.kpis,
+      parameters: this.state.parameters,
+    }, overrides);
+
+    if (this.state.system_id === -1) {
+      return post('system', o).catch(error => {
+        error.then(jo => {
+          this.onError(jo);
+        });
+        throw error;
+      });
+    } else {
+      return put('system', this.state.system_id, o).catch(error => {
+        error.then(jo => {
+          this.onError(jo);
+        });
+        throw error;
+      });
     }
   }
 
@@ -131,220 +205,283 @@ export default class KPIEdit extends React.Component {
       kpiDialogOpen: true
     });
   }
+
+onError(error) {
+  this.setState({ nameErrors: util.objectPop(error, 'name') });
+  this.setState({ kpiErrors: util.objectPop(error, 'kpis') });
+  this.setState({ paramErrors: util.objectPop(error, 'parameters') });        
+  if (Object.keys(error).length > 0) {
+    this.setState({ errors: error });
+  } else {
+    this.setState({ errors: null });
+  }
+}
+
+render () {
+  const props = this.props;
   
-  render () {
-    const props = this.props;
-    
-    const onEntity = entity => {
-      const name = entity.name;
-      this.setState({
-        name: entity.name,
-        description: entity.description,
-        kpis: entity.kpis,
-        parameters: entity.parameters,
-      });
-    };
+  const onEntity = entity => {
+    const name = entity.name;
+    this.setState({
+      system_id: entity.system_id,        
+      name: entity.name,
+      description: entity.description,
+      kpis: entity.kpis,
+      parameters: entity.parameters,
+    });
+  };
 
-    const onError = error => {
-      this.setState({ nameErrors: util.objectPop(error, 'name') });
-      this.setState({ kpiErrors: util.objectPop(error, 'kpis') });      
-      if (Object.keys(error).length > 0) {
-        this.setState({ errors: error });
-      } else {
-        this.setState({ errors: null });
+  return (
+    <Grid container spacing={2}>
+      {this.state.errors !== null ?
+       (<Grid item>
+                      {JSON.stringify(this.state.errors)}
+                    </Grid>) : null
       }
-    };
+      <EntityEdit
+        {...props}
+        edit={props.edit}
+        entityName="System"
+        entityUrl='system'
+        onGETEntity={onEntity}
+        onError={this.onError.bind(this)}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12}>            
+            <TextField
+              fullWidth={true}
+              name="name"
+              value={this.state.name}
+              onChange={e => this.setState({ nameErrors: null, name: e.value })}
+              error={this.state.nameErrors !== null}
+              helperText={this.state.nameErrors === null ? '' : this.state.nameErrors.join('\n')}
+              label="Name"
+            />
+          </Grid>
 
-    return (
-      <Grid container spacing={2}>
-        {this.state.errors !== null ?
-         (<Grid item>
-            {JSON.stringify(this.state.errors)}
-          </Grid>) : null
-        }
-        <EntityEdit
-          {...props}
-          edit={props.edit}
-          entityName="System"
-          entityUrl='system'
-          onGETEntity={onEntity}
-          onError={onError}        
-        >
-          <Grid container spacing={2}>
-            <Grid item xs={12}>            
-              <TextField
-                fullWidth={true}
-                name="name"
-                value={this.state.name}
-                onChange={e => this.setState({ nameErrors: null, name: e.value })}
-                error={this.state.nameErrors !== null}
-                helperText={this.state.nameErrors === null ? '' : this.state.nameErrors.join('\n')}
-                label="Name"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <InputLabel>Description</InputLabel>
-              <input name="description"
-                     value={this.state.description}
-                     type="hidden" />
-              <HTMLEditor
-                value={this.state.description}
-                onChange={value => {
-                  this.setState({ description: value });
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <InputLabel>KPIs</InputLabel>            
-              <PrettyTable
-                header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
-                rows={this.state.kpis.map((kpi, i) => {
-                  const hasError =
-                        this.state.kpiErrors !== null &&
-                        i <= this.state.kpiErrors.length &&
-                        !util.objectIsEmpty(this.state.kpiErrors[i]);
-                  const hasNameError = hasError && 'name' in this.state.kpiErrors[i];
-                  const hasComputationError = hasError && 'computation' in this.state.kpiErrors[i];
-                  
-                  return [
-                    hasNameError ?
-                      (<div>
-                         <TextField
-                           error={true}
-                           helperText={this.state.kpiErrors[i].name}
-                           value={kpi.name}
-                         />
-                       </div>) : kpi.name,
-                    <KPIEditor
-                      className="code"
-                      options={{
-                        lineNumbers: false,
-                        readOnly: true,
-                      }}
-                      readonly={true}
-                      value={util.getIdentifier(kpi.name, kpi.identifier)}/>,
-                    hasComputationError ?
-                      (<div>
-        <div class="editor-error-thick">
-          <KPIEditor
-            className="code"
-            options={{
-              lineNumbers: false,
-              readOnly: true,
-            }}
-            readonly={true}
-            value={kpi.computation}/>
-        </div>
-        <FormHelperText error={true}>
-          {this.state.kpiErrors[i].computation}
-        </FormHelperText>
-      </div>) :
-                      (<KPIEditor
-                             className="code"
-                             options={{
-                               lineNumbers: false,
-                               readOnly: true,
-                             }}
-                             readonly={true}
-                             value={kpi.computation}/>),
-                    <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
-                    kpi.hidden ? 'Yes' : 'No',
-                    (<EditAndDeleteLocal
-                                           entityName={kpi.name}
-                                             entityType="KPI"
-                                 onClickEdit={() => {
-                                   this.setState({
-                                     kpiDialogOpen: true,
-                                     
-                                     kpiId: i,
-                                     kpiName: kpi.name,
-                                     kpiIdentifier: kpi.identifier,
-                                     kpiDescription: kpi.description,
-                                     kpiHidden: kpi.hidden,
-                                     kpiComputation: kpi.computation,
-                                   });
-                                 }}
-                                   onClickDelete={x => {
-                                     this.setState({ kpis: this.state.kpis.filter((x, j) => i !== j) });                                              
-                                   }}
-          />)
-                  ];
-                                         })}
-              />
-              <Button variant="contained"
-                      color="primary"
-                      style={{ marginTop: '10px' }}
-                      onClick={() => {
-                        this.clearKpi();
-                        this.setState({
-                          kpiDialogOpen: true
-                        })
-                      }}>
-                Add KPI
-              </Button>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <InputLabel>Parameters</InputLabel>                        
-              <PrettyTable
-                header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
-                rows={this.state.parameters.map((parameter, i) => [parameter.name,
-                                                                   <KPIEditor
-                                                                     className="code"
-                                                                     options={{
-                                                                       lineNumbers: false,
-                                                                       readOnly: true,
-                                                                     }}
-                                                                     readonly={true}
-                                                                     value={parameter.identifier}/>,
-                                                                   <KPIEditor
-                                                                     className="code"
-                                                                     options={{
-                                                                       lineNumbers: false,
-                                                                       readOnly: true,
-                                                                     }}
-                                                                     readonly={true}
-                                                                     value={parameter.default}/>,
-                                                                   parameter.description,
-                                                                   parameter.hidden ? 'Yes' : 'No',
-                                                                   (<EditAndDeleteLocal
-                                                                     entityName={parameter.name}
-                                                                     entityType="parameter"
-                                                                     onClickEdit={() => {
-                                                                       this.setState({
-                                                                         paramDialogOpen: true,
-                                                                         
-                                                                         paramId: i,
-                                                                         paramName: parameter.name,
-                                                                         paramIdentifier: parameter.identifier,
-                                                                         paramDefault: parameter.default,                                                                        
-                                                                         paramDescription: parameter.description,
-                                                                         paramHidden: parameter.hidden,
-                                                                         paramComputation: parameter.computation,
-                                                                       });
-                                                                     }}
-                                                                     onClickDelete={x => {
-                                                                       this.setState({ parameters: this.state.parameters.filter((x, j) => i !== j) });
-                                                                     }}
-                              />)])}              
-              />
-              <Button variant="contained"
-                      color="primary"
-                      style={{ marginTop: '10px' }}
-                      onClick={() => {
-                        this.clearParam();
-                        this.setState({ paramDialogOpen: true })
-                      }}>
-                Add Parameter
-              </Button>
-            </Grid>
-
-            <input name="kpis"
-                   value={JSON.stringify(this.state.kpis)}
-                   data-type="json"
+          <Grid item xs={12}>
+            <InputLabel>Description</InputLabel>
+            <input name="description"
+                   value={this.state.description}
                    type="hidden" />
+            <HTMLEditor
+              value={this.state.description}
+              onChange={value => {
+                this.setState({ description: value });
+              }}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <InputLabel>KPIs</InputLabel>            
+            <PrettyTable
+              header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
+              rows={this.state.kpis.map((kpi, i) => {
+                const hasError =
+                      this.state.kpiErrors !== null &&
+                      i <= this.state.kpiErrors.length &&
+                      !util.objectIsEmpty(this.state.kpiErrors[i]);
+                const hasNameError = hasError && 'name' in this.state.kpiErrors[i];
+                const hasComputationError = hasError && 'computation' in this.state.kpiErrors[i];
+                
+                return [
+                  hasNameError ?
+                    (<div>
+                <TextField
+                  error={true}
+                  helperText={this.state.kpiErrors[i].name}
+                  value={kpi.name}
+                />
+                     </div>) : kpi.name,
+                  <KPIEditor
+                    className="code"
+                    options={{
+                      autoRefresh:true,                      
+                      lineNumbers: false,
+                      readOnly: true,
+                    }}
+                    readonly={true}
+                    value={util.getIdentifier(kpi.name, kpi.identifier)}/>,
+                  
+                  hasComputationError ?
+                    (<div>
+                       <div className="editor-error-thick">
+                         <KPIEditor
+                           className="code"
+                           options={{
+                             lineNumbers: false,
+                           }}
+                           value={kpi.computation}/>
+                       </div>
+                       <FormHelperText error={true}>
+                         {this.state.kpiErrors[i].computation}
+                       </FormHelperText>
+                     </div>) :
+                    (<KPIEditor
+                       className="code"
+                       options={{
+                         lineNumbers: false,
+                       }}
+                       value={kpi.computation}/>),
+                  
+                  <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
+                  kpi.hidden ? 'Yes' : 'No',
+                  (<EditAndDeleteLocal
+                           entityName={kpi.name}
+                              entityType="KPI"
+                           onClickEdit={() => {
+                             this.setState({
+                               kpiDialogOpen: true,
+                               
+                               kpiId: i,
+                               kpiName: kpi.name,
+                               kpiIdentifier: kpi.identifier,
+                               kpiDescription: kpi.description,
+                               kpiHidden: kpi.hidden,
+                               kpiComputation: kpi.computation,
+                             });
+                           }}
+                               onClickDelete={x => {
+                                 this.setState({ kpis: this.state.kpis.filter((x, j) => i !== j) }, () => {
+                                   this.save();
+                                 });                                              
+                               }}
+                           />)
+                ];
+              })}
+            />
+            <Button variant="contained"
+                    color="primary"
+                    style={{ marginTop: '10px' }}
+                    onClick={() => {
+                      this.clearKpi();
+                      this.setState({
+                        kpiDialogOpen: true
+                      })
+                    }}>
+              Add KPI
+            </Button>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <InputLabel>Parameters</InputLabel>                        
+            <PrettyTable
+              header={['Name', 'Identifier', 'Default', 'Description', 'Hidden', '']}
+              rows={this.state.parameters.map((parameter, i) => {
+                const hasError =
+                      this.state.paramErrors !== null &&
+                      i <= this.state.paramErrors.length &&
+                      !util.objectIsEmpty(this.state.paramErrors[i]);
+                const hasNameError = hasError && 'name' in this.state.paramErrors[i];
+                const hasIdentifierError = hasError && 'identifier' in this.state.paramErrors[i];
+                const hasDefaultError = hasError && 'default' in this.state.paramErrors[i];
+
+                return [
+                  hasNameError ?
+                    (<div>
+                       <TextField
+                         error={true}
+                         helperText={this.state.paramErrors[i].name}
+                         value={parameter.name}
+                       />
+                     </div>) : parameter.name,
+
+                  hasIdentifierError ?
+                    (<div>
+                       <div className="editor-error-thick">
+                         <KPIEditor
+                           className="code"
+                           options={{
+                             lineNumbers: false,
+                             readOnly: true,
+                           }}
+                           readonly={true}
+                           value={parameter.identifier}/>,
+                       </div>
+                       <FormHelperText error={true}>
+                         {this.state.paramErrors[i].identifier}
+                       </FormHelperText>
+                     </div>) :
+                    (<KPIEditor
+                       className="code"
+                       options={{
+                         lineNumbers: false,
+                         readOnly: true,
+                       }}
+                       readonly={true}
+                       value={parameter.identifier}/>),
+
+                  hasDefaultError ?
+                    (<div>
+                       <div className="editor-error-thick">
+                         <KPIEditor
+                           className="code"
+                           options={{
+                             lineNumbers: false,
+                             readOnly: true,
+                           }}
+                           readonly={true}
+                           value={parameter.default}/>,
+                       </div>
+                       <FormHelperText error={true}>
+                         {this.state.paramErrors[i].default}
+                     </FormHelperText>
+                     </div>) :
+                    (<KPIEditor
+                       className="code"
+                       options={{
+                         lineNumbers: false,
+                         readOnly: true,
+                       }}
+                       readonly={true}
+                       value={parameter.default}/>),
+                  
+                  parameter.description,
+                  
+                  parameter.hidden ? 'Yes' : 'No',
+                  
+                  (<EditAndDeleteLocal
+                                  entityName={parameter.name}
+                                  entityType="parameter"
+                                  onClickEdit={() => {
+                                    this.setState({
+                                      paramDialogOpen: true,
+                                      
+                                      paramId: i,
+                                      paramName: parameter.name,
+                                      paramIdentifier: parameter.identifier,
+                                      paramDefault: parameter.default,                                                                        
+                                      paramDescription: parameter.description,
+                                      paramHidden: parameter.hidden,
+                                      paramComputation: parameter.computation,
+                                    });
+                                  }}
+                                    onClickDelete={x => {
+                                      this.setState({
+                                        parameters: this.state.parameters.filter((x, j) => i !== j)
+                                      }, () => {
+                                        this.save();
+                                      });
+                                      
+                                    }}
+                                                                 />)];
+                                             })}              
+            />
+            <Button variant="contained"
+                    color="primary"
+                    style={{ marginTop: '10px' }}
+                    onClick={() => {
+                      this.clearParam();
+                      this.setState({ paramDialogOpen: true })
+                    }}>
+              Add Parameter
+            </Button>
+          </Grid>
+
+          <input name="kpis"
+                 value={JSON.stringify(this.state.kpis)}
+                 data-type="json"
+                 type="hidden" />
           <KPIDialog
             open={this.state.kpiDialogOpen}
             handleClose={this.handleCloseKPIDialog.bind(this)}
@@ -372,6 +509,7 @@ export default class KPIEdit extends React.Component {
             open={this.state.paramDialogOpen}
             handleClose={this.handleCloseParamDialog.bind(this)}
             handleSave={this.handleSaveParamDialog.bind(this)}
+            paramErrors={this.state.paramErrors}
             
             id={this.state.paramId}
             name={this.state.paramName}
@@ -388,10 +526,10 @@ export default class KPIEdit extends React.Component {
           
         </Grid>
       </EntityEdit>
-      </Grid>
-    );
-    
-  }
+    </Grid>
+  );
+
+}
 }
 
 function EditAndDeleteLocal(props) {

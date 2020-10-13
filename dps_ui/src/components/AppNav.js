@@ -23,6 +23,16 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 
+import Filter1Icon from '@material-ui/icons/Filter1';
+import Filter2Icon from '@material-ui/icons/Filter2';
+import Filter3Icon from '@material-ui/icons/Filter3';
+import Filter4Icon from '@material-ui/icons/Filter4';
+import Filter5Icon from '@material-ui/icons/Filter5';
+import Filter6Icon from '@material-ui/icons/Filter6';
+import Filter7Icon from '@material-ui/icons/Filter7';
+import Filter8Icon from '@material-ui/icons/Filter8';
+import Filter9Icon from '@material-ui/icons/Filter9';
+
 import HomeIcon from '@material-ui/icons/Home';
 import MemoryIcon from '@material-ui/icons/Memory';
 import TableChartIcon from '@material-ui/icons/TableChart';
@@ -36,6 +46,14 @@ import EntityPage from './EntityPage';
 import { list } from '../api';
 
 const drawerWidth = 240;
+
+const indexToIcon = i => {
+  return [
+    <Filter1Icon/>, <Filter2Icon/>, <Filter3Icon/>,
+    <Filter4Icon/>, <Filter5Icon/>, <Filter6Icon/>,
+    <Filter7Icon/>, <Filter8Icon/>, <Filter9Icon/>,
+  ][i % 9]
+};
 
 const styles = theme => ({
   root: {
@@ -190,13 +208,13 @@ class MiniDrawer extends React.Component {
             </List>
             <Divider />
             <List>
-              {this.state.systems.map(system => (
+              {this.state.systems.map((system, i) => (
                 <Link
                   key={system.system_id}
                   to={"/batch-process/" + system.system_id}
                   style={linkStyle}>
                   <ListItem button key={system.name}>
-                    <ListItemIcon><TableChartIcon /></ListItemIcon>
+                    <ListItemIcon>{indexToIcon(i)}</ListItemIcon>
                     <ListItemText primary={system.name} />
                   </ListItem>
                 </Link>

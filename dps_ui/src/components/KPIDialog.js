@@ -17,21 +17,6 @@ import HTMLEditor from './HTMLEditor';
 
 export default class KPIDialog extends React.Component {
   render() {
-    const identifier = util.getIdentifier(this.props.name, this.props.identifier);
-    const identifierField =
-          (<Grid item xs={12}>
-             <TextField
-               id="identifier"
-               label="Identifier"
-               type="text"
-               value={identifier === null ? '' : identifier}                    
-               onChange={event => {
-                 this.props.handleIdentifier(event.target.value);
-               }}
-               fullWidth
-             />
-           </Grid>);
-
     const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
 
     let id = this.props.id;
@@ -46,8 +31,24 @@ export default class KPIDialog extends React.Component {
           !util.objectIsEmpty(this.props.kpiErrors[id]);
     const hasNameError = hasError && 'name' in this.props.kpiErrors[id];
     const hasComputationError = hasError && 'computation' in this.props.kpiErrors[id];
+    const hasIdentifierError = hasError && 'identifier' in this.props.kpiErrors[id];    
 
-    console.log(id);
+    const identifier = util.getIdentifier(this.props.name, this.props.identifier);
+    const identifierField =
+          (<Grid item xs={12}>
+             <TextField
+               id="identifier"
+               label="Identifier"
+               type="text"
+               error={hasIdentifierError}
+               helperText={this.props.kpiErrors === null ? '' : this.props.kpiErrors[id].identifier}               
+               value={identifier === null ? '' : identifier}                    
+               onChange={event => {
+                 this.props.handleIdentifier(event.target.value);
+               }}
+               fullWidth
+             />
+           </Grid>);
 
     return (
       <Dialog open={this.props.open}
@@ -92,7 +93,7 @@ export default class KPIDialog extends React.Component {
               >Computation *</FormLabel>
               {hasComputationError ?
                (<div>
-                  <div class="editor-error">
+                  <div className="editor-error">
                     <KPIEditor
               	      value={this.props.computation}
 	              onBeforeChange={(editor, data, value) => {

@@ -15,6 +15,20 @@ import KPIEditor from './KPIEditor';
 
 export default class ParameterDialog extends React.Component {
   render() {
+    let id = this.props.id;
+    if (this.props.paramErrors !== null && this.props.id === -1) {
+      id = this.props.paramErrors.length - 1;
+    }
+
+    const hasError =
+          this.props.paramErrors !== null &&
+          this.props.paramErrors !== undefined &&
+          id in this.props.paramErrors &&
+          !util.objectIsEmpty(this.props.paramErrors[id]);
+    const hasNameError = hasError && 'name' in this.props.paramErrors[id];
+    const hasDefaultError = hasError && 'default' in this.props.paramErrors[id];
+    const hasIdentifierError = hasError && 'identifier' in this.props.paramErrors[id];    
+
     const identifier = util.getIdentifier(this.props.name, this.props.identifier);    
     const identifierField =
           (
@@ -23,6 +37,8 @@ export default class ParameterDialog extends React.Component {
                 id="identifier"
                 label="Identifier"
                 type="text"
+                error={hasIdentifierError}
+                helperText={this.props.paramErrors === null ? '' : this.props.paramErrors[id].identifier}               
                 value={identifier === null ? '' : identifier}                    
                 onChange={event => {
                   this.props.handleIdentifier(event.target.value);
@@ -43,7 +59,9 @@ export default class ParameterDialog extends React.Component {
                 autoFocus
                 id="name"
                 label="Name"
-                value={this.props.name}                    
+                value={this.props.name}
+                error={hasNameError}
+                helperText={this.props.paramErrors === null ? '' : this.props.paramErrors[id].name}               
                 type="text"
                 onChange={event => {
                   this.props.handleName(event.target.value);
