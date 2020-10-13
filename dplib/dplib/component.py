@@ -49,6 +49,17 @@ class Component:
         bp = bp.prune(*kpi_ids)
         print('pruned bp', bp.kpis)
         return bp.get_required_inputs()
+
+    def make_bp(self, mapping={}):
+        # Build BatchProcess for all KPIs
+        bp = BatchProcess()
+        for kpi in self.kpis.values():
+            kpi.add_to_batch_process(bp, mapping)
+
+        bp._connect_graph()
+        bp._get_topological_ordering()
+
+        return bp
         
     def run_all(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
         if isinstance(kpi_names, str):
@@ -56,12 +67,7 @@ class Component:
 
         self._validate_kpi_names(kpi_names)
 
-        # Build BatchProcess for all KPIs
-        bp = BatchProcess()
-        for kpi in self.kpis.values():
-            kpi.add_to_batch_process(bp, mapping)
-
-        bp._connect_graph()
+        bp = self.make_bp(mapping)
 
         # Prune BatchProcess so it only computes the necessary KPIs
         kpi_ids = []

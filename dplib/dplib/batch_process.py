@@ -83,7 +83,7 @@ class BatchProcess:
         try:
             return self.graph.get_topological_ordering()
         except CyclicGraphException:
-            raise Exception('Batch Processes cannot contain recursive KPI computations.')
+            raise CyclicGraphException('Batch Processes cannot contain recursive KPI computations.')
 
     def run_all(self, df, time_column='Time', parameters=[], previous_result=None):
         '''

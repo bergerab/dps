@@ -15,6 +15,7 @@ import EditIcon from '@material-ui/icons/Edit';
 
 import KPIEditor from './KPIEditor';
 import HTMLEditor from './HTMLEditor';
+import Errors from './Errors';
 import InputLabel from './InputLabel';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -232,11 +233,13 @@ render () {
   };
 
   return (
-    <Grid container spacing={2}>
+    <Grid container>
       {this.state.errors !== null ?
-       (<Grid item>
-                      {JSON.stringify(this.state.errors)}
-                    </Grid>) : null
+       (<Grid item style={{marginBottom: '2em', width: '100%' }}>
+          <Errors
+            errors={this.state.errors}
+          />
+        </Grid>) : null
       }
       <EntityEdit
         {...props}

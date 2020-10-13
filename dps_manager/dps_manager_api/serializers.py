@@ -5,7 +5,7 @@ from rest_framework import serializers, viewsets
 from .models import Object
 
 import dps_services.util as util
-from dplib import DPL
+from dplib import DPL, Component, CyclicGraphException
 
 # System
 class KPISerializer(serializers.Serializer):
@@ -56,6 +56,76 @@ class SystemSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)    
     kpis = KPISerializer(many=True, default=[])
     parameters = ParameterSerializer(many=True, default=[])
+    
+    def validate(self, data):
+        # Make sure topological ordering succeeds
+
+        parameter_names = []
+        for parameter in data['parameters']:
+            name = None
+            if parameter['identifier']:
+                name = parameter['identifier']
+            else:
+                name = parameter['name']
+            parameter_names.append(name)
+        
+        c = Component('Temp', parameters=parameter_names)
+        for kpi in data['kpis']:
+            identifier = kpi.get('identifier')
+            if identifier == '':
+                identifier = None
+            c.add(kpi['name'], kpi['computation'], id=identifier)
+
+        try:
+            bp = c.make_bp()            
+            bp._get_topological_ordering()
+        except CyclicGraphException as e:
+            raise serializers.ValidationError('One or more KPIs create a recursive KPI computation.')
+
+        identifiers = []
+
+        kpi_names = []
+        kpi_errors = []
+        for i, kpi in enumerate(data['kpis']):
+            if kpi['name'] in kpi_names:
+                kpi_errors.append({'name': ['Name is not unique.']})
+            else:
+                kpi_errors.append({})
+
+            identifier = kpi['identifier'] or kpi['name']
+            if identifier in identifiers:
+                if kpi['identifier']:
+                    kpi_errors[i]['identifier'] = ['Identifier is not unique.']
+                else:
+                    kpi_errors[i]['name'] = ['Identifier is not unique (name was used as identifier).']
+            identifiers.append(identifier)
+            kpi_names.append(kpi['name'])
+
+        parameter_names = []
+        parameter_errors = []
+        for i, parameter in enumerate(data['parameters']):
+            if parameter['name'] in parameter_names:
+                parameter_errors.append({'name': ['Name is not unique.']})
+            else:
+                parameter_errors.append({})
+
+            identifier = parameter['identifier'] or parameter['name']
+            if identifier in identifiers:
+                if parameter['identifier']:
+                    parameter_errors[i]['identifier'] = ['Identifier is not unique.']
+                else:
+                    parameter_errors[i]['name'] = ['Identifier is not unique (name was used as identifier).']
+            identifiers.append(identifier)                    
+            parameter_names.append(parameter['name'])
+
+        for error in parameter_errors:
+            if error != {}:
+                raise serializers.ValidationError({ 'parameters': parameter_errors, 'kpis': kpi_errors })
+        for error in kpi_errors:
+            if error != {}:
+                raise serializers.ValidationError({ 'parameters': parameter_errors, 'kpis': kpi_errors })                
+
+        return data
 
 # Batch Process
 class MappingSerializer(serializers.Serializer):
