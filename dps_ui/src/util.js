@@ -25,7 +25,19 @@ function getIdentifier(kpiName, kpiIdentifier) {
   return kpiName;
 }
 
+function objectIsEmpty(obj) {
+  return Object.keys(obj).length === 0;
+}
+
+function objectPop(obj, key, _default=null) {
+  const temp = obj[key];
+  delete obj[key];
+  return temp === undefined ? _default : temp;
+}
+
 export default {
   nameNeedsIdentifier,
   getIdentifier,
+  objectIsEmpty,
+  objectPop,
 };

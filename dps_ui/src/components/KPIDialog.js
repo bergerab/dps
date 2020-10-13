@@ -5,6 +5,7 @@ import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -33,6 +34,21 @@ export default class KPIDialog extends React.Component {
 
     const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
 
+    let id = this.props.id;
+    if (this.props.kpiErrors !== null && this.props.id === -1) {
+      id = this.props.kpiErrors.length - 1;
+    }
+    
+    const hasError =
+          this.props.kpiErrors !== null &&
+          this.props.kpiErrors !== undefined &&
+          id in this.props.kpiErrors &&
+          !util.objectIsEmpty(this.props.kpiErrors[id]);
+    const hasNameError = hasError && 'name' in this.props.kpiErrors[id];
+    const hasComputationError = hasError && 'computation' in this.props.kpiErrors[id];
+
+    console.log(id);
+
     return (
       <Dialog open={this.props.open}
               onClose={() => {
@@ -47,11 +63,13 @@ export default class KPIDialog extends React.Component {
                 autoFocus
                 id="name"
                 label="Name"
-                value={this.props.name}                    
+                value={this.props.name}
                 type="text"
-                  onChange={event => {
+                onChange={event => {
                   this.props.handleName(event.target.value);
-                  }}
+                }}
+                error={hasNameError}
+                helperText={this.props.kpiErrors === null ? '' : this.props.kpiErrors[id].name}
                 fullWidth
                 required
               />
@@ -69,13 +87,30 @@ export default class KPIDialog extends React.Component {
             </Grid>
 
             <Grid item xs={12}>
-              <FormLabel>Computation *</FormLabel>
-              <KPIEditor
-              	value={this.props.computation}
-	        onBeforeChange={(editor, data, value) => {
-                  this.props.handleComputation(value);
-	        }}
-              />
+              <FormLabel
+                error={hasComputationError}
+              >Computation *</FormLabel>
+              {hasComputationError ?
+               (<div>
+                  <div class="editor-error">
+                    <KPIEditor
+              	      value={this.props.computation}
+	              onBeforeChange={(editor, data, value) => {
+                        this.props.handleComputation(value);
+	              }}
+                    />
+                  </div>
+                  <FormHelperText error={true}>
+                    {this.props.kpiErrors[id].computation}
+                  </FormHelperText>
+                </div>) :
+               (<KPIEditor
+              	  value={this.props.computation}
+	          onBeforeChange={(editor, data, value) => {
+                    this.props.handleComputation(value);
+	          }}
+                />
+               )}
             </Grid>
 
             <Grid item xs={12}>

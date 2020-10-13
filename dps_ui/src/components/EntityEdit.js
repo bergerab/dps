@@ -1,6 +1,7 @@
 import React from 'react';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 
 import Box from './Box';
 import Row from './Row';
@@ -20,6 +21,8 @@ export default class EntityEdit extends React.Component {
       if (this.props.onGETEntity !== undefined) {
         this.props.onGETEntity(entity);
       }
+      this.setState({ loading: false });
+    } else {
       this.setState({ loading: false });
     }
   }
@@ -43,10 +46,19 @@ export default class EntityEdit extends React.Component {
       if (props.edit) {
         put(props.entityUrl, props.entityId, jo).then(o => {
 	  window.history.back();		
-        });
-      } else {
-        post(props.entityUrl, jo).then(o => {
-          window.history.back();
+        }).catch(error => {
+          error.then(jo => {
+            this.props.onError(jo);
+          });
+      });
+
+  } else {
+    post(props.entityUrl, jo).then(o => {
+      window.history.back();
+        }).catch(error => {
+          error.then(jo => {
+            this.props.onError(jo);
+          });
         });
       }
       e.preventDefault();
@@ -55,29 +67,34 @@ export default class EntityEdit extends React.Component {
 
     let form =
         (<form
-          onSubmit={onSubmit}
-        noValidate
-        autoComplete="off"
-        style={{ width: '100%'}}
-   >
-     {props.children}
-     <Row>
-       <Button
-         type="submit"
-         variant="contained"
-         color="primary"
-       >
-         Save
-       </Button>          
-     </Row>
-   </form>);
+           onSubmit={onSubmit}
+           noValidate
+           autoComplete="off"
+           style={{ width: '100%'}}
+         >
+           {props.children}
+           <Row>
+             <Button
+               type="submit"
+               variant="contained"
+               color="primary"
+             >
+               Save
+             </Button>          
+           </Row>
+         </form>);
+
     return (
-      <Box header={headerText}
-           loading={this.state.loading}>
-        <Grid container>
-          {form}
+      <Grid container spacing={2}>
+        <Grid item>
+          <Box header={headerText}
+               loading={this.state.loading}>
+            <Grid container>
+              {form}
+            </Grid>
+          </Box>
         </Grid>
-      </Box>
+      </Grid>
     );
   }
 }

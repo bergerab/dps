@@ -23,7 +23,14 @@ export function put(entityUrl, id, entity) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(entity),
-  }).then(r => r.json());
+  }).then(r => {
+    const jo = r.json();
+    if (r.status >= 400 || r.status < 200) {
+      throw jo;
+    } else {
+      return jo;
+    }
+  });
 }
 
 export function post(entityUrl, entity) {
@@ -33,7 +40,14 @@ export function post(entityUrl, entity) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(entity),
-  }).then(r => r.json());
+  }).then(r => {
+    const jo = r.json();
+    if (r.status >= 400 || r.status < 200) {
+      throw jo;
+    } else {
+      return jo;
+    }
+  });
 }
 
 export function get(entityUrl, id) {

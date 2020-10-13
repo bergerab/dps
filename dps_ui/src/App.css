@@ -12,3 +12,15 @@
 .quill .ql-editor {
     min-height: 6em;
 }
+
+.editor-error {
+    border: 1px solid red;
+}
+
+.editor-error-thick {
+    border-bottom: 2px solid red;
+}
+
+.editor-error-text {
+    color: red;
+}
