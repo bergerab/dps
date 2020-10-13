@@ -16,6 +16,7 @@ import Box from './Box';
 import PrettyTable from './PrettyTable';
 import InputLabel from './InputLabel';
 
+import util from '../util';
 
 import { get, get_required_mappings } from '../api';
 
@@ -74,66 +75,75 @@ export default class BatchProcessPage extends React.Component {
         });
     };
 
-      const handleKPICheck = (kpi, checked) => {
-        if (checked) {
-          this.state.kpis.add(kpi.name);
-        } else {
-          this.state.kpis.delete(kpi.name);
-        }
+    const handleKPICheck = (kpi, checked) => {
+      if (checked) {
+        this.state.kpis.add(kpi.name);
+      } else {
+        this.state.kpis.delete(kpi.name);
+      }
 
-        // Force an update
+      // Force an update
         this.setState({ kpis: this.state.kpis });
         updateMappings();
       };
 
-      const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
-        return [
-          <CheckBox color="primary"
-                    className="kpi-cb"
-                    checked={this.state.kpis.has(kpi.name)}
-                    onChange={e => {
-                      const checked = e.target.checked
-                      handleKPICheck(kpi, checked);
-                    }}/>,
-          kpi.name,
-          <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
-          '',
-          '',
-        ]
+    const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
+      return [
+        <CheckBox color="primary"
+                  className="kpi-cb"
+                  checked={this.state.kpis.has(kpi.name)}
+                  onChange={e => {
+                    const checked = e.target.checked
+                    handleKPICheck(kpi, checked);
+                  }}/>,
+        kpi.name,
+        <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
+        '',
+        '',
+      ]
       });
 
       const name = this.state.loading ?
             (<Skeleton width="150pt"/>) :
             this.state.system.name;
 
-      const makeKPITableHeader = loading => [loading ? <CheckBox color="primary"/> :
-                                             <CheckBox color="primary"
-                                                       checked={JSON.stringify(this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort()) ===
-                                                                JSON.stringify(Array.from(this.state.kpis).sort())}
-                                                       onChange={e => {
-                                                         const checked = e.target.checked;
-                                                         if (checked) {
-                                                           const s = new Set();
-                                                           for (const kpi of this.state.system.kpis) {
-                                                             const name = kpi.name;
+    const allKpis = this.state.system.kpis.filter(x => !x.hidden).map(x => x.name).sort();
+    const selectedKpis = Array.from(this.state.kpis).sort();
+    const checked = util.arrayEqual(allKpis, selectedKpis);
+    const indeterminate = selectedKpis.length > 0 && !util.arrayEqual(allKpis, selectedKpis);
+
+    const makeKPITableHeader = loading => [loading ? <CheckBox checked={false}
+                                                               indeterminate={false}
+                                                               color="primary"/> :
+                                           <CheckBox color="primary"
+                                                     checked={checked}
+                                                     indeterminate={indeterminate}                                             
+                                                     onChange={e => {
+                                                       const checked = e.target.checked;
+                                                       if (checked) {
+                                                         const s = new Set();
+                                                         for (const kpi of this.state.system.kpis) {
+                                                           const name = kpi.name;
+                                                           if (!kpi.hidden) {
                                                              s.add(name);
                                                            }
-                                                           this.setState({ kpis: s }, () => {
-                                                             updateMappings();
-                                                           });
-                                                         } else {
-                                                           this.setState({ kpis: new Set() }, () => {
-                                                             updateMappings();
-                                                           });
                                                          }
-                                                       }}
-                                             />, 'KPI', 'Description', 'Last Run', 'Result'];
+                                                         this.setState({ kpis: s }, () => {
+                                                           updateMappings();
+                                                         });
+                                                       } else {
+                                                         this.setState({ kpis: new Set() }, () => {
+                                                           updateMappings();
+                                                         });
+                                                       }
+                                                     }}
+                                           />, 'KPI', 'Description', 'Last Run', 'Result'];
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
              header={makeKPITableHeader(true)}
              rows={[1,2,3,4,5].map((_, i) => [
-               <CheckBox color="primary" key={'cb' + i} />,
+               <CheckBox checked={false} color="primary" key={'cb' + i} />,
                <Skeleton key={'s1' + i} />,
                <Skeleton key={'s2' + i} />,
                <Skeleton key={'s3' + i} />,

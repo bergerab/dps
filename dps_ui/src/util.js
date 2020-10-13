@@ -37,9 +37,14 @@ function objectPop(obj, key, _default=null) {
   return temp === undefined ? _default : temp;
 }
 
+function arrayEqual(a1, a2) {
+  return JSON.stringify(a1) === JSON.stringify(a2);
+}
+
 export default {
   nameNeedsIdentifier,
   getIdentifier,
   objectIsEmpty,
   objectPop,
+  arrayEqual,
 };
