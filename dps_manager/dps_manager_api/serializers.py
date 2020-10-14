@@ -137,14 +137,32 @@ class IntervalSerializer(serializers.Serializer):
     end = serializers.CharField()    
 
     def validate(self, data):
-        if not util.validate_datetime(data['start']):
+        start = util.validate_datetime(data['start'])
+        if not start:
             raise serializers.ValidationError({
                 'start': f'Start time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
             })
-
-        if not util.validate_datetime(data['end']):
+        
+        end = util.validate_datetime(data['end'])
+        if not end:
             raise serializers.ValidationError({
                 'end': f'End time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
+            })
+
+        if start > end:
+            raise serializers.ValidationError({
+                'start': f'Start time occurs after end time.'
+            })
+
+        if end < start:
+            raise serializers.ValidationError({
+                'end': f'End time occurs before end time.'
+            })
+
+        if start == end:
+            raise serializers.ValidationError({
+                'start': f'Start and end time cannot be the same time.',
+                'end': f'Start and end time cannot be the same time.',
             })
 
         return data
@@ -153,6 +171,11 @@ class BatchProcessSerializer(serializers.Serializer):
     mappings = MappingSerializer(many=True, required=False)
     kpis = KPISerializer(many=True, required=False)
     interval = IntervalSerializer()
+
+    def validate(self, data):
+        if not data['mappings']:
+            raise serializers.ValidationError('You must choose one or more KPIs to compute.')
+        return data
 
 # Batch Process Progress
 class ProgressSerializer(serializers.Serializer):
@@ -173,3 +196,11 @@ class ProgressSerializer(serializers.Serializer):
 class RequiredMappingsRequestSerializer(serializers.Serializer):
     system = SystemSerializer()
     kpi_names = serializers.ListField(child=serializers.CharField())
+
+# Saved mappings for systems
+class SystemMappingSerializer(serializers.Serializer):
+    system_id = serializers.IntegerField()
+    mappings = MappingSerializer(many=True, required=True)
+
+class GetSystemMappingSerializer(serializers.Serializer):
+    system_id = serializers.IntegerField()

@@ -80,3 +80,8 @@ export function get_required_mappings(system, kpi_names) {
     }),
   }).then(r => r.json());
 }
+
+export default {
+  get, list,
+  post, put,
+};

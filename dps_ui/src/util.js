@@ -41,10 +41,22 @@ function arrayEqual(a1, a2) {
   return JSON.stringify(a1) === JSON.stringify(a2);
 }
 
+function dateToString(dt) {
+  if (!(dt instanceof Date)) { // if it is a moment object
+    dt = dt.toDate();
+  }
+  return `${dt.getUTCFullYear()}-${numPad2(dt.getUTCMonth())}-${numPad2(dt.getUTCDate())} ${numPad2(dt.getUTCHours())}:${numPad2(dt.getUTCMinutes())}:${numPad2(dt.getUTCSeconds())}.${dt.getUTCMilliseconds()}`    
+}
+
+function numPad2(n) {
+  return ('0' + n).slice(-2);
+}
+
 export default {
   nameNeedsIdentifier,
   getIdentifier,
   objectIsEmpty,
   objectPop,
   arrayEqual,
+  dateToString,  
 };

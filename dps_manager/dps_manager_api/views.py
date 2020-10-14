@@ -4,12 +4,15 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from .models import Object
+
 from .object_api import ObjectAPI
 from .serializers import \
     SystemSerializer, \
     BatchProcessSerializer, \
     ProgressSerializer, \
-    RequiredMappingsRequestSerializer
+    RequiredMappingsRequestSerializer, \
+    SystemMappingSerializer
 
 from dplib import Component, KPI
 
@@ -40,6 +43,14 @@ class ProgressAPI(ObjectAPI):
     id_name = 'progress_id'
     api_name = 'progress'
     plural_api_name = 'progresses'
+
+class SystemMappingAPI(ObjectAPI):
+    serializer = SystemMappingSerializer
+    kind = 'SystemMapping'
+    id_name = 'system_mapping_id'
+    api_name = 'system_mapping'
+    plural_api_name = 'system_mappings'
+    ref_name = 'system_id'
 
 @csrf_exempt
 def get_required_mappings(request):
@@ -82,6 +93,17 @@ def get_required_mappings(request):
         'signals': signals,
         'parameters': parameters,
     })
+
+@csrf_exempt
+def get_system_mapping(request):
+    serializer = GetSystemMappingSerializer(data=json.loads(request.body))
+    if not serializer.is_valid():
+        return JsonResponse(serializer.errors, status=400)
+    data = serializer.validated_data
+    
+    obj = Object.objects.filter(kind='SystemMapping', ref=data['system_id']).first()
+    serializer = SystemMappingSerializer(obj)
+    return serializer.data
 
 def info(request):
     return JsonResponse({
