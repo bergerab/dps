@@ -75,8 +75,7 @@ export default class BatchProcessPage extends React.Component {
   }
 
   localSave() {
-    console.log(this.state.signalInputs);
-    localStorage.setItem(this.getLocalStorageItemName(), JSON.stringify({
+    const o = {
       errors: this.state.errors,
       mappingErrors: this.state.mappingErrors,      
       kpis: Array.from(this.state.kpis),
@@ -86,11 +85,12 @@ export default class BatchProcessPage extends React.Component {
       signalInputs: this.state.signalInputs,
 
       intervalErrors: this.state.intervalErrors,
-      startDate: this.state.startDate,
-      endDate: this.state.endDate,
+      startDate: this.state.startDate.toJSON(),
+      endDate: this.state.endDate.toJSON(),
 
       localLoaded: false,
-    }));
+    };
+    localStorage.setItem(this.getLocalStorageItemName(), JSON.stringify(o));
   }
 
   getLocalStorageItemName() {
@@ -103,10 +103,16 @@ export default class BatchProcessPage extends React.Component {
     if (o.kpis !== undefined) {
       o.kpis = new Set(o.kpis);
     }
-    this.setState(o);
-    this.setState({
-      localLoaded: true,
-    });
+
+    if (o.startDate !== undefined) {
+      o.startDate = new Date(o.startDate);
+    }
+
+    if (o.kpis !== undefined) {
+      o.endDate = new Date(o.endDate);
+    }
+    
+    this.setState(Object.assign(o, { localLoaded: true }));
   }
   
   async componentDidMount() {
