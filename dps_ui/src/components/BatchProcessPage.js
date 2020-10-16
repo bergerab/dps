@@ -116,7 +116,16 @@ export default class BatchProcessPage extends React.Component {
   localLoad() {
     const o = JSON.parse(localStorage.getItem(this.getLocalStorageItemName())) || {};
     if (o.kpis !== undefined) {
-      o.kpis = new Set(o.kpis);
+      console.log(o.kpis);
+      const s = new Set();
+      // Only add KPIs which exist in the system (for the case where a kpi name has changed since the last load)
+      const allKpis = this.state.system.kpis.map(x => x.name);
+      for (const kpi of o.kpis) {
+        if (allKpis.includes(kpi)) {
+          s.add(kpi);
+        }
+      }
+      o.kpis = s;
     }
 
     if (o.startDate !== undefined) {
