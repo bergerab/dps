@@ -1,4 +1,5 @@
 import json
+import numbers
 
 from rest_framework import serializers, viewsets
 
@@ -194,7 +195,7 @@ class BatchProcessSerializer(serializers.Serializer):
                 continue
             print(value, i)
             try:
-                if not str(DPL().compile(value).run()).isnumeric():
+                if not isinstance(DPL().compile(value).run(), numbers.Number):
                     raise Exception('Parameter must be a number.')
             except Exception as e:
                 errors[i] = {
