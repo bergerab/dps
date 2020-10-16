@@ -9,7 +9,7 @@ from signal import SIGINT, SIGTERM
 
 import dplib
 
-INTERVAL = 10
+INTERVAL = 5
 '''
 How many seconds to wait between checking for job.
 '''
@@ -49,8 +49,6 @@ async def main():
                             mappings[identifier] = dplib.DPL().compile(parameter['default']).run()
                         parameters.append(identifier)
 
-                    print('DINk')
-
                     for key in mappings:
                         if key in parameters:
                             print(mappings[key])
@@ -67,17 +65,32 @@ async def main():
                         if name not in parameters:
                             signals.append(name)
 
-                    print(signals, max_window)
                     now = datetime.now()
                     data = {
-                        'Time': map(lambda x: now + timedelta(seconds=x), range(1, 10))
+                        'Time': map(lambda x: now + timedelta(seconds=x), range(1, 11))
                     }
                     for key in mappings:
                         if key in signals:
-                            data[mappings[key]] = list(range(1, 10))
+                            data[mappings[key]] = list(range(1, 11))
                     df = pd.DataFrame(data=data)
                     result = component.run(df, batch_process['kpis'], mappings)
-                    print(result.get_aggregations())
+                    aggregations = result.get_aggregations()
+
+                    results = []
+                    for key in aggregations:
+                        results.append({
+                            'key': key,
+                            'value': aggregations[key],
+                        })
+                    
+                    async with session.post(RESULT_URL, json={
+                            'batch_process_id': job['batch_process_id'],
+                            'complete': True,
+                            'results': results,
+                    }) as resp:
+                        print('Sent results.')
+                        print(await resp.text())
+
 
         await asyncio.sleep(INTERVAL)
 

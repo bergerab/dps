@@ -12,7 +12,9 @@ from .serializers import \
     BatchProcessSerializer, \
     ProgressSerializer, \
     RequiredMappingsRequestSerializer, \
-    JobSerializer
+    JobSerializer, \
+    ResultsSerializer, \
+    GetKPIsSerializer
 
 from dplib import Component, KPI
 
@@ -53,6 +55,34 @@ class JobAPI(ObjectAPI):
     id_name = 'job_id'
     api_name = 'job'
     plural_api_name = 'jobs'
+
+class ResultsAPI(ObjectAPI):
+    serializer = ResultsSerializer
+    kind = 'Result'
+    id_name = 'result_id'
+    api_name = 'result'
+    plural_api_name = 'results'
+    ref_name = 'batch_process_id'
+
+    def after_update(self, data, obj):
+        if data['complete']:
+            bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
+            bp = json.loads(bp_obj.value)
+            system_id = bp['system_id']
+            results = data['results']
+            for mapping in results:
+                key = mapping['key']
+                value = mapping['value']
+                Object.objects.create(
+                    name=key,
+                    kind='KPIResult',
+                    ref=system_id,
+                    value=json.dumps({
+                        'name': key,
+                        'value': value,
+                        'system_id': system_id,
+                        'batch_process_id': bp_obj.object_id,
+                    }))
 
 @csrf_exempt
 def get_required_mappings(request):
@@ -107,6 +137,28 @@ def pop_job(request):
     )
     job_obj.delete()
     return response
+
+@csrf_exempt
+def get_kpis(request):
+    serializer = GetKPIsSerializer(data=json.loads(request.body))
+    if not serializer.is_valid():
+        return JsonResponse(serializer.errors, status=400)
+    data = serializer.validated_data
+    system_id = data['system_id']
+    objs = Object.objects.filter(kind='KPIResult', ref=system_id) \
+                         .order_by('-created_at').all()
+        # .distinct('name')
+
+    SEEN = set()
+    kpis = []
+    for obj in objs:
+        if obj.name not in SEEN:
+            d = json.loads(obj.value)
+            d['created_at'] = obj.created_at
+            kpis.append(d)
+            SEEN.add(obj.name)        
+        
+    return JsonResponse({ 'kpis': kpis })
 
 def info(request):
     return JsonResponse({

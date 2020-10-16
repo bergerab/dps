@@ -9,9 +9,11 @@ router.add(views.SystemAPI)
 router.add(views.BatchProcessAPI)
 router.add(views.ProgressAPI)
 router.add(views.JobAPI)
+router.add(views.ResultsAPI)
 
 urlpatterns = router.get_urls() + [
     path('', views.info),
     path('api/v1/get_required_mappings', views.get_required_mappings),
-    path('api/v1/pop_job', views.pop_job),    
+    path('api/v1/pop_job', views.pop_job),
+    path('api/v1/get_kpis', views.get_kpis),        
 ]

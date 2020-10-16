@@ -202,3 +202,17 @@ class JobSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
     batch_process = BatchProcessSerializer()
     database_manager_url = serializers.CharField()
+
+class ResultsSerializer(serializers.Serializer):
+    batch_process_id = serializers.IntegerField()
+    results = MappingSerializer(many=True)
+    complete = serializers.BooleanField()
+
+class KPIResultSerializer(serializers.Serializer):
+    system_id = serializers.IntegerField()
+    batch_process_id = serializers.IntegerField()    
+    name = serializers.CharField()
+    value = serializers.CharField()
+
+class GetKPIsSerializer(serializers.Serializer):
+    system_id = serializers.IntegerField() 

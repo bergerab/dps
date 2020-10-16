@@ -20,6 +20,8 @@ import Errors from './Errors';
 import util from '../util';
 import api from '../api';
 
+import moment from 'moment';
+
 import { get, get_required_mappings } from '../api';
 
 export default class BatchProcessPage extends React.Component {
@@ -51,6 +53,8 @@ export default class BatchProcessPage extends React.Component {
       intervalErrors: null,
       startDate: defaultStartDate,
       endDate: new Date(),
+
+      kpiResults: {},
     };
   }
 
@@ -127,16 +131,42 @@ export default class BatchProcessPage extends React.Component {
     
     this.setState(Object.assign(o, { localLoaded: true }));
   }
+
+  getKPIResultByName(kpi_name) {
+    return this.state.kpiResults[kpi_name];
+  }
   
   async componentDidMount() {
-    const id = window.location.href.split('/').pop();
-    get('system', id).then(system => {
-      this.setState({
-        system,
-        loading: false,
-      }, () => {
-        this.localLoad();
+      const id = window.location.href.split('/').pop();
+      get('system', id).then(system => {
+        this.setState({
+          system,
+          loading: false,
+        }, () => {
+          this.localLoad();
+        });
       });
+    
+    this.updateKPIResults(id);
+    this.intervalId = setInterval(() => {
+      this.updateKPIResults(id);
+    }, 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
+  }  
+
+  updateKPIResults(system_id) {
+    api.post('get_kpis', {
+      system_id: system_id,
+    }).then(resp => {
+      const results = {};
+      for (const kpi of resp.kpis) {
+        results[kpi.name] = kpi;
+      }
+      this.setState({ kpiResults: results });
+      console.log(results);
     });
   }
 
@@ -185,8 +215,8 @@ export default class BatchProcessPage extends React.Component {
                   }}/>,
         kpi.name,
         <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
-        '',
-        '',
+        this.getKPIResultByName(kpi.name) !== undefined ? moment(this.getKPIResultByName(kpi.name).created_at).format('LL LTS') : '',
+        this.getKPIResultByName(kpi.name) !== undefined ? this.getKPIResultByName(kpi.name).value : '',
       ]
     });
 
@@ -200,8 +230,8 @@ export default class BatchProcessPage extends React.Component {
     const indeterminate = selectedKpis.length > 0 && !util.arrayEqual(allKpis, selectedKpis);
 
     const makeKPITableHeader = loading => [loading ? <CheckBox checked={false}
-                                                                            indeterminate={false}
-                                                                            color="primary"/> :
+                                                           indeterminate={false}
+                                                           color="primary"/> :
                                            <CheckBox color="primary"
                                                      checked={checked}
                                                      indeterminate={indeterminate}                                             
@@ -228,26 +258,26 @@ export default class BatchProcessPage extends React.Component {
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
-           header={makeKPITableHeader(true)}
-           rows={[1,2,3,4,5].map((_, i) => [
-             <CheckBox checked={false} color="primary" key={'cb' + i} />,
-             <Skeleton key={'s1' + i} />,
-             <Skeleton key={'s2' + i} />,
-             <Skeleton key={'s3' + i} />,
-             <Skeleton key={'s4' + i} />,
-           ])}/>) :
+                                                                        header={makeKPITableHeader(true)}
+                                             rows={[1,2,3,4,5].map((_, i) => [
+                                               <CheckBox checked={false} color="primary" key={'cb' + i} />,
+                                               <Skeleton key={'s1' + i} />,
+                                               <Skeleton key={'s2' + i} />,
+                                               <Skeleton key={'s3' + i} />,
+                                               <Skeleton key={'s4' + i} />,
+                                             ])}/>) :
           (<PrettyTable
-             header={makeKPITableHeader(false)}
-             rows={rows}
-               />);
+                                               header={makeKPITableHeader(false)}
+                                               rows={rows}
+                                />);
 
     const description =
           this.state.system.description !== '' &&
           this.state.system.description !== null &&
           this.state.system.description !== undefined ?
           (<Grid item xs={12}>
-             <div className="system-description" dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
-           </Grid>) :
+                                                                                                       <div className="system-description" dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
+                                                                                                     </Grid>) :
           null;
 
     const hasStartTimeError = this.state.intervalErrors !== null &&
@@ -258,81 +288,81 @@ export default class BatchProcessPage extends React.Component {
           !util.objectIsEmpty(this.state.intervalErrors.end);
 
     return (
-        <Grid container>
-          {this.state.errors !== null && !util.objectIsEmpty(this.state.errors) ?
-           (<Grid item style={{marginBottom: '2em', width: '100%' }}>
-        <Errors
-          errors={this.state.errors}
-        />
-      </Grid>) : null
-          }
+      <Grid container>
+        {this.state.errors !== null && !util.objectIsEmpty(this.state.errors) ?
+         (<Grid item style={{marginBottom: '2em', width: '100%' }}>
+                                         <Errors
+                                           errors={this.state.errors}
+                                         />
+                                       </Grid>) : null
+        }
 
-          <Box
-            header={name}
-            loading={this.state.loading}
-          >
-            <Grid container spacing={2}
-                  style={{maxWidth: '1500px'}}>
-              {description}
-              
-              <Grid item xs={12}>
-                <InputLabel>KPIs</InputLabel>
-                {kpiTable}
-              </Grid>
+        <Box
+          header={name}
+          loading={this.state.loading}
+        >
+          <Grid container spacing={2}
+                style={{maxWidth: '1500px'}}>
+            {description}
+            
+            <Grid item xs={12}>
+              <InputLabel>KPIs</InputLabel>
+              {kpiTable}
+            </Grid>
 
-              <Grid item xs={6}>
-                <InputLabel>Signals</InputLabel>
-                <PrettyTable
-                  header={['KPI Input', 'Signal Name']}
-                  rows={this.state.signals.map((signal, i) => {
-                    const hasError = this.state.mappingErrors !== null &&
-                          i in this.state.mappingErrors &&
-                          !util.objectIsEmpty(this.state.mappingErrors[i]);
-                    
-                    return [
-                      signal,
-                      (<TextField
-                    fullWidth={true}
-                    name="name"
-                    error={hasError}
-                    helperText={hasError ? this.state.mappingErrors[i].value : ''}
-                    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
-                    onChange={e => {
-                      this.state.signalInputs[signal] = e.target.value;
-                      // Force an update
-                      this.setState({ signals: this.state.signals });
-                    }}
-                  />)
-                    ];
-                  })}
-                />
-              </Grid>
-              
-              <Grid item xs={6}>
-                <InputLabel>Parameters</InputLabel>
-                <PrettyTable
-                  header={['Name', 'Value']}
-                  rows={this.state.parameters.map((parameter, i) => {
-                    const mappingIndex = i + this.state.signals.length;
-                    
-                    const hasError = this.state.mappingErrors !== null &&
-                          mappingIndex in this.state.mappingErrors &&
-                          !util.objectIsEmpty(this.state.mappingErrors[mappingIndex]);
-                    
-                    return [
-                      parameter,
-                      (<TextField
-                                                                                fullWidth={true}
-                  name="name"
-                  error={hasError}
-                       helperText={hasError ? this.state.mappingErrors[mappingIndex].value : ''}
-                       value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
-                       onChange={e => {
-                         this.state.parameterInputs[parameter] = e.target.value;
-                         // Force an update
-                         this.setState({ parameters: this.state.parameters });
-                       }}
-                          />)
+            <Grid item xs={6}>
+              <InputLabel>Signals</InputLabel>
+              <PrettyTable
+                header={['KPI Input', 'Signal Name']}
+                rows={this.state.signals.map((signal, i) => {
+                  const hasError = this.state.mappingErrors !== null &&
+                        i in this.state.mappingErrors &&
+                        !util.objectIsEmpty(this.state.mappingErrors[i]);
+                  
+                  return [
+                    signal,
+                    (<TextField
+                                                  fullWidth={true}
+                                                  name="name"
+                                                  error={hasError}
+                                                  helperText={hasError ? this.state.mappingErrors[i].value : ''}
+                                                  value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
+                                                  onChange={e => {
+                                                    this.state.signalInputs[signal] = e.target.value;
+                                                    // Force an update
+                                                    this.setState({ signals: this.state.signals });
+                                                  }}
+                                        />)
+                  ];
+                })}
+              />
+            </Grid>
+            
+            <Grid item xs={6}>
+              <InputLabel>Parameters</InputLabel>
+              <PrettyTable
+                header={['Name', 'Value']}
+                rows={this.state.parameters.map((parameter, i) => {
+                  const mappingIndex = i + this.state.signals.length;
+                  
+                  const hasError = this.state.mappingErrors !== null &&
+                        mappingIndex in this.state.mappingErrors &&
+                        !util.objectIsEmpty(this.state.mappingErrors[mappingIndex]);
+                  
+                  return [
+                    parameter,
+                    (<TextField
+                                            fullWidth={true}
+                                            name="name"
+                                            error={hasError}
+                                            helperText={hasError ? this.state.mappingErrors[mappingIndex].value : ''}
+                                            value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
+                                            onChange={e => {
+                                              this.state.parameterInputs[parameter] = e.target.value;
+                                              // Force an update
+                                              this.setState({ parameters: this.state.parameters });
+                                            }}
+                                  />)
                   ];
                 })}
               />
