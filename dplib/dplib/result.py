@@ -55,6 +55,13 @@ class Result:
             key: value.get_value() for key, value in self.aggregations.items()
         }
 
+    def get_intermidiate_values(self):
+        data = {
+            key: list(value.get_dataseries()) for key, value in self.aggregations.items()
+        }
+        # TODO: Add time
+        return pd.DataFrame(data=data)
+
     @staticmethod
     def lift(x):
         if isinstance(x, pd.DataFrame):

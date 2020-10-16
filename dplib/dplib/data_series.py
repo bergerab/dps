@@ -293,7 +293,7 @@ class DataSeries:
         for x in self:
             sum += x
             count += 1
-        return AverageAggregation.from_sum_and_count(sum, count)
+        return AverageAggregation.from_sum_and_count(self, sum, count)
 
     def average(self):
         return self.aggregate(lambda ds: sum(ds)/len(ds))
@@ -309,7 +309,7 @@ class DataSeries:
                 local_min = x
             else:
                 local_min = min(x, local_min)
-        return MinAggregation(local_min)
+        return MinAggregation(self, local_min)
 
     def min(self):
         return self.aggregate(lambda ds: min(ds))
@@ -321,7 +321,7 @@ class DataSeries:
                 local_max = x
             else:
                 local_max = max(x, local_max)
-        return MaxAggregation(local_max)
+        return MaxAggregation(self, local_max)
 
     def max(self):
         return self.aggregate(lambda ds: max(ds))

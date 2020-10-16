@@ -1,37 +1,38 @@
 class Aggregation:
     name = 'constant'
-    def __init__(self, value):
+    def __init__(self, ds, value):
+        self.ds = ds
         self.value = value
 
     def __add__(self, other):
-        return AddAggregation(self, other)
+        return AddAggregation(None, self, other)
     
     def __radd__(self, other):
-        return AddAggregation(self, other)
+        return AddAggregation(None, self, other)
     
     def __sub__(self, other):
-        return SubAggregation(self, other)
+        return SubAggregation(None, self, other)
     
     def __rsub__(self, other):
-        return SubAggregation(other, self)
+        return SubAggregation(None, other, self)
     
     def __mul__(self, other):
-        return MulAggregation(self, other)
+        return MulAggregation(None, self, other)
     
     def __rmul__(self, other):
-        return MulAggregation(self, other)
+        return MulAggregation(None, self, other)
     
     def __truediv__(self, other):
-        return DivAggregation(self, other)
+        return DivAggregation(None, self, other)
     
     def __rtruediv__(self, other):
-        return DivAggregation(other, self)        
+        return DivAggregation(None, other, self)        
     
     def __floordiv__(self, other):
-        return FloorDivAggregation(self, other)        
+        return FloorDivAggregation(None, self, other)        
     
     def __rfloordiv__(self, other):
-        return FloorDivAggregation(other, self)
+        return FloorDivAggregation(None, other, self)
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
@@ -46,11 +47,14 @@ class Aggregation:
     def get_value(self):
         return self.value
 
+    def get_dataseries(self):
+        return self.ds
+
     @staticmethod
     def lift(x):
         if isinstance(x, Aggregation):
             return x
-        return Aggregation(x)
+        return Aggregation(None, x)
 
     def to_dict(self):
         return {
@@ -62,33 +66,39 @@ class Aggregation:
     def from_dict(d):
         name = d['name']
         if name == Aggregation.name:
-            return Aggregation(d['value'])
+            return Aggregation(None, d['value'])
         elif name == MinAggregation.name:
-            return MinAggregation(d['value'])
+            return MinAggregation(None, d['value'])
         elif name == MaxAggregation.name:
-            return MaxAggregation(d['value'])
+            return MaxAggregation(None, d['value'])
         elif name == AverageAggregation.name:
-            return AverageAggregation(d['average'], d['count'])
+            return AverageAggregation(None, d['average'], d['count'])
         elif name == AddAggregation.name:
-            return AddAggregation(Aggregation.from_dict(d['lhs']),
+            return AddAggregation(None,
+                                  Aggregation.from_dict(d['lhs']),
                                   Aggregation.from_dict(d['rhs']))
         elif name == SubAggregation.name:
-            return SubAggregation(Aggregation.from_dict(d['lhs']),
+            return SubAggregation(None,
+                                  Aggregation.from_dict(d['lhs']),
                                   Aggregation.from_dict(d['rhs']))
         elif name == MulAggregation.name:
-            return MulAggregation(Aggregation.from_dict(d['lhs']),
+            return MulAggregation(None,
+                                  Aggregation.from_dict(d['lhs']),
                                   Aggregation.from_dict(d['rhs']))
         elif name == DivAggregation.name:
-            return DivAggregation(Aggregation.from_dict(d['lhs']),
+            return DivAggregation(None,
+                                  Aggregation.from_dict(d['lhs']),
                                   Aggregation.from_dict(d['rhs']))
         elif name == FloorDivAggregation.name:
-            return FloorDivAggregation(Aggregation.from_dict(d['lhs']),
+            return FloorDivAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
                                        Aggregation.from_dict(d['rhs']))
         else:
             raise Exception('Invalid aggregation dictionary.')
 
 class OperatorAggregation(Aggregation):
-    def __init__(self, lhs, rhs):
+    def __init__(self, ds, lhs, rhs):
+        self.ds = ds
         self.lhs = Aggregation.lift(lhs)
         self.rhs = Aggregation.lift(rhs)
 
@@ -96,7 +106,7 @@ class OperatorAggregation(Aggregation):
         raise Exception('Unimplemented `op` for OperatorAggregation.')
 
     def merge(self, other):
-        return self.__class__(self.lhs.merge(other.lhs), self.rhs.merge(other.rhs))
+        return self.__class__(None, self.lhs.merge(other.lhs), self.rhs.merge(other.rhs))
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
@@ -143,7 +153,8 @@ class FloorDivAggregation(OperatorAggregation):
 
 class AverageAggregation(Aggregation):
     name = 'average'        
-    def __init__(self, average, count):
+    def __init__(self, ds, average, count):
+        self.ds = ds
         self.average = average
         self.count = count
 
@@ -156,8 +167,8 @@ class AverageAggregation(Aggregation):
         return f'AverageAggregation({self.average}, {self.count})'
 
     @staticmethod
-    def from_list(xs):
-        return AverageAggregation.from_sum_and_count(sum(xs), len(xs))
+    def from_dataseries(ds):
+        return AverageAggregation.from_sum_and_count(ds, sum(ds), len(ds))
 
     @staticmethod
     def from_dataseries(ds):
@@ -166,16 +177,19 @@ class AverageAggregation(Aggregation):
         for x in ds:
             sum += x
             count += 1
-        return AverageAggregation.from_sum_and_count(sum, count)
+        return AverageAggregation.from_sum_and_count(ds, sum, count)
 
     @staticmethod
-    def from_sum_and_count(sum, count):
-        agg = AverageAggregation(sum / count, count)
+    def from_sum_and_count(ds, sum, count):
+        agg = AverageAggregation(ds, sum / count, count)
         return agg
 
     def merge(self, other):
         count = self.count + other.count
-        return AverageAggregation(((self.average * self.count) + (other.average * other.count)) / count,
+        # Take the other DataSeries, it would be pricy to keep a copy of all DataSeries (by combining them)
+        # We take the other.ds because it should be the newer one
+        return AverageAggregation(other.ds,
+                                  ((self.average * self.count) + (other.average * other.count)) / count,
                                   count)
 
     def get_value(self):
@@ -191,9 +205,9 @@ class AverageAggregation(Aggregation):
 class MaxAggregation(Aggregation):
     name = 'max'
     def merge(self, other):
-        return MaxAggregation(max(self.value, other.value))
+        return MaxAggregation(other.ds, max(self.value, other.value))
     
 class MinAggregation(Aggregation):
     name = 'min'    
     def merge(self, other):
-        return MinAggregation(min(self.value, other.value))
+        return MinAggregation(other.ds, min(self.value, other.value))

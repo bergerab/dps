@@ -99,7 +99,7 @@ class TestComponent(TestCase, ResultAssertions):
             'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
                      NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)],
         }), {
-            'PlusAvgSum': AddAggregation(AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6), 2),    
+            'PlusAvgSum': AddAggregation(None, AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6), 2),    
         })
         self.assertResultEqual(expected_result, result)
     
@@ -115,7 +115,7 @@ class TestComponent(TestCase, ResultAssertions):
             'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
                      NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)],
         }), {
-            'AvgSum': AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6),    
+            'AvgSum': AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6),    
         })
         self.assertResultEqual(expected_result, result)
 
@@ -131,7 +131,7 @@ class TestComponent(TestCase, ResultAssertions):
             'Sum': [7 + 9, 6 + 8, 5 + 7],
             'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
         }), {
-            'PlusAvgSum': AddAggregation(AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7]) / 3, 3), 2),    
+            'PlusAvgSum': AddAggregation(None, AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7]) / 3, 3), 2),    
         }), result)
 
     def test_mapping(self):
@@ -168,6 +168,17 @@ class TestComponent(TestCase, ResultAssertions):
             .add('PlusAvgSum', 'AvgSum + 2')
         result = SUT.run(DF1, 'PlusAvgSum')
         self.assertResultEqual(DF1_AVG_DEP_RESULT, result.get_aggregations())
+
+    def test_aggregation_persists_values(self):
+        SUT = Component('System Under Test') \
+            .add('KPI One', 'avg(A + B)')
+        
+        RESULT = pd.DataFrame(data={
+            'KPI One': [7+9, 6+8, 5+7],
+#            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+        })
+        
+        assert_frame_equal(RESULT, SUT.run(DF1, 'KPI One').get_intermidiate_values())
     
     def test_aggregation(self):
         SUT = Component('System Under Test') \

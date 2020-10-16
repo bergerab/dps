@@ -4,6 +4,24 @@ from datetime import datetime, timedelta
 from dplib import DataSeries, DPL
 
 class TestDPL(TestCase):
+    def test_aggregation_propagates_intermidiate_values(self):
+        xs = [1, 2, 3, 4, 5, 6]
+        ds = DataSeries.from_list(xs)
+        agg = DPL.eval('avg(a)', {
+            'a': ds,
+        })
+        self.assertEqual(agg.get_value(), sum(xs)/len(xs))
+        self.assertEqual(agg.get_dataseries(), xs)        
+
+        xs = [1, 2, 3, 4, 5, 6]
+        ys = list(map(lambda x: x * 37, [1, 2, 3, 4, 5, 6]))
+        ds = DataSeries.from_list(xs)
+        agg = DPL.eval('avg(a * 37)', {
+            'a': ds,
+        })
+        self.assertEqual(agg.get_value(), sum(ys)/len(ys))
+        self.assertEqual(agg.get_dataseries(), ys)        
+
     def test_aggregation(self):
         xs = [1, 2, 3, 4, 5, 6]
         ds = DataSeries.from_list(xs)
