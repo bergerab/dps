@@ -96,9 +96,7 @@ export default class BatchProcessPage extends React.Component {
   localSave() {
     const o = {
       kpis: Array.from(this.state.kpis),
-      parameters: this.state.parameters,
       parameterInputs: this.state.parameterInputs,
-      signals: this.state.signals,
       signalInputs: this.state.signalInputs,
 
       // Don't save the dates (let it use default of one month in the past)
@@ -129,7 +127,9 @@ export default class BatchProcessPage extends React.Component {
       o.endDate = new Date(o.endDate);
     }
     
-    this.setState(Object.assign(o, { localLoaded: true }));
+    this.setState(Object.assign(o, { localLoaded: true }), () => {
+      this.updateMappings();
+    });
   }
 
   getKPIResultByName(kpi_name) {
@@ -170,27 +170,27 @@ export default class BatchProcessPage extends React.Component {
     });
   }
 
+  updateMappings() {
+    return get_required_mappings(this.state.system, Array.from(this.state.kpis))
+      .then(resp => {
+        for (const signal of resp.signals) {
+          if (!(signal in this.state.signalInputs)) {
+            this.state.signalInputs[signal] = '';
+          }
+        }
+
+        this.setState({
+          signals: resp.signals.sort(),
+          parameters: resp.parameters.sort(),
+        });
+      });
+  }
+
   render () {
     // If we attempted to load from localStorage already, save
     if (this.state.localLoaded) {
       this.localSave();
     }
-
-    const updateMappings = () => {
-      get_required_mappings(this.state.system, Array.from(this.state.kpis))
-        .then(resp => {
-          for (const signal of resp.signals) {
-            if (!(signal in this.state.signalInputs)) {
-              this.state.signalInputs[signal] = '';
-            }
-          }
-
-          this.setState({
-            signals: resp.signals.sort(),
-            parameters: resp.parameters.sort(),
-          });
-        });
-    };
 
     const handleKPICheck = (kpi, checked) => {
       if (checked) {
@@ -201,7 +201,7 @@ export default class BatchProcessPage extends React.Component {
 
       // Force an update
       this.setState({ kpis: this.state.kpis });
-      updateMappings();
+      this.updateMappings();
     };
 
     const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
@@ -246,11 +246,11 @@ export default class BatchProcessPage extends React.Component {
                                                            }
                                                          }
                                                          this.setState({ kpis: s }, () => {
-                                                           updateMappings();
+                                                           this.updateMappings();
                                                          });
                                                        } else {
                                                          this.setState({ kpis: new Set() }, () => {
-                                                           updateMappings();
+                                                           this.updateMappings();
                                                          });
                                                        }
                                                      }}
