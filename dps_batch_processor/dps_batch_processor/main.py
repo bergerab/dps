@@ -44,17 +44,13 @@ async def main():
                     for parameter in system['parameters']:
                         identifier = parameter['identifier'] or parameter['name']                        
                         if parameter['default']:
-                            print('default', parameter['default'])
-
-                            mappings[identifier] = dplib.DPL().compile(parameter['default']).run()
+                            mappings[identifier] = parameter['default']
                         parameters.append(identifier)
 
                     for key in mappings:
                         if key in parameters:
-                            print(mappings[key])
-                            mappings[key] = dplib.DPL().compile(mappings[key]).run()
-
-                    print(mappings)
+                            value = mappings[key]
+                            mappings[key] = dplib.DPL().compile(value).run(mappings)
                     
                     bp = component.make_pruned_bp(batch_process['kpis'], mappings)
 
@@ -73,6 +69,8 @@ async def main():
                         if key in signals:
                             data[mappings[key]] = list(range(1, 11))
                     df = pd.DataFrame(data=data)
+
+                    print('final map', mappings)
                     result = component.run(df, batch_process['kpis'], mappings)
                     aggregations = result.get_aggregations()
 
