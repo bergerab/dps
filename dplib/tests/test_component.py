@@ -16,6 +16,12 @@ DF1 = pd.DataFrame(data={
     'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
 })
 
+DF1_MAPPED = pd.DataFrame(data={
+    'E': [7, 6, 5],
+    'D': [9, 8, 7],
+    'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+})
+
 DF1_PART_2 = pd.DataFrame(data={
     'A': [11, 23, 9],
     'B': [27, 38, 4],
@@ -127,6 +133,33 @@ class TestComponent(TestCase, ResultAssertions):
         }), {
             'PlusAvgSum': AddAggregation(AverageAggregation(sum([7 + 9, 6 + 8, 5 + 7]) / 3, 3), 2),    
         }), result)
+
+    def test_mapping(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', '(A * P1) + (B * P2)')
+        P1 = 3.1
+        P2 = 7.3
+        result = SUT.run(DF1, 'Sum', {
+            'P1': P1,
+            'P2': P2,
+        })
+        self.assertResultEqual(pd.DataFrame(data={
+            'Sum': [(7 * P1) + (9 * P2), (6 * P1) + (8 * P2), (5 * P1) + (7 * P2)],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+        }), result.df)
+
+        SUT = Component('System Under Test') \
+            .add('Sum', '(A * P1) + (B * P2)')
+        result = SUT.run(DF1_MAPPED, 'Sum', {
+            'A': 'E',
+            'B': 'D',
+            'P1': P1,
+            'P2': P2,
+        })
+        self.assertResultEqual(pd.DataFrame(data={
+            'Sum': [(7 * P1) + (9 * P2), (6 * P1) + (8 * P2), (5 * P1) + (7 * P2)],
+            'Time': [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)],
+        }), result.df)
     
     def test_aggregation_with_dependent(self):
         SUT = Component('System Under Test') \

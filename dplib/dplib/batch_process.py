@@ -1,5 +1,6 @@
 import numbers
 import copy
+from datetime import timedelta
 from collections import defaultdict
 
 from .result import Result
@@ -51,8 +52,6 @@ class BatchProcess:
                     input = id.original_name
                 elif isinstance(value, str) and value not in self.kpis:
                     input = value
-
-                print('Adding ', input, self.kpis)
 
                 if input in self.kpis and input not in SEEN:
                     kpis.push((input, self.kpis[input]))
@@ -113,18 +112,20 @@ class BatchProcess:
             result = previous_result.append(result)
         return result
 
-    def _get_windows(self):
+    def _get_windows(self, mappings={}):
         '''
         Gets all the windows in the KPIs (the times in "window(x, time)")
         '''
         windows = []
         for kpi in self.kpis.values():
-            windows += kpi.kpi.dpl.get_windows()
+            windows += kpi.kpi.dpl.get_windows(mappings)
         return windows
 
-    def _get_max_window(self):
-        windows = self._get_windows()
-        return max(windows)
+    def _get_max_window(self, mappings={}):
+        windows = self._get_windows(mappings)
+        if windows:
+            return max(windows)
+        return None
 
     def _validate_windows(self):
         windows = self._get_windows()

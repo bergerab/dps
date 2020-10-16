@@ -12,7 +12,7 @@ from .serializers import \
     BatchProcessSerializer, \
     ProgressSerializer, \
     RequiredMappingsRequestSerializer, \
-    SystemMappingSerializer
+    JobSerializer
 
 from dplib import Component, KPI
 
@@ -23,19 +23,22 @@ class SystemAPI(ObjectAPI):
     api_name = 'system'
     plural_api_name = 'systems'
 
-    def after_update(self, data):
-        print('after_update', data)
-
-    def after_delete(self, data):
-        # delete all KPIResults for this system
-        print('after_delete', data)
-
 class BatchProcessAPI(ObjectAPI):
     serializer = BatchProcessSerializer
     kind = 'BatchProcess'
     id_name = 'batch_process_id'
     api_name = 'batch_process'    
     plural_api_name = 'batch_processes'
+    ref_name = 'system_id'
+
+    def after_create(self, data, obj):
+        Object.objects.create(kind=JobAPI.kind,
+                              ref=obj.object_id,
+                              value=json.dumps({
+                                  'batch_process_id': obj.object_id,
+                                  'batch_process': data,
+                                  'database_manager_url': 'TODO',
+                              }))
 
 class ProgressAPI(ObjectAPI):
     serializer = ProgressSerializer
@@ -44,13 +47,12 @@ class ProgressAPI(ObjectAPI):
     api_name = 'progress'
     plural_api_name = 'progresses'
 
-class SystemMappingAPI(ObjectAPI):
-    serializer = SystemMappingSerializer
-    kind = 'SystemMapping'
-    id_name = 'system_mapping_id'
-    api_name = 'system_mapping'
-    plural_api_name = 'system_mappings'
-    ref_name = 'system_id'
+class JobAPI(ObjectAPI):
+    serializer = JobSerializer
+    kind = 'Job'
+    id_name = 'job_id'
+    api_name = 'job'
+    plural_api_name = 'jobs'
 
 @csrf_exempt
 def get_required_mappings(request):
@@ -95,15 +97,16 @@ def get_required_mappings(request):
     })
 
 @csrf_exempt
-def get_system_mapping(request):
-    serializer = GetSystemMappingSerializer(data=json.loads(request.body))
-    if not serializer.is_valid():
-        return JsonResponse(serializer.errors, status=400)
-    data = serializer.validated_data
-    
-    obj = Object.objects.filter(kind='SystemMapping', ref=data['system_id']).first()
-    serializer = SystemMappingSerializer(obj)
-    return serializer.data
+def pop_job(request):
+    # TODO: add a mutex here for if more than one batch processor is supported
+    job_obj = Object.objects.filter(kind=JobAPI.kind).order_by('created_at').first()
+    if not job_obj:
+        return JsonResponse({}, status=404)
+    response = JsonResponse(
+        json.loads(job_obj.value)
+    )
+    job_obj.delete()
+    return response
 
 def info(request):
     return JsonResponse({

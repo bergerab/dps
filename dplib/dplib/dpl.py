@@ -63,18 +63,20 @@ class DPL:
         Parses the text to prepare it for evaluation.
         '''
         self.ast = self.mpy.parse(text)
+        return self
 
     def compile(self, text):
         self.parse(text)
         self.compiled_ast = self.ast.compile()
+        return self
 
-    def get_windows(self):
+    def get_windows(self, mapping={}):
         self.require_ast()
         sexprs = self.ast.get_sexprs()
         windows = []
         for sexpr in sexprs:
             if sexpr.name == 'WINDOW':
-                windows.append(sexpr.exprs[1].x) # get the timedelta value
+                windows.append(sexpr.exprs[1].compile().run(mapping)) # get the timedelta value
         return windows
 
     def run(self, env={}):

@@ -26,11 +26,16 @@ export default class EntityPage extends React.Component {
           edit = params.action === 'edit',
           view = !add && !edit;
 
+    const pluralName = props.entityName[props.entityName.length - 1] === 's' ?
+          props.entityName + 'es' :
+          props.entityName + 's';
+
     if (view) {
       return (
-        <Box header={props.entityName + 's'}
+        <Box header={pluralName}
              loading={this.state.loading}>
           <EntityTable
+            readOnly={props.readOnly}
             entityUrl={props.entityUrl}
             entityName={props.entityName}
             header={props.fields}
@@ -39,11 +44,13 @@ export default class EntityPage extends React.Component {
             }}
           />            
           <Row key>
-            <Link to={props.entityUrl + '/add'} style={{ color: 'white' }}>              
-              <Button variant="contained" color="primary">
-                Add {props.entityName}
-              </Button>
-            </Link>          
+            {this.props.readOnly === true ? null : 
+             <Link to={props.entityUrl + '/add'} style={{ color: 'white' }}>              
+               <Button variant="contained" color="primary">
+                 Add {props.entityName}
+               </Button>
+             </Link>
+            }
           </Row>
         </Box>
       );

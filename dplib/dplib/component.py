@@ -34,20 +34,18 @@ class Component:
     def run(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
         return self.run_all(df, kpi_names, mapping, time_column, previous_result)
 
-    def get_required_inputs(self, kpi_names):
-        bp = BatchProcess()
-        for kpi in self.kpis.values():
-            print('adding to bp', kpi.name)
-            kpi.add_to_batch_process(bp, {})
-
-        bp._connect_graph()
-
+    def make_pruned_bp(self, kpi_names, mappings={}):
+        bp = self.make_bp(mappings)
+        
         kpi_ids = []
         for kpi_name in kpi_names:
             if self.kpis[kpi_name]:
                 kpi_ids.append(self.kpis[kpi_name].id)
         bp = bp.prune(*kpi_ids)
-        print('pruned bp', bp.kpis)
+        return bp
+
+    def get_required_inputs(self, kpi_names, mappings={}):
+        bp = self.make_pruned_bp(kpi_names, mappings)
         return bp.get_required_inputs()
 
     def make_bp(self, mapping={}):
@@ -57,7 +55,6 @@ class Component:
             kpi.add_to_batch_process(bp, mapping)
 
         bp._connect_graph()
-        bp._get_topological_ordering()
 
         return bp
         
@@ -66,19 +63,11 @@ class Component:
             kpi_names = [kpi_names]
 
         self._validate_kpi_names(kpi_names)
-
-        bp = self.make_bp(mapping)
-
-        # Prune BatchProcess so it only computes the necessary KPIs
-        kpi_ids = []
-        for kpi_name in kpi_names:
-            if self.kpis[kpi_name]:
-                kpi_ids.append(self.kpis[kpi_name].id)
-        bp = bp.prune(*kpi_ids)
+        bp = self.make_pruned_bp(kpi_names, mapping)
         result = bp.run(df, time_column, parameters=self.parameters, previous_result=previous_result)
         
         rename_map = {}
-        kpis_in_df = list(filter(lambda x: x not in result.aggregations, kpi_names))
+        kpis_in_df = list(filter(lambda x: self.kpis[x].id not in result.aggregations, kpi_names))
         for kpi_name in kpis_in_df:
             kpi = self.kpis[kpi_name]
             rename_map[kpi.id] = kpi_name
@@ -92,8 +81,9 @@ class Component:
         # Filter the aggregation dictionary so only KPIs in `kpi_names` are included
         d = {}
         for kpi_name in kpi_names:
-            if kpi_name in result.aggregations:
-                d[kpi_name] = result.aggregations[kpi_name]
+            kpi_id = self.kpis[kpi_name].id
+            if kpi_id in result.aggregations:
+                d[kpi_name] = result.aggregations[kpi_id]
         result.aggregations = d
 
         return result

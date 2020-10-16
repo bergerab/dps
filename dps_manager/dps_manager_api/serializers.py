@@ -58,7 +58,7 @@ class SystemSerializer(serializers.Serializer):
     parameters = ParameterSerializer(many=True, default=[])
     
     def validate(self, data):
-        # Make sure topological ordering succeeds
+        # TODO: make sure all windows are multiples of each other
 
         parameter_names = []
         for parameter in data['parameters']:
@@ -168,8 +168,10 @@ class IntervalSerializer(serializers.Serializer):
         return data
 
 class BatchProcessSerializer(serializers.Serializer):
+    system_id = serializers.IntegerField()
+    system = SystemSerializer()
     mappings = MappingSerializer(many=True, required=False)
-    kpis = KPISerializer(many=True, required=False)
+    kpis = serializers.ListField(child=serializers.CharField())
     interval = IntervalSerializer()
 
     def validate(self, data):
@@ -192,15 +194,11 @@ class ProgressSerializer(serializers.Serializer):
 
         return data
 
-# RequiredMappingsRequestSerializer
 class RequiredMappingsRequestSerializer(serializers.Serializer):
     system = SystemSerializer()
     kpi_names = serializers.ListField(child=serializers.CharField())
 
-# Saved mappings for systems
-class SystemMappingSerializer(serializers.Serializer):
-    system_id = serializers.IntegerField()
-    mappings = MappingSerializer(many=True, required=True)
-
-class GetSystemMappingSerializer(serializers.Serializer):
-    system_id = serializers.IntegerField()
+class JobSerializer(serializers.Serializer):
+    batch_process_id = serializers.IntegerField()
+    batch_process = BatchProcessSerializer()
+    database_manager_url = serializers.CharField()

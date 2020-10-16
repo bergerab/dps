@@ -54,39 +54,52 @@ export default class BatchProcessPage extends React.Component {
     };
   }
 
+  getParameterIdentifier(name) {
+    for (const parameter of this.state.system.parameters) {
+      if (parameter.name === name) {
+        console.log(parameter.name, name, parameter.identifier);
+        return typeof parameter.identifier === 'string' &&
+          parameter.identifier !== '' ? parameter.identifier : parameter.name;
+      }
+    }
+    return name;
+  }
+
   makeObject() {
     const mappings = this.state.signals.map((x, i) => ({
       key: x,
       value: this.state.signalInputs[x]
     })).concat(
       this.state.parameters.map((x, i) => ({
-        key: x,
+        key: this.getParameterIdentifier(x),
         value: this.state.parameterInputs[x]
       }))
     );
+    const startDate = util.dateToString(util.dateToUTCDate(this.state.startDate));
+    const endDate = util.dateToString(util.dateToUTCDate(this.state.endDate));
     return {
       mappings: mappings,
+      system: this.state.system,
       system_id: this.state.system.system_id,
+      kpis: Array.from(this.state.kpis),            
       interval: {
-        start: util.dateToString(this.state.startDate),
-        end: util.dateToString(this.state.endDate),
+        start: startDate,
+        end: endDate,
       }
     };
   }
 
   localSave() {
     const o = {
-      errors: this.state.errors,
-      mappingErrors: this.state.mappingErrors,      
       kpis: Array.from(this.state.kpis),
       parameters: this.state.parameters,
       parameterInputs: this.state.parameterInputs,
       signals: this.state.signals,
       signalInputs: this.state.signalInputs,
 
-      intervalErrors: this.state.intervalErrors,
-      startDate: this.state.startDate.toJSON(),
-      endDate: this.state.endDate.toJSON(),
+      // Don't save the dates (let it use default of one month in the past)
+      // startDate: this.state.startDate.toJSON(),
+      // endDate: this.state.endDate.toJSON(),
 
       localLoaded: false,
     };
@@ -108,7 +121,7 @@ export default class BatchProcessPage extends React.Component {
       o.startDate = new Date(o.startDate);
     }
 
-    if (o.kpis !== undefined) {
+    if (o.endDate !== undefined) {
       o.endDate = new Date(o.endDate);
     }
     
@@ -364,7 +377,6 @@ export default class BatchProcessPage extends React.Component {
                         const value = e.target.value;
                         const obj = this.makeObject();
                         api.post('batch_process', obj).then(() => {
-                          
                           this.setState({
                             errors: null,
                             mappingErrors: null,

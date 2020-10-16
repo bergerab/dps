@@ -18,6 +18,7 @@ import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
+import WorkIcon from '@material-ui/icons/Work';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -44,6 +45,7 @@ import Home from './Home';
 import EntityPage from './EntityPage';
 
 import { list } from '../api';
+import util from '../util';
 
 const drawerWidth = 240;
 
@@ -205,6 +207,18 @@ class MiniDrawer extends React.Component {
                   <ListItemText primary="Systems" />
                 </ListItem>
               </Link>
+              <Link to="/bp" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><TableChartIcon/></ListItemIcon>
+                  <ListItemText primary="Batch Processes" />
+                </ListItem>
+              </Link>
+              <Link to="/job" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><WorkIcon/></ListItemIcon>
+                  <ListItemText primary="Jobs" />
+                </ListItem>
+              </Link>
             </List>
             <Divider />
             <List>
@@ -255,6 +269,74 @@ class MiniDrawer extends React.Component {
 		              editComponent={SystemEdit}
       />)}
 	      />
+              <Route
+                path="/bp"
+                render={props =>
+		        (<EntityPage
+                         key={'Batch Process'}
+                         readOnly={true}
+		           {...props}
+		           fields={[
+                             ['Created At', bp => {
+                               return util.dateToPrettyDate(new Date(bp.created_at));
+                             }],
+			     ['System', bp => {
+                               return bp.system.name;
+                             }],
+                             ['KPIs', bp => {
+                               return (<span>{bp.kpis
+                                              .map(kpi => <Chip
+                                                            key={kpi}
+                                                            label={kpi}
+                                                            style={{ margin: '5px' }}/>)}
+                                       </span>)
+                             }],
+                             ['Start Time', bp => {
+                               return util.dateToPrettyDate(util.stringToUTCDate(bp.interval.start));
+                             }],
+                             ['End Time', bp => {
+                               return util.dateToPrettyDate(util.stringToUTCDate(bp.interval.end));
+                             }],
+                           ]}
+		           entityUrl="batch_process"
+		           entityName="Batch Process"
+                         />)}
+	      />
+
+              <Route
+                path="/job"
+                render={props =>
+		        (<EntityPage
+                           key={'Job'}
+                           readOnly={true}
+		           {...props}
+		           fields={[
+                             ['Created At', j => {
+                               return util.dateToPrettyDate(new Date(j.created_at));
+                             }],
+			     ['System', j => {
+                               return j.batch_process.system.name;
+                             }],
+                             ['KPIs', j => {
+                               return (<span>{j.batch_process.kpis
+                                              .map(kpi => <Chip
+                                                            key={kpi}
+                                                            label={kpi}
+                                                            style={{ margin: '5px' }}/>)}
+                                       </span>)
+                             }],
+                             ['Start Time', j => {
+                               return util.dateToPrettyDate(util.stringToUTCDate(j.batch_process.interval.start));
+                             }],
+                             ['End Time', j => {
+                               return util.dateToPrettyDate(util.stringToUTCDate(j.batch_process.interval.end));
+                             }],
+                           ]}
+		           entityUrl="job"
+		           entityName="Job"
+                         />)}
+	      />
+              
               {this.state.systems.map(system => (
                 <Route
                   key={system.system_id}

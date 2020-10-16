@@ -45,7 +45,24 @@ function dateToString(dt) {
   if (!(dt instanceof Date)) { // if it is a moment object
     dt = dt.toDate();
   }
-  return `${dt.getUTCFullYear()}-${numPad2(dt.getUTCMonth())}-${numPad2(dt.getUTCDate())} ${numPad2(dt.getUTCHours())}:${numPad2(dt.getUTCMinutes())}:${numPad2(dt.getUTCSeconds())}.${dt.getUTCMilliseconds()}`    
+  return `${dt.getUTCFullYear()}-${numPad2(dt.getUTCMonth() + 1)}-${numPad2(dt.getUTCDate())} ${numPad2(dt.getUTCHours())}:${numPad2(dt.getUTCMinutes())}:${numPad2(dt.getUTCSeconds())}.${dt.getUTCMilliseconds()}`    
+}
+
+function dateToPrettyDate(dt) {
+  return dt.toLocaleDateString('en-US') + ' ' + dt.toLocaleTimeString('en-US');
+}
+
+function dateToUTCDate(dt) {
+  dt = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(),
+		dt.getUTCHours(), dt.getUTCMinutes(), dt.getUTCSeconds());
+  return new Date(dt);
+}
+
+function stringToUTCDate(s) {
+  const dt = new Date(s);
+  const os = dt.getTimezoneOffset();
+  var d = new Date((dt.getTime() - (os * 60 * 1000)));
+  return d;
 }
 
 function numPad2(n) {
@@ -58,5 +75,8 @@ export default {
   objectIsEmpty,
   objectPop,
   arrayEqual,
-  dateToString,  
+  dateToString,
+  stringToUTCDate,  
+  dateToUTCDate,
+  dateToPrettyDate,
 };

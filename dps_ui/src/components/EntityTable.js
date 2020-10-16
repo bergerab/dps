@@ -56,8 +56,9 @@ render () {
     return (
       <TableRow key={rowId++}>
 	{cells}
-	<TableCell
-          align="right"
+        {this.props.readOnly ? null :
+         <TableCell
+        align="right"
           key={rowId}
         >
 	  <EditAndDelete {...props}
@@ -67,6 +68,7 @@ render () {
 			 entityUrl={props.entityUrl}
 	  />
 	</TableCell>
+      }
       </TableRow>);
   });
 

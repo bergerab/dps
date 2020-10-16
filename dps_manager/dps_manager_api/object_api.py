@@ -28,22 +28,28 @@ class ObjectAPI:
             raise Exception(f'You must specify an "plural_api_name" field on the {class_name} class.')
         elif not self.serializer:
             raise Exception(f'You must specify a "serializer" field on the {class_name} class.')
+
+    def add_metafields(self, data, obj):
+        data[self.id_name] = obj.object_id
+        data['created_at'] = obj.created_at
+        data['updated_at'] = obj.updated_at  
         
     def get(self, request, id=None):
         if id:
             obj = get_object_or_404(Object, pk=id)
             serializer = self.serializer(extract_obj_value(obj))
             data = serializer.data
-            data[self.id_name] = obj.object_id
+            self.add_metafields(data, obj)            
             return data
         else:
             # If no id was provided, list all objects
-            objs = Object.objects.filter(kind=self.kind).all()
+            objs = Object.objects.filter(kind=self.kind).order_by('-created_at').all()
             q = map(extract_obj_value, objs)
             serializer = self.serializer(q, many=True)
             datas = serializer.data
             for i, data in enumerate(datas):
-                data[self.id_name] = objs[i].object_id
+                obj = objs[i]
+                self.add_metafields(data, obj)
             return {
                 self.plural_api_name.lower(): datas,
             }
@@ -51,7 +57,9 @@ class ObjectAPI:
     def post(self, request):
         if self.read_only:
             raise MethodNotAllowed()
-        serializer = self.serializer(data=json.loads(request.body))
+        jo = json.loads(request.body)
+        self.before_update(jo)
+        serializer = self.serializer(data=jo)
         if not serializer.is_valid():
             return JsonResponse(serializer.errors, status=400)
         data = serializer.validated_data
@@ -62,13 +70,16 @@ class ObjectAPI:
         kwargs['kind'] = self.kind
         if self.ref_name:
             kwargs['ref'] = data[self.ref_name]
+
         kwargs['value'] = json.dumps(data)
             
         obj = Object.objects.create(**kwargs)
 
-        self.after_update(data)
+        self.after_update(data, obj)
+        self.after_create(data, obj)
         
-        data[self.id_name] = obj.object_id
+        self.add_metafields(data, obj)
+
         return data
 
     def delete(self, request, id):
@@ -96,8 +107,9 @@ class ObjectAPI:
         if self.read_only:
             raise MethodNotAllowed()
         obj = get_object_or_404(Object, pk=id)
-        
-        serializer = self.serializer(data=json.loads(request.body))
+        jo = json.loads(request.body)
+        self.before_update(jo)        
+        serializer = self.serializer(data=jo)
         if not serializer.is_valid():
             return JsonResponse(serializer.errors, status=400)
         data = serializer.validated_data
@@ -105,15 +117,26 @@ class ObjectAPI:
         obj.value = json.dumps(data)
         obj.save()
 
-        self.after_update(data)
+        self.after_update(data, obj)
 
-        data[self.id_name] = obj.object_id
+        self.add_metafields(data, obj)
         
         return JsonResponse(data)
 
-    def after_update(self, data):
+    def after_update(self, data, obj):
         '''
         Called after this entity is updated or created for the first time (after it is written to the database)
+        '''
+        pass
+
+    def after_create(self, data, obj):
+        pass
+
+    def before_update(self, data):
+        '''
+        Called before this entity is updated or created for the first time (after it is written to the database).
+
+        This provides an opportunity to update the object before it reaches the database.
         '''
         pass
 
