@@ -177,6 +177,35 @@ class BatchProcessSerializer(serializers.Serializer):
     def validate(self, data):
         if not data['mappings']:
             raise serializers.ValidationError('You must choose one or more KPIs to compute.')
+
+        system = data['system']
+        parameters = []
+        for parameter in system['parameters']:
+            identifier = parameter['identifier'] or parameter['name']                        
+            if parameter['default']:
+                mappings[identifier] = parameter['default']
+            parameters.append(identifier)
+
+        errors = {}
+        for i, mapping in enumerate(data['mappings']):
+            key = mapping['key']
+            value = mapping['value']
+            if key not in parameters:
+                continue
+            print(value, i)
+            try:
+                if not str(DPL().compile(value).run()).isnumeric():
+                    raise Exception('Parameter must be a number.')
+            except Exception as e:
+                errors[i] = {
+                            'value': ['Invalid parameter value.'],
+                }
+        if errors:
+            raise serializers.ValidationError({
+                'mappings': errors,
+            })
+            
+            
         return data
 
 # Batch Process Progress
