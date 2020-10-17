@@ -1,4 +1,4 @@
-from .data_series import DataSeries
+from .series import Series, Dataset
 from .dpl import DPL
 from .kpi import KPI
 from .batch_process import BatchProcess, Graph, CyclicGraphException

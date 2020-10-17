@@ -31,8 +31,8 @@ class Component:
         if errors:
             raise Exception('\n'.join(errors))
 
-    def run(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
-        return self.run_all(df, kpi_names, mapping, time_column, previous_result)
+    def run(self, dataset, kpi_names=[], mapping={}, previous_result=None):
+        return self.run_all(dataset, kpi_names, mapping, previous_result)
 
     def make_pruned_bp(self, kpi_names, mappings={}):
         bp = self.make_bp(mappings)
@@ -58,25 +58,25 @@ class Component:
 
         return bp
         
-    def run_all(self, df, kpi_names=[], mapping={}, time_column='Time', previous_result=None):
+    def run_all(self, dataset, kpi_names=[], mapping={}, previous_result=None):
         if isinstance(kpi_names, str):
             kpi_names = [kpi_names]
 
         self._validate_kpi_names(kpi_names)
         bp = self.make_pruned_bp(kpi_names, mapping)
-        result = bp.run(df, time_column, parameters=self.parameters, previous_result=previous_result)
+        result = bp.run(dataset, parameters=self.parameters, previous_result=previous_result)
         
         rename_map = {}
-        kpis_in_df = list(filter(lambda x: self.kpis[x].id not in result.aggregations, kpi_names))
-        for kpi_name in kpis_in_df:
+        kpis_in_dataset = list(filter(lambda x: self.kpis[x].id not in result.aggregations, kpi_names))
+        for kpi_name in kpis_in_dataset:
             kpi = self.kpis[kpi_name]
             rename_map[kpi.id] = kpi_name
 
         # Filter the DataFrame so only KPIs in `kpi_names` are included
         if len(rename_map) == 0:
-            result.df = None
+            result.dataset = None
         else:
-            result.df = result.df.rename(columns=rename_map)[kpis_in_df + [time_column]]
+            result.dataset = result.dataset.rename(rename_map).select(kpis_in_dataset)
 
         # Filter the aggregation dictionary so only KPIs in `kpi_names` are included
         d = {}

@@ -2,7 +2,7 @@ from unittest import TestCase
 from datetime import datetime, timedelta
 
 import dplib.aggregation as agg
-from dplib.data_series import DataSeries
+from dplib import Series
 
 def make_dict(name, rest):
     rest['name'] = name
@@ -46,10 +46,10 @@ class TestAggregation(TestCase):
         v2 = [3, 19, 2]
         v3 = [1.2, 3]
         v4 = [5.3, 23, 4, 2]
-        self.assertEqual(agg.AverageAggregation.from_dataseries(DataSeries.from_list(v1))
-                        .merge(agg.AverageAggregation.from_dataseries(DataSeries.from_list(v2)))
-                        .merge(agg.AverageAggregation.from_dataseries(DataSeries.from_list(v3)))
-                        .merge(agg.AverageAggregation.from_dataseries(DataSeries.from_list(v4))).get_value(),
+        self.assertEqual(agg.AverageAggregation.from_series(Series(v1))
+                        .merge(agg.AverageAggregation.from_series(Series(v2)))
+                        .merge(agg.AverageAggregation.from_series(Series(v3)))
+                        .merge(agg.AverageAggregation.from_series(Series(v4))).get_value(),
                          sum(v1 + v2 + v3 + v4) / len(v1 + v2 + v3 + v4))
 
         self.assertEqual(agg.AddAggregation(None, 1, 2)
@@ -58,7 +58,7 @@ class TestAggregation(TestCase):
                         .merge(agg.AddAggregation(None, 99, 2)).get_value(), 99 + 2)
 
     def test_get_value(self):
-        self.assertEqual(agg.AverageAggregation.from_dataseries(DataSeries.from_list([1,2,3,4,5])).get_value(),
+        self.assertEqual(agg.AverageAggregation.from_series(Series([1,2,3,4,5])).get_value(),
                          sum([1,2,3,4,5]) / len([1,2,3,4,5]))
         self.assertEqual(agg.MinAggregation(None, 38).get_value(), 38)
         self.assertEqual(agg.MaxAggregation(None, 11).get_value(), 11)
@@ -168,3 +168,5 @@ class TestAggregation(TestCase):
                 'value': 94,
             },
         }).to_dict(), agg.AddAggregation(None, 12, 94).to_dict())
+        
+test_suite = TestAggregation

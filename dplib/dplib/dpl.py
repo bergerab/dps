@@ -3,35 +3,35 @@ import numbers
 from datetime import timedelta
 
 from .minipy import MiniPy
-from .data_series import DataSeries
+from .series import Series
 
 class DPL:
     def __init__(self):
         
         def window(series, duration):
-            return series.time_window(duration)
+            return series.window(duration)
         
         def average(x):
-            if isinstance(x, DataSeries):
+            if isinstance(x, Series):
                 if x.is_windowed(): return x.average()
                 else: return x.average_aggregation()
             else: raise Exception('Unsupported type for average.')
             
         def min(x):
-            if isinstance(x, DataSeries):
+            if isinstance(x, Series):
                 if x.is_windowed(): return x.min()                
                 else: return x.min_aggregation()
             else: raise Exception('Unsupported type for min.')
             
         def max(x):
-            if isinstance(x, DataSeries):
+            if isinstance(x, Series):
                 if x.is_windowed(): return x.max()                
                 else: return x.max_aggregation()
             else: raise Exception('Unsupported type for max.')
             
         def if_exp(test, body, orelse, env):
             test_value = test.compile().run(env)
-            if isinstance(test_value, DataSeries):
+            if isinstance(test_value, Series):
                 return test_value.when(body.compile().run(env), orelse.compile().run(env))
             # Otherwise, continue with normal IF behavior:
             if test_value:

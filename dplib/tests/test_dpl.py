@@ -1,63 +1,68 @@
 from unittest import TestCase
 from datetime import datetime, timedelta
 
-from dplib import DataSeries, DPL
+from dplib import Series, DPL
+
+def make_series(n, plus=0):
+    now = datetime.now()
+    return Series([x + plus for x in range(n)],
+                  [now + timedelta(seconds=x) for x in range(n)])
 
 class TestDPL(TestCase):
     def test_aggregation_propagates_intermidiate_values(self):
         xs = [1, 2, 3, 4, 5, 6]
-        ds = DataSeries.from_list(xs)
+        series = Series(xs)
         agg = DPL.eval('avg(a)', {
-            'a': ds,
+            'a': series,
         })
         self.assertEqual(agg.get_value(), sum(xs)/len(xs))
-        self.assertEqual(agg.get_dataseries(), xs)        
+        self.assertEqual(agg.get_series(), xs)        
 
         xs = [1, 2, 3, 4, 5, 6]
         ys = list(map(lambda x: x * 37, [1, 2, 3, 4, 5, 6]))
-        ds = DataSeries.from_list(xs)
+        series = Series(xs)
         agg = DPL.eval('avg(a * 37)', {
-            'a': ds,
+            'a': series,
         })
         self.assertEqual(agg.get_value(), sum(ys)/len(ys))
-        self.assertEqual(agg.get_dataseries(), ys)        
+        self.assertEqual(agg.get_series(), ys)        
 
     def test_aggregation(self):
         xs = [1, 2, 3, 4, 5, 6]
-        ds = DataSeries.from_list(xs)
+        series = Series(xs)
         self.assertEqual(DPL.eval('avg(a)', {
-            'a': ds,
+            'a': series,
         }).get_value(), sum(xs)/len(xs))
 
         xs = [1, 2, 8, 4, 5, 6]
-        ds = DataSeries.from_list(xs)
+        series = Series(xs)
         self.assertEqual(DPL.eval('max(a)', {
-            'a': ds,
+            'a': series,
         }).get_value(), max(xs))
 
         xs = [1, 2, 8, 4, 5, 6]
-        ds = DataSeries.from_list(xs)
+        series = Series(xs)
         self.assertEqual(DPL.eval('min(a)', {
-            'a': ds,
+            'a': series,
         }).get_value(), min(xs))
 
         xs = [1, 2, 8, 4, 5, 6]
         ys = [8, 2, 3, 1, 4, 9]
         self.assertEqual(DPL.eval('min(a) + max(b)', {
-            'a': DataSeries.from_list(xs),
-            'b': DataSeries.from_list(ys),            
+            'a': Series(xs),
+            'b': Series(ys),            
         }).get_value(), min(xs) + max(ys))
 
         xs = [1, 2, 8, 4, 5, 6]
         ys = [8, 2, 3, 1, 4, 9]
         self.assertEqual(DPL.eval('min(a) * 2 + max(b) / 8.3', {
-            'a': DataSeries.from_list(xs),
-            'b': DataSeries.from_list(ys),            
+            'a': Series(xs),
+            'b': Series(ys),            
         }).get_value(), min(xs) * 2 + max(ys) / 8.3)
 
         print(DPL.eval('min(a) * 2 + max(b) / 8.3', {
-            'a': DataSeries.from_list(xs),
-            'b': DataSeries.from_list(ys),            
+            'a': Series(xs),
+            'b': Series(ys),            
         }))
     
     def test_basic(self):
@@ -72,66 +77,66 @@ class TestDPL(TestCase):
 
     def test_window(self):
         # Window size = 1
-        ds = DataSeries.from_list([1, 2, 3, 4, 5, 6])
-        windows = DPL.eval('window(b, "1s")', { 'B': ds}).windows_to_list()
+        series = make_series(6)
+        windows = DPL.eval('window(b, "1s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[1], [2], [3], [4], [5], [6]]
+            [[0], [1], [2], [3], [4]]
         )
 
         # Even sized windows
-        ds = DataSeries.from_list([1, 2, 3, 4, 5, 6])
-        windows = DPL.eval('window(b, "2s")', { 'B': ds}).windows_to_list()
+        series = make_series(6)        
+        windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[1, 2], [3, 4], [5, 6]]
+            [[0, 1], [2, 3]]
         )
 
         # Odd sized windows
-        ds = DataSeries.from_list([1, 2, 3, 4, 5, 6])
-        windows = DPL.eval('window(b, "3s")', { 'B': ds}).windows_to_list()
+        series = make_series(6)                
+        windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[1, 2, 3], [4, 5, 6]]
+            [[0, 1, 2]]
         )
 
         # Even sized window with non-multiple
-        ds = DataSeries.from_list([1, 2, 3, 4, 5, 6, 7])
-        windows = DPL.eval('window(b, "2s")', { 'B': ds}).windows_to_list()
+        series = make_series(6)                        
+        windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[1, 2], [3, 4], [5, 6], [7]]
+            [[0, 1], [2, 3]],
         )
 
         # Odd sized window with non-multiple
-        ds = DataSeries.from_list([1, 2, 3, 4, 5, 6, 7])
-        windows = DPL.eval('window(b, "3s")', { 'B': ds}).windows_to_list()
+        series = make_series(7)                                
+        windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[1, 2, 3], [4, 5, 6], [7]]
+            [[0, 1, 2], [3, 4, 5]],
         )
 
     def test_average(self):
-        ds = DataSeries.from_list([1,2,3,4,5,6,7,8,9,10])
+        series = make_series(10, plus=1)
         avg1 = (1+2)/2
         avg2 = (3+4)/2
         avg3 = (5+6)/2
         avg4 = (7+8)/2
         avg5 = (9+10)/2
-        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': ds })),
-                         [avg1, avg1, avg2, avg2, avg3, avg3, avg4, avg4, avg5, avg5])
+        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': series })),
+                         [avg1, avg2, avg3, avg4])
 
         # Should work when window is not a multiple of input size
-        ds = DataSeries.from_list([1,2,3,4,5,6,7])
+        series = make_series(7, plus=1)        
         avg4 = 7/1
-        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': ds })),
-                         [avg1, avg1, avg2, avg2, avg3, avg3, avg4])
+        self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': series })),
+                         [avg1, avg2, avg3])
 
     def test_if_exp(self):
-        '''If expressions should call DataSeries.when'''
-        test = DataSeries.from_list([True, False, False, True])
-        A = DataSeries.from_list(['a', 'b', 'c', 'd'])
-        B = DataSeries.from_list([9, 8, 7, 6])
+        '''If expressions should call Series.when'''
+        test = Series([True, False, False, True])
+        A = Series(['a', 'b', 'c', 'd'])
+        B = Series([9, 8, 7, 6])
         self.assertEqual(list(DPL.eval('A if test else B', { 'test': test, 'A': A, 'B': B })),
                          ['a', 8, 7, 'd'])
 
@@ -142,13 +147,13 @@ class TestDPL(TestCase):
                          [9, 8, 7, 6])
 
     def test_with_constants(self):
-        A = DataSeries.from_list([1,2,3,4])
+        A = Series([1,2,3,4])
         self.assertEqual(list(DPL.eval('A*22', { 'A': A })), [1*22, 2*22, 3*22, 4*22])
         self.assertEqual(list(DPL.eval('A*2.13', { 'A': A })), [1*2.13, 2*2.13, 3*2.13, 4*2.13])
         self.assertEqual(list(DPL.eval('2.13*A', { 'A': A })), [2.13*1, 2.13*2, 2.13*3, 2.13*4])
 
         # Constants inside of a if expression
-        T = DataSeries.from_list([True, True, False, False])
+        T = Series([True, True, False, False])
         self.assertEqual(list(DPL.eval('2.13*A if T else A*83.22', { 'A': A, 'T': T })), [2.13*1, 2.13*2, 3*83.22, 4*83.22])
 
     def test_time_parsing(self):
@@ -168,3 +173,5 @@ class TestDPL(TestCase):
         self.assertEqual(set(dpl.get_windows()), {timedelta(seconds=1)})
         dpl.parse('window(window(3, "2m"), "1s")')
         self.assertEqual(set(dpl.get_windows()), {timedelta(minutes=2), timedelta(seconds=1)})
+        
+test_suite = TestDPL

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from pandas._testing import assert_frame_equal
+from .series import Series, Dataset
 
 class ResultAssertions:
     def assertResultEquals(self, result1, result2):
@@ -9,13 +9,13 @@ class ResultAssertions:
     def assertResultEqual(self, result1, result2):
         result1 = Result.lift(result1)
         result2 = Result.lift(result2)
-        if result1.df is not None and result2.df is not None:
-            assert_frame_equal(result1.df, result2.df, check_like=True)
-        self.assertEquals(result1.aggregations, result2.aggregations)
+        if result1.dataset is not None and result2.dataset is not None:
+            self.assertEqual(result1.dataset, result2.dataset)
+        self.assertEqual(result1.aggregations, result2.aggregations)
 
 class Result:
-    def __init__(self, df=None, aggregations=None):
-        self.df = df
+    def __init__(self, dataset=None, aggregations=None):
+        self.dataset = dataset
         self.aggregations = {} if aggregations is None else aggregations
 
     def _merge_aggregations(self, agg):
@@ -28,26 +28,26 @@ class Result:
 
     def merge(self, other):
         aggregations = self._merge_aggregations(other.aggregations)
-        if other.df is None and self.df is None:
+        if other.dataset is None and self.dataset is None:
             return Result(aggregations=aggregations)
-        if other.df is None and self.df is not None:
-            return Result(self.df, aggregations=aggregations)
-        if other.df is not None and self.df is None:
-            return Result(other.df, aggregations=aggregations)
-        return Result(self.df.join(other.df),
+        if other.dataset is None and self.dataset is not None:
+            return Result(self.dataset, aggregations=aggregations)
+        if other.dataset is not None and self.dataset is None:
+            return Result(other.dataset, aggregations=aggregations)
+        return Result(self.dataset.merge(other.dataset),
                       aggregations)
 
     def append(self, other):
         aggregations = self._merge_aggregations(other.aggregations)
-        if other.df is None and self.df is not None:
-            return Result(self.df, aggregations=aggregations)
-        if other.df is not None and self.df is None:
-            return Result(other.df, aggregations=aggregations)
-        return Result(self.df.append(other.df, ignore_index=True),
+        if other.dataset is None and self.dataset is not None:
+            return Result(self.dataset, aggregations=aggregations)
+        if other.dataset is not None and self.dataset is None:
+            return Result(other.dataset, aggregations=aggregations)
+        return Result(self.dataset.merge(other.dataset),
                       aggregations)
 
     def equals(self, other):
-        return self.df.equals(other.df) and \
+        return self.dataset.equals(other.dataset) and \
                self.aggregations == other.aggregations
 
     def get_aggregations(self):
@@ -56,18 +56,16 @@ class Result:
         }
 
     def get_intermidiate_values(self):
-        data = {
-            key: list(value.get_dataseries()) for key, value in self.aggregations.items()
-        }
-        # TODO: Add time
-        return pd.DataFrame(data=data)
+        return Dataset({
+            key: value.get_series() for key, value in self.aggregations.items()
+        })
 
     @staticmethod
     def lift(x):
-        if isinstance(x, pd.DataFrame):
-            return Result(df=x)
-        elif isinstance(x, pd.Series):
-            return Result(df=x.to_frame())
+        if isinstance(x, Dataset):
+            return Result(dataset=x)
+        elif isinstance(x, Series):
+            return Result(dataset=x.to_dataset(None)) # TODO: pass a name for the dataset?
         elif isinstance(x, dict):
             return Result(aggregations=x)
         elif isinstance(x, Result):
