@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from dplib import Series, DPL
 from dplib.minipy import MiniPy
-from dplib.dpl_util import make_builtin_decorator
+from dplib.decorators import make_builtin_decorator
 from dplib.testing import SeriesAssertions
 
 def make_series(n, plus=0):
@@ -282,6 +282,5 @@ class TestDPL(TestCase, SeriesAssertions):
         self.assertEqual(mpy.parse('plus_one(8)').compile().run(builtins), 8 + 1)        
         self.assertEqual(mpy.parse('add(1, 2)').compile().run(builtins), 1 + 2)
         self.assertEqual(mpy.parse('plus(8, -2)').compile().run(builtins), 8 + -2)                
-        
 
 test_suite = TestDPL

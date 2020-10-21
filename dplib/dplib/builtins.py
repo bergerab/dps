@@ -1,4 +1,4 @@
-from .dpl_util import make_builtin_decorator
+from .decorators import make_builtin_decorator
 
 from .series import Series
 
@@ -69,5 +69,30 @@ def _or(series1, series2):
         return series1 or series2
 
 @builtin()
-def thd(series, base_harmonic, fs=None):
-    pass
+def thd(series, base_harmonic, fs):
+    L = len(series)
+
+    # Next power of 2, for increased resolution
+    n = int(2 ** (np.ceil(np.log2(L)) + 1))
+    vf = np.abs(np.fft.fft(series, n))
+    f = fs * np.arange(0, (n / 2) + 1) / n
+    vf = vf[:n // 2 + 1]
+    fund_ind = np.argmax(vf[1:])
+    fund_ind = fund_ind + 1
+    f_fund = f[fund_ind]
+    p_fund = vf[fund_ind]
+    f_hrm = base_harmonic + f_fund
+
+    # look for harmonic bin around  the true harmonic
+    f_hrm = f_fund + base_harmonic
+    v_rms_harmonics = 0
+    while f_hrm < f[-1] - base_harmonic:
+        harm_ind = ((f <= f_hrm + 1.3 * fs / n) & (f >= f_hrm - 1.3 * fs / n)).nonzero()[0]
+        hrm = np.argmax(vf[harm_ind])
+        hrm = harm_ind[hrm]
+        hrm_frq = f[hrm]
+        hrm_pwr = vf[hrm]
+        f_hrm = f_hrm + base_harmonic
+        v_rms_harmonics = v_rms_harmonics + (hrm_pwr ** 2)
+
+    return 100 * np.sqrt(v_rms_harmonics) / p_fund
