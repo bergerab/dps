@@ -2,9 +2,9 @@ from unittest import TestCase
 from datetime import datetime, timedelta
 
 from dplib import KPI
-import dplib as dp
+from dplib.testing import ResultAssertions
 from dplib.result import Result
-from dplib.result import ResultAssertions
+import dplib as dp
 
 NOW = datetime.now()
 

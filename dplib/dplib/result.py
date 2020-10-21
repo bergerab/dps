@@ -2,17 +2,6 @@ import pandas as pd
 
 from .series import Series, Dataset
 
-class ResultAssertions:
-    def assertResultEquals(self, result1, result2):
-        return self.assertResultEquals(result1, result2)
-        
-    def assertResultEqual(self, result1, result2):
-        result1 = Result.lift(result1)
-        result2 = Result.lift(result2)
-        if result1.dataset is not None and result2.dataset is not None:
-            self.assertEqual(result1.dataset, result2.dataset)
-        self.assertEqual(result1.aggregations, result2.aggregations)
-
 class Result:
     def __init__(self, dataset=None, aggregations=None):
         self.dataset = dataset

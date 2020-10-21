@@ -2,13 +2,16 @@ from unittest import TestCase
 from datetime import datetime, timedelta
 
 from dplib import Series, DPL
+from dplib.minipy import MiniPy
+from dplib.dpl_util import make_builtin_decorator
+from dplib.testing import SeriesAssertions
 
 def make_series(n, plus=0):
     now = datetime.now()
     return Series([x + plus for x in range(n)],
                   [now + timedelta(seconds=x) for x in range(n)])
 
-class TestDPL(TestCase):
+class TestDPL(TestCase, SeriesAssertions):
     def test_aggregation_propagates_intermidiate_values(self):
         xs = [1, 2, 3, 4, 5, 6]
         series = Series(xs)
@@ -173,5 +176,112 @@ class TestDPL(TestCase):
         self.assertEqual(set(dpl.get_windows()), {timedelta(seconds=1)})
         dpl.parse('window(window(3, "2m"), "1s")')
         self.assertEqual(set(dpl.get_windows()), {timedelta(minutes=2), timedelta(seconds=1)})
+
+    def test_logical_operators(self):
+        r = DPL.eval('Load >= Lo', {
+            'Load': Series([0,1,2,3,4]),
+            'Lo': 3,
+        })
+        self.assertSeriesEqual(r, Series([False, False, False, True, True]))
+
+        r = DPL.eval('Load <= Lo', {
+            'Load': Series([0,1,2,3,4]),
+            'Lo': 3,
+        })
+        self.assertSeriesEqual(r, Series([True, True, True, True, False]))
+
+        r = DPL.eval('0 == 0 and 1 == 1')
+        self.assertEqual(r, True)
+
+        r = DPL.eval('Load >= 0 and 1 == 1', {
+            'Load': Series([0,1,2,3,4]),
+        })
+        self.assertSeriesEqual(r, Series([True, True, True, True, True]))
         
+
+        r = DPL.eval('Load >= LoadLowerBound and Load <= LoadUpperBound', {
+            'Load': Series([0,1,2,3,4,5,6,7,8,9]),
+            'LoadLowerBound': 2,
+            'LoadUpperBound': 8,
+        })
+        self.assertSeriesEqual(r, Series([False, False, True, True, True,
+                                          True, True, True, True, False]))
+
+    def test_make_builtin_decorator(self):
+        builtins = {}
+        builtin = make_builtin_decorator(builtins)
+
+        @builtin()
+        def one():
+            return 1
+
+        @builtin()
+        def plus_one(x):
+            return x + 1
+
+        @builtin()
+        def add(x, y):
+            return x + y
+
+        # Passing a name with the builtin, sets the name different from the function's name
+        @builtin('plus')
+        def _plus(x, y):
+            return x + y
+
+        @builtin('if')
+        def _if(test, body, orelse):
+            if test:
+                return body
+            else:
+                return orelse
+
+        self.assertTrue('one' in builtins)
+        self.assertEqual(builtins['one'](), 1)
+
+        self.assertTrue('plus_one' in builtins)        
+        self.assertEqual(builtins['plus_one'](2), 3)
+        self.assertEqual(builtins['plus_one'](-2), -1)
+
+        self.assertTrue('add' in builtins)                
+        self.assertEqual(builtins['add'](3, 7), 3 + 7)
+        self.assertEqual(builtins['add'](-2, 9), -2 + 9)
+
+        self.assertTrue('plus' in builtins)
+        self.assertTrue('_plus' not in builtins)                        
+        self.assertEqual(builtins['plus'](3, 7), 3 + 7)
+        self.assertEqual(builtins['plus'](-2, 9), -2 + 9)
+
+        self.assertTrue('if' in builtins)
+        self.assertTrue('_if' not in builtins)                        
+        self.assertEqual(builtins['if'](True, 3, 7), 3)
+        self.assertEqual(builtins['if'](False, 3, 7), 7)
+
+    def test_builtin_integration(self):
+        builtins = {}
+        builtin = make_builtin_decorator(builtins)
+        
+        @builtin()
+        def one():
+            return 1
+
+        @builtin()
+        def plus_one(x):
+            return x + 1
+
+        @builtin()
+        def add(x, y):
+            return x + y
+
+        @builtin('plus')
+        def _plus(x, y):
+            return x + y
+        
+        mpy = MiniPy(builtins=builtins)
+
+        self.assertEqual(mpy.parse('one()').compile().run(builtins), 1)
+        self.assertEqual(mpy.parse('plus_one(8)').compile().run(builtins), 8 + 1)        
+        self.assertEqual(mpy.parse('add(1, 2)').compile().run(builtins), 1 + 2)
+        self.assertEqual(mpy.parse('plus(8, -2)').compile().run(builtins), 8 + -2)                
+        
+
 test_suite = TestDPL

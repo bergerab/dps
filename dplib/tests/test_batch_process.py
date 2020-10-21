@@ -5,6 +5,7 @@ import copy
 
 import pandas as pd
 
+from dplib.testing import ResultAssertions
 import dplib as dp
 
 POWER = dp.KPI('Voltage * Current')
@@ -69,7 +70,7 @@ def make_power_bp():
                 'LoadUpperBound': 1.0,
             })
 
-class TestBatchProcess(TestCase, dp.result.ResultAssertions):
+class TestBatchProcess(TestCase, ResultAssertions):
     def test_batch_process_get_required_inputs(self):
         bp = make_power_bp()
         inputs = bp.get_required_inputs()
@@ -143,7 +144,7 @@ class TestBatchProcess(TestCase, dp.result.ResultAssertions):
             'Power': dp.Series([1*3, 2*4, 3*5, 4*6, 5*7], TIME2),
             'Load %': dp.Series([1*3/35, 2*4/35, 3*5/35, 4*6/35, 5*7/35], TIME2),
             'Power at 50% Load': dp.Series([0, 0, 3*5, 0, 0], TIME2),
-            'Power above 50% Load': dp.Series([0, 0, 0, 4*6, 5*7], TIME2),            
+            'Power above 50% Load': dp.Series([0, 0, 0, 4*6, 5*7], TIME2),
         }))
             
         result = bp.run(DF2)

@@ -4,56 +4,11 @@ from datetime import timedelta
 
 from .minipy import MiniPy
 from .series import Series
+from .builtins import BUILTINS
 
 class DPL:
     def __init__(self):
-        
-        def window(series, duration):
-            return series.window(duration)
-        
-        def average(x):
-            if isinstance(x, Series):
-                if x.is_windowed(): return x.average()
-                else: return x.average_aggregation()
-            else: raise Exception('Unsupported type for average.')
-            
-        def min(x):
-            if isinstance(x, Series):
-                if x.is_windowed(): return x.min()                
-                else: return x.min_aggregation()
-            else: raise Exception('Unsupported type for min.')
-            
-        def max(x):
-            if isinstance(x, Series):
-                if x.is_windowed(): return x.max()                
-                else: return x.max_aggregation()
-            else: raise Exception('Unsupported type for max.')
-            
-        def if_exp(test, body, orelse, env):
-            test_value = test.compile().run(env)
-            if isinstance(test_value, Series):
-                return test_value.when(body.compile().run(env), orelse.compile().run(env))
-            # Otherwise, continue with normal IF behavior:
-            if test_value:
-                return body.compile().run(env)
-            return orelse.compile().run(env)
-
-        def thd(ds, base_harmonic, fs=None):
-            if fs:
-                return ds.thd2(base_harmonic, fs)
-            else:
-                return ds.thd(base_harmonic)
-            
-        self.mpy = MiniPy(builtins={
-            'window': window,
-            'avg': average,
-            'max': max,
-            'min': min,                        
-            'if': if_exp,
-            'thd': thd,
-            'and': lambda x, y: x._and(y),
-            'or': lambda x, y: x._or(y),
-        })
+        self.mpy = MiniPy(builtins=BUILTINS)
         self.mpy.add_string_transformer(parse_time)        
         self.ast = None
         self.compiled_ast = None

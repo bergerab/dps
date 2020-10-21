@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 
 from pandas.testing import assert_series_equal
 import pandas as pd
-from timeit import timeit
 
+from dplib.testing import SeriesAssertions
 from dplib.series import Series, Dataset
 
 def make_times(n, t=None, step=None):
@@ -12,7 +12,7 @@ def make_times(n, t=None, step=None):
     step = (lambda x: timedelta(seconds=x)) if step is None else step
     return [t + step(x) for x in range(n)]
 
-class TestSeries(TestCase):
+class TestSeries(TestCase, SeriesAssertions):
     def test_identity(self):
         ds = Series(range(10))
         self.assertEqual(list(ds), list(range(10)))
@@ -179,7 +179,6 @@ class TestSeries(TestCase):
         self.assertFalse(Series([1,2,3], times).equals(Series([1], times[:1])))
         self.assertFalse(Series([1,2,3], times).equals(Series([1, 2, 3], times[:1] + [datetime.now(), datetime.now()])))        
         
-        
     def test_dataset_eq(self):
         self.assertEqual(Dataset({
             'a': Series([1])
@@ -192,6 +191,15 @@ class TestSeries(TestCase):
         values = range(10)
         series = Series(values, times)
         self.assertTrue(series.window(timedelta(seconds=1)).is_windowed())
-        self.assertFalse(series.is_windowed())        
+        self.assertFalse(series.is_windowed())
+
+    def test_logical_operator_integration(self):
+        series = Series([1, 2, 3, 4])
+        self.assertSeriesEqual((series >= 2)._and(series <= 3),
+                               Series([False, True, True, False]))
+
+        series = Series([1, 2, 3, 4])
+        self.assertSeriesEqual((series >= 2)._or(series <= 3),
+                               Series([True, True, True, True]))
 
 test_suite = TestSeries

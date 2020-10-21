@@ -1,10 +1,13 @@
 from itertools import chain
 import pandas as pd
 
+from .stream import SeriesStream
 from .aggregation import \
     MaxAggregation, \
     MinAggregation, \
     AverageAggregation
+
+from pandas.testing import assert_series_equal
 
 class Dataset:
     def __init__(self, dataset=None):
@@ -176,8 +179,7 @@ class Series:
         '''
         series = []
         for i in range(len(self.series)):
-            x = self.series[i]
-            if x:
+            if self.series[i]:
                 if isinstance(body, Series):
                     value = body.series[i]
                 else:
@@ -267,37 +269,7 @@ class Series:
             return Series(f(series.series, other), cout=series.cout)
 
     @staticmethod
-    def create_with_series(series):
-        s = Series()
+    def create_with_series(series, cout=None):
+        s = Series(cout=cout)
         s.series = series
         return s
-
-class ListStream:
-    def __init__(self, obj):
-        self.obj = obj
-        self.i = 0
-        self.lookback = 0
-
-    def get(self):
-        value = self.get_value(self.i)
-        self.i += 1
-        return value
-
-    def get_value(self, i):
-        return self.obj[i]
-
-    def unget(self):
-        self.i -= 1
-
-    def has_values(self):
-        return self.i < len(self.obj)
-
-    def save(self):
-        self.lookback = self.i
-
-    def restore(self):
-        self.i = self.lookback
-
-class SeriesStream(ListStream):
-    def get_value(self, i):
-        return (self.obj.index[i], self.obj[i])

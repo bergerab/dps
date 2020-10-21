@@ -66,9 +66,6 @@ class MiniPy:
         return mpy_node
 
     def add_string_transformer(self, string_transformer):
-        '''
-
-        '''
         self.string_transformers.append(string_transformer)
 
 class Expression:

@@ -192,3 +192,10 @@ class TestMiniPy(TestCase):
         # If expressions should extract identifiers
         ids = mpy.parse('((fcall(arg1 if unicorn else donkey, arg2, ie(arg3, wo(arg4))) + vcc)+ call2(neww))').get_identifiers()
         self.assertEqual(ids_to_set(ids), {'ARG1', 'UNICORN', 'DONKEY', 'ARG2', 'ARG3', 'ARG4', 'VCC', 'NEWW'})
+
+    def test_logical_operators(self):
+        self.assertEqual(run('1 and 2'), 2)
+        self.assertEqual(run('1 > 0 and 2 > 0'), True)
+        self.assertEqual(run('1 < 0 or 2 > 0'), True)
+
+test_suite = TestMiniPy

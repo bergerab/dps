@@ -5,7 +5,8 @@ from pandas._testing import assert_frame_equal
 import pandas as pd
 
 from dplib.component import Component
-from dplib.result import ResultAssertions, Result
+from dplib.result import Result
+from dplib.testing import ResultAssertions
 from dplib.aggregation import AverageAggregation, AddAggregation
 from dplib import Series, Dataset
 
