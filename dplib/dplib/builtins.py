@@ -2,6 +2,8 @@ from .decorators import make_builtin_decorator
 
 from .series import Series
 
+import numpy as np
+
 BUILTINS = {}
 builtin = make_builtin_decorator(BUILTINS)
 
@@ -16,15 +18,15 @@ def average(series):
         else: return series.average_aggregation()
     else: raise Exception('Unsupported type for average.')
 
-@builtin()
-def min(series):
+@builtin('min')
+def _min(series):
     if isinstance(series, Series):
         if series.is_windowed(): return series.min()
         else: return series.min_aggregation()
     else: raise Exception('Unsupported type for min.')
 
-@builtin()
-def max(series):
+@builtin('max')
+def _max(series):
     if isinstance(series, Series):
         if series.is_windowed(): return series.max()
         else: return series.max_aggregation()
@@ -68,8 +70,25 @@ def _or(series1, series2):
     else:
         return series1 or series2
 
-@builtin()
-def thd(series, base_harmonic, fs):
+@builtin(aggregate=True)
+def thd(series, base_harmonic):
+    fft_vals = np.absolute(np.fft.fft(series))
+
+    # Look at twice the amount just in case we miss the base harmonic
+    fund_freq, fund_freq_idx = max([(v,i) for i,v in enumerate(fft_vals[:2*base_harmonic])])
+
+    sum = 0        
+    harmonic = fund_freq_idx + base_harmonic
+    offset = int(base_harmonic/2)
+
+    while harmonic < len(fft_vals)/2:
+        peak = np.max(fft_vals[harmonic - offset : harmonic + offset])
+        sum += peak * peak
+        harmonic += base_harmonic
+    return np.sqrt(sum) / fund_freq
+
+@builtin('thd2', aggregate=True)
+def thd2(series, base_harmonic, fs):
     L = len(series)
 
     # Next power of 2, for increased resolution
