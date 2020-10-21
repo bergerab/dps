@@ -5,7 +5,8 @@ from pandas.testing import assert_series_equal
 import pandas as pd
 
 from dplib.testing import SeriesAssertions
-from dplib.series import Series, Dataset
+from dplib.series import Series
+from dplib.dataset import Dataset
 
 def make_times(n, t=None, step=None):
     t = datetime.now() if t is None else t

@@ -2,7 +2,15 @@ from .result import Result
 
 from pandas.testing import assert_series_equal
 
-class DatasetAssertions:
+class SeriesAssertions:
+    def assertSeriesEquals(self, series1, series2):
+        return self.assertSeriesEquals(series1, series2)
+        
+    def assertSeriesEqual(self, series1, series2):
+        assert_series_equal(series1.series, series2.series)
+        assert_series_equal(series1.cout, series2.cout)
+
+class DatasetAssertions(SeriesAssertions):
     def assertDatasetEquals(self, dataset1, dataset2):
         return self.assertDatasetEquals(dataset1, dataset2)
         
@@ -13,14 +21,6 @@ class DatasetAssertions:
         for name, series in dataset2.dataset.items():
             self.assertTrue(name in dataset1.dataset)
             self.assertSeriesEqual(series, dataset1.dataset[name])
-
-class SeriesAssertions:
-    def assertSeriesEquals(self, series1, series2):
-        return self.assertSeriesEquals(series1, series2)
-        
-    def assertSeriesEqual(self, series1, series2):
-        assert_series_equal(series1.series, series2.series)
-        assert_series_equal(series1.cout, series2.cout)
 
 class ResultAssertions(DatasetAssertions, SeriesAssertions):
     def assertResultEquals(self, result1, result2):

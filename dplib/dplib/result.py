@@ -1,6 +1,7 @@
 import pandas as pd
 
-from .series import Series, Dataset
+from .series import Series
+from .dataset import Dataset
 
 class Result:
     def __init__(self, dataset=None, aggregations=None):

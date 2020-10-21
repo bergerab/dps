@@ -3,7 +3,8 @@ import numbers
 import pandas as pd
 
 from .dpl import DPL
-from .series import Series, Dataset
+from .series import Series
+from .dataset import Dataset
 from .aggregation import Aggregation
 from .result import Result
 

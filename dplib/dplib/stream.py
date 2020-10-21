@@ -1,4 +1,4 @@
-class ListStream:
+class Stream:
     def __init__(self, obj):
         self.obj = obj
         self.i = 0
@@ -24,6 +24,6 @@ class ListStream:
     def restore(self):
         self.i = self.lookback
 
-class SeriesStream(ListStream):
+class SeriesStream(Stream):
     def get_value(self, i):
         return (self.obj.index[i], self.obj[i])
