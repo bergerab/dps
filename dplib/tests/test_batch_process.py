@@ -6,6 +6,7 @@ import copy
 import pandas as pd
 
 from dplib.testing import ResultAssertions
+from dplib.graph import Graph
 import dplib as dp
 
 POWER = dp.KPI('Voltage * Current')
@@ -27,7 +28,7 @@ DF2 = dp.Dataset({
 })
 
 def make_graph_sut():
-    G = dp.Graph()
+    G = Graph()
     G.connect('Power', 'Average Power')
     G.connect('Power', 'Load %')
     G.connect('Load %', 'THD Voltage at Load %')
@@ -99,7 +100,7 @@ class TestBatchProcess(TestCase, ResultAssertions):
         self.assertEqual(bp.prune('B').kpis.keys(), set(['A', 'B']))
 
     def test_graph_prune(self):
-        G = dp.Graph()
+        G = Graph()
         G.connect('A', 'B')
         G.connect('B', 'C')
         
@@ -261,7 +262,7 @@ class TestBatchProcess(TestCase, ResultAssertions):
             bp._get_topological_ordering()
         
     def test_graph_edge_removal(self):
-        G = dp.Graph()
+        G = Graph()
         G.connect('A', 'B')
         G.connect('B', 'A')
         self.assertTrue(G.has_edges())
@@ -271,7 +272,7 @@ class TestBatchProcess(TestCase, ResultAssertions):
         self.assertFalse(G.has_edges())
 
     def test_graph_topological_sort_one_node(self):
-        G = dp.Graph()
+        G = Graph()
         G.connect('A', 'B')
         order = G.get_topological_ordering()
         self.assertEqual(order, ['A', 'B'])
@@ -308,12 +309,12 @@ class TestBatchProcess(TestCase, ResultAssertions):
         '''
         G = make_graph_sut()
         G.connect('Power', 'Power') # Self recursive
-        with self.assertRaises(dp.CyclicGraphException):
+        with self.assertRaises(dp.exceptions.CyclicGraphException):
             G.get_topological_ordering()
             
         G = make_graph_sut()
         G.connect('Load %', 'Power')
-        with self.assertRaises(dp.CyclicGraphException):
+        with self.assertRaises(dp.exceptions.CyclicGraphException):
             G.get_topological_ordering()            
 
         # Test adding a valid edge does not cause any exception:
