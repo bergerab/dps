@@ -33,6 +33,8 @@ Python.
 import ast
 import functools
 
+from .exceptions import InvalidOperationException
+
 class MiniPy:
     def __init__(self, builtins={}):
         self.builtins = { # default builtins for common operators
@@ -293,9 +295,6 @@ class MiniPyVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node):
         return SExpr(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.mpy.builtins)
-
-class InvalidOperationException(Exception):
-    pass
 
 def flatten(xs):
     return functools.reduce(
