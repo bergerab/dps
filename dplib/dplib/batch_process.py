@@ -1,6 +1,5 @@
 import numbers
 import copy
-from datetime import timedelta
 from collections import defaultdict
 
 from .result import Result
@@ -84,7 +83,7 @@ class BatchProcess:
         except CyclicGraphException:
             raise CyclicGraphException('Batch Processes cannot contain recursive KPI computations.')
 
-    def run_all(self, df, time_column='Time', parameters=[], previous_result=None):
+    def run_all(self, dataset, parameters=[], previous_result=None):
         '''
         Runs the batch process on the entire DataFrame (without reporting progress, one column at a time)
         '''
@@ -92,7 +91,7 @@ class BatchProcess:
         self._connect_graph()
         order = self._get_topological_ordering()
 
-        input = Result.lift(df)
+        input = Result(dataset)
         result = Result()
 
         # Compute each KPI in order, adding them to the DataFrame
@@ -101,15 +100,11 @@ class BatchProcess:
             kpi = bpkpi.kpi
             mapping = bpkpi.mapping
             kpi_result = kpi.run(kpi_name, input.merge(result), mapping,
-                                 include_time=False,
                                  parameters=parameters,
                                  previous_result=previous_result)
             result = kpi_result.merge(result)
-
-        time_df = input.df[time_column].to_frame()
-        result = result.merge(Result(time_df))
         if previous_result:
-            result = previous_result.append(result)
+            result = previous_result.merge(result)
         return result
 
     def _get_windows(self, mappings={}):
@@ -135,7 +130,7 @@ class BatchProcess:
             if max_window.total_seconds() % window.total_seconds() != 0:
                 raise Exception('All windows in each KPI computation must be multiples of each other.')
 
-    def run(self, df, time_column='Time', parameters=[], previous_result=None):
+    def run(self, dataset, parameters=[], previous_result=None):
         '''
         Runs the batch process taking sub batches of the DataFrame (that have a size which is a multiple of the largest window size in the KPIs).
 
@@ -143,7 +138,7 @@ class BatchProcess:
 
         As another example, if there are two KPIs one which is "average(window(Signal, '1s'))" and another which is "average(window(Signal, '2s'))", this will process the DataFrame two second at a time. It will take the two second, process it, then move to the next two second, until all the data has been processed. Notice how all windows must be multiples of each other (otherwise we will get a window which is missing data).
         '''
-        return self.run_all(df, time_column, parameters, previous_result)
+        return self.run_all(dataset, parameters, previous_result)
 
 class Graph:
     def __init__(self):
@@ -240,26 +235,3 @@ class Graph:
         return L
 
 class CyclicGraphException(Exception): pass
-    
-'''
-BatchProcess() \
-  .add('Power', POWER, {
-    'Voltage': 'volts',
-    'Current': 'amps',
-  }) \
-  .add('THD (Voltage)', THD, {
-    'Signal': 'volts',
-  }) \
-  .add('Load', LOAD, {
-    'Max': 100000,
-    'Value': 'Power',
-  }) \
-  .add('THD (Voltage) at 25% Load', AT_LOAD, {
-    'Target': 25,
-    'Value': 'THD (Voltage)',
-    'Load': 'Load',
-  }),
-  .add('Efficiency at 25% Load', AT_LOAD, {
-
-  })
-'''

@@ -1,7 +1,7 @@
 class Aggregation:
     name = 'constant'
-    def __init__(self, ds, value):
-        self.ds = ds
+    def __init__(self, series, value):
+        self.series = series
         self.value = value
 
     def __add__(self, other):
@@ -47,8 +47,8 @@ class Aggregation:
     def get_value(self):
         return self.value
 
-    def get_dataseries(self):
-        return self.ds
+    def get_series(self):
+        return self.series
 
     @staticmethod
     def lift(x):
@@ -97,8 +97,8 @@ class Aggregation:
             raise Exception('Invalid aggregation dictionary.')
 
 class OperatorAggregation(Aggregation):
-    def __init__(self, ds, lhs, rhs):
-        self.ds = ds
+    def __init__(self, series, lhs, rhs):
+        self.series = series
         self.lhs = Aggregation.lift(lhs)
         self.rhs = Aggregation.lift(rhs)
 
@@ -153,8 +153,8 @@ class FloorDivAggregation(OperatorAggregation):
 
 class AverageAggregation(Aggregation):
     name = 'average'        
-    def __init__(self, ds, average, count):
-        self.ds = ds
+    def __init__(self, series, average, count):
+        self.series = series
         self.average = average
         self.count = count
 
@@ -167,28 +167,19 @@ class AverageAggregation(Aggregation):
         return f'AverageAggregation({self.average}, {self.count})'
 
     @staticmethod
-    def from_dataseries(ds):
-        return AverageAggregation.from_sum_and_count(ds, sum(ds), len(ds))
+    def from_series(series):
+        return AverageAggregation.from_sum_and_count(series, sum(series), len(series))
 
     @staticmethod
-    def from_dataseries(ds):
-        sum = 0
-        count = 0
-        for x in ds:
-            sum += x
-            count += 1
-        return AverageAggregation.from_sum_and_count(ds, sum, count)
-
-    @staticmethod
-    def from_sum_and_count(ds, sum, count):
-        agg = AverageAggregation(ds, sum / count, count)
+    def from_sum_and_count(series, sum, count):
+        agg = AverageAggregation(series, sum / count, count)
         return agg
 
     def merge(self, other):
         count = self.count + other.count
-        # Take the other DataSeries, it would be pricy to keep a copy of all DataSeries (by combining them)
-        # We take the other.ds because it should be the newer one
-        return AverageAggregation(other.ds,
+        # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
+        # We take the other.series because it should be the newer one
+        return AverageAggregation(other.series,
                                   ((self.average * self.count) + (other.average * other.count)) / count,
                                   count)
 
@@ -205,9 +196,9 @@ class AverageAggregation(Aggregation):
 class MaxAggregation(Aggregation):
     name = 'max'
     def merge(self, other):
-        return MaxAggregation(other.ds, max(self.value, other.value))
+        return MaxAggregation(other.series, max(self.value, other.value))
     
 class MinAggregation(Aggregation):
     name = 'min'    
     def merge(self, other):
-        return MinAggregation(other.ds, min(self.value, other.value))
+        return MinAggregation(other.series, min(self.value, other.value))
