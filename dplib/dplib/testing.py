@@ -54,29 +54,20 @@ class WaveformGenerator:
         return result
         
     def generate_single_waveform(self, waveform_description, sample_rate, duration):
-        sample_count = duration * sample_rate
-        x = np.arange(0, duration, 1/sample_rate)
-        xs = np.arange(sample_count)
-        y = np.sin(2 * np.pi * waveform_description.frequency * xs / sample_count) * waveform_description.amplitude
-        return Waveform(x, y)
+        times = np.arange(duration * sample_rate) / sample_rate
+        signal = np.sin(2 * np.pi * waveform_description.frequency * times) * waveform_description.amplitude
+        return Waveform(times, signal)
+        
+        # sample_count = duration * sample_rate
+        # x = np.arange(0, duration, 1/sample_rate)
+        # xs = np.arange(sample_count)
+        # y = np.sin(2 * np.pi * waveform_description.frequency * xs / sample_count) * waveform_description.amplitude
+        # return Waveform(x, y)
 
 class Waveform:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
-    def get_frequency(self):
-        ft = np.abs(np.fft.fft(self.y))
-        freq = np.abs(np.fft.fftfreq(len(self.y), self.x[1] - self.x[0]))
-    
-        m = 0
-        f = 0
-        for i in freq:
-            val = ft[int(i)]
-            if val > m:
-                m = val
-                f = i
-        return f
 
     def get_times(self):
         now = datetime.now()
@@ -88,25 +79,26 @@ class Waveform:
     def to_series(self):
         return Series(self.y, self.get_times())
 
-    def plot(time, wave):
-        import matplotlib.pyplot as plot
-        plot.plot(self.x, self.y)
-        plot.title('Wave')
-        plot.xlabel('Time')
-        plot.ylabel('Amplitude')
-        plot.grid(True, which='both')
-        plot.axhline(y=0, color='k')
-        plot.show()
+    def plot(self):
+        import matplotlib.pyplot as plt
+        plt.plot(self.x, self.y)
+        plt.title('Wave')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.grid(True, which='both')
+        plt.axhline(y=0, color='k')
+        plt.show()
 
     def plot_fft(self):
-        import matplotlib.pyplot as plot
+        import matplotlib.pyplot as plt
         ft = np.fft.fft(self.y)
-        freq = np.fft.fftfreq(len(self.y), self.x[1] - self.x[0])
+        delta_time = self.x[1] - self.x[0]
+        freq = np.fft.fftfreq(len(self.y), delta_time)
 
-        plot.ylabel("Amplitude")
-        plot.xlabel("Frequency [Hz]")
-        plot.plot(freq, np.abs(ft))
-        plot.show()    
+        plt.ylabel("Amplitude")
+        plt.xlabel("Frequency [Hz]")
+        plt.plot(freq, np.abs(ft))
+        plt.show()    
 
     def add(self, other):
         self.y += other.y

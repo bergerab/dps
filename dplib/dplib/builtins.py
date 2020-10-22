@@ -72,12 +72,24 @@ def _or(series1, series2):
 
 @builtin(aggregate=True)
 def thd(series, base_harmonic):
-    fft_vals = np.absolute(np.fft.fft(series))
+    # At least two values are needed to determine sampling rate.
+    # Even more than this are needed to do an FFT as well, but
+    # that will return 0 as well, just not error like have under 2 datapoints would.
+    if len(series) < 2:
+        return 0
+    
+    fft_vals = np.abs(np.fft.fft(series))
+
+    # Determine sampling rate based off first two values (assume even spacing between samples)
+    sample_rate = 1 / (series.index[1] - series.index[0]).total_seconds()
+
+    # How many seconds of data `series` contains
+    seconds_of_data = int(len(series)/sample_rate)
 
     # Look at twice the amount just in case we miss the base harmonic
-    fund_freq, fund_freq_idx = max([(v,i) for i,v in enumerate(fft_vals[:2*base_harmonic])])
+    fund_freq, fund_freq_idx = max([(v,i) for i,v in enumerate(fft_vals[:(1 + seconds_of_data)*base_harmonic])])
 
-    sum = 0        
+    sum = 0 
     harmonic = fund_freq_idx + base_harmonic
     offset = int(base_harmonic/2)
 
