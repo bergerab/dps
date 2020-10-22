@@ -85,7 +85,7 @@ def thd(series, base_harmonic):
         peak = np.max(fft_vals[harmonic - offset : harmonic + offset])
         sum += peak * peak
         harmonic += base_harmonic
-    return np.sqrt(sum) / fund_freq
+    return 100 * (np.sqrt(sum) / fund_freq)
 
 @builtin('thd2', aggregate=True)
 def thd2(series, base_harmonic, fs):
