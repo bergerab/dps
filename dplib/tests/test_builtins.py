@@ -5,7 +5,7 @@ import functools
 import numpy as np
 
 from dplib import Series, DPL
-from dplib.testing import SeriesAssertions, WaveformGenerator
+from dplib.testing import SeriesAssertions, WaveGenerator
 
 class TestBuiltins(TestCase):
     def test_thd_0_percent(self):
@@ -22,7 +22,7 @@ class TestBuiltins(TestCase):
         '''
         When there is a harmonic with the same amplitude as the base harmonic, THD should be 100%.
 
-        This test creates a waveform with a base harmonic of 30 and an amplitude of 1, and one harmonic
+        This test creates a wave with a base harmonic of 30 and an amplitude of 1, and one harmonic
         (the 1st harmonic). The 1st harmonic has an amplitude of 1. This matches the base harmonic's amplitude,
         which means the THD should be 1/1 = 100%.
         '''
@@ -38,7 +38,7 @@ class TestBuiltins(TestCase):
         '''
         When there are two harmonics, their amplitudes should be included in the THD.
 
-        This test creates a waveform with a base harmonic of 30 that has an amplitude of 1,
+        This test creates a wave with a base harmonic of 30 that has an amplitude of 1,
         and two harmonics (the 1st and 2nd). The 1st harmonic has an amplitude of 1/3, and the 2nd harmonic has
         an amplitude of 1/4.
         '''
@@ -55,7 +55,7 @@ class TestBuiltins(TestCase):
         '''
         When there are three harmonics, their amplitudes should be included in the THD.
 
-        This test creates a waveform with a base harmonic of 30 that has an amplitude of 1,
+        This test creates a wave with a base harmonic of 30 that has an amplitude of 1,
         and three harmonics (the 1st, 2nd, and 8th). The 1st harmonic has an amplitude of 1/3, 
         and the 2nd harmonic has an amplitude of 1/4, and the 8th harmonic has an amplitude of
         1/9.
@@ -134,21 +134,34 @@ class TestBuiltins(TestCase):
                           2: 1/8,
                       })
 
+    def test_thd_with_phase_shift_waves(self):
+        for phase_shift in map(lambda x: np.pi*2/x, range(1, 10)):
+            self.thd_test(base_harmonic=10,
+                          base_amplitude=1,
+                          duration=5,
+                          sample_rate=500,
+                          phase_shift=phase_shift,
+                          window_size="1s",
+                          harmonics={
+                              3: 1/8,
+                              5: 1/27,                          
+                          })
+
     def assertEqualsWithTolerance(self, i1, i2, tolerance=1e-7):
         '''
         Assert the difference between `i1` and `i2` is less than `tolerance`
         '''
         self.assertLess(abs(i2 - i1), tolerance)
 
-    def thd_test(self, base_harmonic=30, base_amplitude=1, sample_rate=1000, harmonics={}, duration=5, window_size="1s"):
-        gen = WaveformGenerator() \
-            .add(frequency=base_harmonic, amplitude=base_amplitude)
+    def thd_test(self, base_harmonic=30, base_amplitude=1, sample_rate=1000, harmonics={}, duration=5, window_size="1s", phase_shift=0):
+        gen = WaveGenerator() \
+            .add(frequency=base_harmonic, amplitude=base_amplitude, phase_shift=phase_shift)
         for nth_harmonic, amplitude in harmonics.items():
             frequency = base_harmonic * (nth_harmonic + 1)
-            gen.add(frequency=frequency, amplitude=amplitude)
-        waveform = gen.generate(sample_rate=sample_rate, duration=duration)
+            gen.add(frequency=frequency, amplitude=amplitude, phase_shift=phase_shift)
+        wave = gen.generate(sample_rate=sample_rate, duration=duration)
         series = DPL.eval(f'thd(window(A, "{window_size}"), {base_harmonic})', {
-            'A': waveform.to_series(),
+            'A': wave.to_series(),
         })
         sum_of_squares = np.sqrt(functools.reduce(lambda a, b: a + np.power(b, 2), harmonics.values(), 0))
         # Theoretical THD is the THD you would get if you did the calculation by hand

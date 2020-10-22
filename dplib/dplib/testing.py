@@ -37,34 +37,28 @@ class ResultAssertions(DatasetAssertions, SeriesAssertions):
             self.assertDatasetEqual(result1.dataset, result2.dataset)
         self.assertEqual(result1.aggregations, result2.aggregations)
 
-class WaveformGenerator:
+class WaveGenerator:
     def __init__(self):
-        self.waveforms = []
+        self.waves = []
 
-    def add(self, frequency=60, amplitude=1):
-        self.waveforms.append(WaveformDescription(frequency, amplitude))
+    def add(self, frequency=60, amplitude=1, phase_shift=0):
+        self.waves.append(WaveDescription(frequency, amplitude, phase_shift))
         return self
 
     def generate(self, sample_rate=10000, duration=1):
         result = None
-        for waveform_description in self.waveforms:
-            waveform = self.generate_single_waveform(waveform_description, sample_rate, duration)
-            if result: result.add(waveform)
-            else: result = waveform
+        for wave_description in self.waves:
+            wave = self.generate_single_wave(wave_description, sample_rate, duration)
+            if result: result.add(wave)
+            else: result = wave
         return result
         
-    def generate_single_waveform(self, waveform_description, sample_rate, duration):
+    def generate_single_wave(self, wave_description, sample_rate, duration):
         times = np.arange(duration * sample_rate) / sample_rate
-        signal = np.sin(2 * np.pi * waveform_description.frequency * times) * waveform_description.amplitude
-        return Waveform(times, signal)
-        
-        # sample_count = duration * sample_rate
-        # x = np.arange(0, duration, 1/sample_rate)
-        # xs = np.arange(sample_count)
-        # y = np.sin(2 * np.pi * waveform_description.frequency * xs / sample_count) * waveform_description.amplitude
-        # return Waveform(x, y)
+        signal = np.sin(2 * np.pi * wave_description.frequency * times + wave_description.phase_shift) * wave_description.amplitude
+        return Wave(times, signal)
 
-class Waveform:
+class Wave:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -104,8 +98,8 @@ class Waveform:
         self.y += other.y
         return self
 
-class WaveformDescription:
-    def __init__(self, frequency, amplitude):
+class WaveDescription:
+    def __init__(self, frequency, amplitude, phase_shift):
         self.frequency = frequency
         self.amplitude = amplitude
-
+        self.phase_shift = phase_shift
