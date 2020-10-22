@@ -125,7 +125,7 @@ class Series:
             windows.append(pd.Series(values, index=times))
             values = []
             times = []
-        return Series(windows, cout=pd.Series(values, index=times))
+        return Series(windows, cout=pd.Series(values, index=times) if values and times else None)
 
     def when(self, body, orelse):
         '''
