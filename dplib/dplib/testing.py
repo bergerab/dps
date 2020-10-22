@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta
+
 from .result import Result
+from .series import Series
 
 from pandas.testing import assert_series_equal
 import numpy as np
@@ -34,50 +37,83 @@ class ResultAssertions(DatasetAssertions, SeriesAssertions):
             self.assertDatasetEqual(result1.dataset, result2.dataset)
         self.assertEqual(result1.aggregations, result2.aggregations)
 
+class WaveformGenerator:
+    def __init__(self):
+        self.waveforms = []
 
+    def add(self, frequency=60, amplitude=1):
+        self.waveforms.append(WaveformDescription(frequency, amplitude))
+        return self
 
-# Based off of: https://mindchasers.com/dev/python-harmonics
-def generate_sine_wave(sample_rate=10000,
-                       duration=1,
-                       frequency=60):
-    samples = duration * sample_rate
-    x = np.arange(0, duration, 1/sample_rate)
-    X = np.arange(samples)
-    y = np.sin(2 * np.pi * frequency * X / samples)
-    return x, y
+    def generate(self, sample_rate=10000, duration=1):
+        result = None
+        for waveform_description in self.waveforms:
+            waveform = self.generate_single_waveform(waveform_description, sample_rate, duration)
+            if result: result.add(waveform)
+            else: result = waveform
+        return result
+        
+    def generate_single_waveform(self, waveform_description, sample_rate, duration):
+        sample_count = duration * sample_rate
+        x = np.arange(0, duration, 1/sample_rate)
+        xs = np.arange(sample_count)
+        y = np.sin(2 * np.pi * waveform_description.frequency * xs / sample_count) * waveform_description.amplitude
+        return Waveform(x, y)
 
-# def generate_sine_wave(sample_rate=10000,
-#                        duration=1,
-#                        frequency=60,
-#                        harmonics=0,
-#                        harmonic_type='odd',
-#                        shape='sine'):
-#     f = frequency
+class Waveform:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def get_frequency(self):
+        ft = np.abs(np.fft.fft(self.y))
+        freq = np.abs(np.fft.fftfreq(len(self.y), self.x[1] - self.x[0]))
     
-#     if harmonic_type == 'even':
-#         odd = 0
-#         mult = 2
-#     elif harmonic_type == 'odd':
-#         odd = 1
-#         mult = 2
-#     else: # all
-#         odd = 0
-#         mult = 1
+        m = 0
+        f = 0
+        for i in freq:
+            val = ft[int(i)]
+            if val > m:
+                m = val
+                f = i
+        return f
 
-#     total_samples = sample_rate * duration
-#     t = np.linspace(0, duration, num=total_samples)
-#     y = np.zeros(total_samples)
-    
-#     # Compute and add fundamental with each harmonic
-#     for i in range(int(harmonics)+1):
-#         k = i * mult + odd # I added the +1 here (division by zero otherwise)
-#         yh = factor(shape,k,i) * np.sin(2 * np.pi * k *  f * t)
-#         y = y + yh
+    def get_times(self):
+        now = datetime.now()
+        return list(map(lambda n: now + timedelta(seconds=n), self.x))
 
-#     return t, y
+    def get_signal(self):
+        return self.y
 
-# def factor(shape, k, i):
-#     if shape == "triangle":
-#         return (1/(k*k) * (-1)**i)
-#     else:
-#         return (1/k)
+    def to_series(self):
+        return Series(self.y, self.get_times())
+
+    def plot(time, wave):
+        import matplotlib.pyplot as plot
+        plot.plot(self.x, self.y)
+        plot.title('Wave')
+        plot.xlabel('Time')
+        plot.ylabel('Amplitude')
+        plot.grid(True, which='both')
+        plot.axhline(y=0, color='k')
+        plot.show()
+
+    def plot_fft(self):
+        import matplotlib.pyplot as plot
+        ft = np.fft.fft(self.y)
+        freq = np.fft.fftfreq(len(self.y), self.x[1] - self.x[0])
+
+        plot.ylabel("Amplitude")
+        plot.xlabel("Frequency [Hz]")
+        plot.plot(freq, np.abs(ft))
+        plot.show()    
+
+    def add(self, other):
+        self.y += other.y
+        return self
+
+class WaveformDescription:
+    def __init__(self, frequency, amplitude):
+        self.frequency = frequency
+        self.amplitude = amplitude
+
