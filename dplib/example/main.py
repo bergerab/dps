@@ -18,6 +18,8 @@ if __name__ == '__main__':
                  'Load (Percent)',
                  'THD Voltage (Percent)',
                  'THD2 Voltage (Percent)',
+                 'THD Distorted Voltage (Percent)',
+                 'THD2 Distorted Voltage (Percent)',
              ],
              # Specify signal mappings and parameter values (constants)
              mapping={
@@ -25,13 +27,15 @@ if __name__ == '__main__':
                  'Vdc': 'DC_Voltage',
                  'Idc': 'DC_Current',
                  'Va': 'AC_Voltage',
+                 'DistortedVa': 'Distorted AC_Voltage',                 
                 
                  # Parameters
-                 'MaxPower': 50000 * 10,
-                 'VoltageBaseHarmonic': 60,
-                 'SamplingFrequency': 1000,
+                 'MaxPower': 200 * 10,
+                 'VoltageBaseHarmonic': 30,
+                 'SamplingFrequency': 5000,
              })
     kpi_df = result.get_dataframe()
+    print(kpi_df.index)
     print('Batch process complete!')
     print('Writing to kpis.csv...')
     kpi_df.to_csv('kpis.csv')

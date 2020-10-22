@@ -7,6 +7,8 @@ import random
 
 from datetime import datetime, timedelta
 
+import dplib.testing as dpt
+
 def generate_sine_wave(t0=0, periods=2, offset=0.0, dt=1e-5, amplitude=2, base_harmonic=40):
     '''
     Generate discrete samples of a pure sine wave.
@@ -18,11 +20,22 @@ def generate_sine_wave(t0=0, periods=2, offset=0.0, dt=1e-5, amplitude=2, base_h
 
 def write_csv(verbose=False):
     if verbose:
+        print('Generating current signal...')
+    current = dpt.WaveGenerator() \
+        .add(frequency=30, amplitude=30) \
+        .generate(sample_rate=5000, duration=5)
+    if verbose:
         print('Generating voltage signal...')
-    time, Voltage = generate_sine_wave(amplitude=200000, periods=60, dt=1e-4)
-    if verbose:    
-        print('Generating current signal...')    
-    _, Current = generate_sine_wave(amplitude=30, offset=2, periods=60, dt=1e-4)
+    voltage = dpt.WaveGenerator() \
+        .add(frequency=30, amplitude=200, phase_shift=np.pi/2) \
+        .generate(sample_rate=5000, duration=5)
+
+    if verbose:
+        print('Generating distorted voltage signal...')
+    voltage_with_distortion = dpt.WaveGenerator() \
+        .add(frequency=30, amplitude=30) \
+        .add(frequency=30*2, amplitude=10) \
+        .generate(sample_rate=5000, duration=5)
 
     NOW = datetime.now()
     
@@ -30,14 +43,15 @@ def write_csv(verbose=False):
         print('Generating DataFrame...')        
     df = pd.DataFrame(data={
         # Two AC signals
-        'AC_Voltage': Voltage,
-        'AC_Current': Current,
+        'AC_Voltage': voltage.get_signal(),
+        'Distorted AC_Voltage': voltage_with_distortion.get_signal(),        
+        'AC_Current': current.get_signal(),
         
         # Example of a DC circuit ramping-up a voltage signal from 0 to 50,000
         # With a fixed current of ~10
-        'DC_Voltage': map(lambda x: 50000 * (x/len(Voltage)), range(len(Voltage))),
-        'DC_Current': map(lambda x: 10 - random.random(), range(len(Voltage))),                
-        'Time': list(map(lambda x: NOW + timedelta(seconds=x), time)),
+        'DC_Voltage': map(lambda x: 50000 * (x/len(voltage.get_signal())), range(len(voltage.get_signal()))),
+        'DC_Current': map(lambda x: 10 - random.random(), range(len(voltage.get_signal()))),                
+        'Time': current.get_times(),
     })
     if verbose:
         print('Writing CSV...')            
