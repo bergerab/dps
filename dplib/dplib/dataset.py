@@ -1,6 +1,8 @@
 from itertools import chain
 
-from .series import *
+import pandas as pd
+
+import dplib.series
 
 class Dataset:
     def __init__(self, dataset=None):
@@ -52,3 +54,19 @@ class Dataset:
 
     def __repr__(self):
         return repr(self.dataset)
+
+
+    @staticmethod
+    def lift(x):
+        if isinstance(x, pd.DataFrame):
+            if not isinstance(x.index, pd.DatetimeIndex):
+                raise Exception('DataFrame must have an index of type pd.DatetimeIndex')
+            data = {}
+            for column in x:
+                series = x[column]
+                data[column] = dplib.series.Series(series, x.index)
+            return Dataset(data)
+        elif isinstance(x, Dataset):
+            return x
+        raise Exception(f'Invalid type to lift into a Dataset type {type(x)}.')
+            

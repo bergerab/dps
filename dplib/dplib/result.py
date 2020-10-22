@@ -50,6 +50,15 @@ class Result:
             key: value.get_series() for key, value in self.aggregations.items()
         })
 
+    def get_dataframe(self):
+        if not self.dataset or len(self.dataset.dataset.items()) == 0:
+            return pd.DataFrame()
+        data = {
+            key: value.series for key, value in self.dataset.dataset.items()
+        }
+        index = list(self.dataset.dataset.values())[0].series.index
+        return pd.DataFrame(data=data, index=index)
+
     @staticmethod
     def lift(x):
         if isinstance(x, Dataset):

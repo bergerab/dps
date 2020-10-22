@@ -11,10 +11,14 @@ class Series:
     '''
     A wrapper around pandas Series.
     '''
-    def __init__(self, data=None, times=None, cin=None, cout=None):
+    def __init__(self, data=None, times=None, cin=None, cout=None, cout_enabled=False):
         # Cout is the "carry-out" from the previous windowed operation
         # It is only when sequencing many series computations together to do
         # stream processing.
+        
+        # If `cout_enabled` is true, windowed computations who's final window is not complete
+        # will still be put into a window (instead of being added to `cout` to be computed when more data comes).
+        
         self.cout = pd.Series([], dtype='float64') if cout is None else cout
         
         if data is None or len(data) == 0:
@@ -22,6 +26,7 @@ class Series:
         else:
             series = pd.Series(data, index=times)
         self.series = pd.concat([cin, series]) if cin is not None else series
+        self.cout_enabled = cout_enabled
 
     def __iter__(self):
         return self.series.__iter__()
@@ -116,6 +121,10 @@ class Series:
             else:
                 values.append(value)
                 times.append(time)
+        if not self.cout_enabled:
+            windows.append(pd.Series(values, index=times))
+            values = []
+            times = []
         return Series(windows, cout=pd.Series(values, index=times))
 
     def when(self, body, orelse):

@@ -1,3 +1,5 @@
+from .result import Result
+from .dataset import Dataset
 from .kpi import KPI
 from .batch_process import BatchProcess
 
@@ -31,9 +33,6 @@ class Component:
         if errors:
             raise Exception('\n'.join(errors))
 
-    def run(self, dataset, kpi_names=[], mapping={}, previous_result=None):
-        return self.run_all(dataset, kpi_names, mapping, previous_result)
-
     def make_pruned_bp(self, kpi_names, mappings={}):
         bp = self.make_bp(mappings)
         
@@ -58,13 +57,15 @@ class Component:
 
         return bp
         
-    def run_all(self, dataset, kpi_names=[], mapping={}, previous_result=None):
+    def run(self, dataset, kpi_names=[], mapping={}, previous_result=None):
         if isinstance(kpi_names, str):
             kpi_names = [kpi_names]
 
         self._validate_kpi_names(kpi_names)
         bp = self.make_pruned_bp(kpi_names, mapping)
-        result = bp.run(dataset, parameters=self.parameters, previous_result=previous_result)
+        result = bp.run(Dataset.lift(dataset),
+                        parameters=self.parameters,
+                        previous_result=previous_result)
         
         rename_map = {}
         kpis_in_dataset = list(filter(lambda x: self.kpis[x].id not in result.aggregations, kpi_names))

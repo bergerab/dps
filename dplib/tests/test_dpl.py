@@ -6,10 +6,11 @@ from dplib.minipy import MiniPy
 from dplib.decorators import make_builtin_decorator
 from dplib.testing import SeriesAssertions
 
-def make_series(n, plus=0):
+def make_series(n, plus=0, cout_enabled=False):
     now = datetime.now()
     return Series([x + plus for x in range(n)],
-                  [now + timedelta(seconds=x) for x in range(n)])
+                  [now + timedelta(seconds=x) for x in range(n)],
+                  cout_enabled=cout_enabled)
 
 class TestDPL(TestCase, SeriesAssertions):
     def test_aggregation_propagates_intermidiate_values(self):
@@ -84,11 +85,28 @@ class TestDPL(TestCase, SeriesAssertions):
         windows = DPL.eval('window(b, "1s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[0], [1], [2], [3], [4]]
+            [[0], [1], [2], [3], [4], [5]]
         )
+
+        # Window size = 1 with cout
+        series = make_series(6, cout_enabled=True)
+        windows = DPL.eval('window(b, "1s")', { 'B': series }).windows_to_list()
+        self.assertEqual(
+            windows,
+            [[0], [1], [2], [3], [4]], 
+        )
+        
 
         # Even sized windows
         series = make_series(6)        
+        windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
+        self.assertEqual(
+            windows,
+            [[0, 1], [2, 3], [4, 5]]
+        )
+
+        # Even sized windows with cout
+        series = make_series(6, cout_enabled=True)        
         windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
@@ -100,19 +118,43 @@ class TestDPL(TestCase, SeriesAssertions):
         windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
+            [[0, 1, 2], [3, 4, 5]]
+        )
+
+        # Odd sized windows with cout
+        series = make_series(6, cout_enabled=True)                
+        windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
+        self.assertEqual(
+            windows,
             [[0, 1, 2]]
         )
 
         # Even sized window with non-multiple
-        series = make_series(6)                        
+        series = make_series(7)                        
         windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
-            [[0, 1], [2, 3]],
+            [[0, 1], [2, 3], [4, 5], [6]],
+        )
+
+        # Even sized window with non-multiple with cout
+        series = make_series(7, cout_enabled=True)                        
+        windows = DPL.eval('window(b, "2s")', { 'B': series }).windows_to_list()
+        self.assertEqual(
+            windows,
+            [[0, 1], [2, 3], [4, 5]],
         )
 
         # Odd sized window with non-multiple
         series = make_series(7)                                
+        windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
+        self.assertEqual(
+            windows,
+            [[0, 1, 2], [3, 4, 5], [6]],
+        )
+
+        # Odd sized window with non-multiple with cout
+        series = make_series(7, cout_enabled=True)                                
         windows = DPL.eval('window(b, "3s")', { 'B': series }).windows_to_list()
         self.assertEqual(
             windows,
@@ -127,13 +169,13 @@ class TestDPL(TestCase, SeriesAssertions):
         avg4 = (7+8)/2
         avg5 = (9+10)/2
         self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': series })),
-                         [avg1, avg2, avg3, avg4])
+                         [avg1, avg2, avg3, avg4, avg5])
 
         # Should work when window is not a multiple of input size
         series = make_series(7, plus=1)        
         avg4 = 7/1
         self.assertEqual(list(DPL.eval('avg(window(a, "2s"))', { 'a': series })),
-                         [avg1, avg2, avg3])
+                         [avg1, avg2, avg3, avg4])
 
     def test_if_exp(self):
         '''If expressions should call Series.when'''

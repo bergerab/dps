@@ -27,6 +27,10 @@ D1_LONG = Dataset({
     'A': Series(range(10), TIME1_LONG),
     'B': Series(range(10, 20), TIME1_LONG),
 })
+D1_LONG_COUT = Dataset({
+    'A': Series(range(10), TIME1_LONG, cout_enabled=True),
+    'B': Series(range(10, 20), TIME1_LONG, cout_enabled=True),
+})
 
 D1_MAPPED = Dataset({
     'E': Series([7, 6, 5], TIME1),
@@ -197,10 +201,10 @@ class TestComponent(TestCase, ResultAssertions):
             .add('KPI One', 'avg(A + B)')
         self.assertResultEqual(D1_AVG_RESULT, SUT.run(D1, 'KPI One').get_aggregations())
 
-    def test_window(self):
+    def test_window_with_cout(self):
         SUT = Component('System Under Test') \
             .add('2s Avg', 'avg(window(A, "2s"))')
-        result = SUT.run(D1_LONG, '2s Avg')
+        result = SUT.run(D1_LONG_COUT, '2s Avg')
         expected_result = Dataset({
             '2s Avg': Series([
                 (0 + 1) / 2,
@@ -215,6 +219,27 @@ class TestComponent(TestCase, ResultAssertions):
             ], cout=pd.Series([8, 9], index=[TIME1_LONG[8],
                                              TIME1_LONG[9]])),
         })        
+        self.assertResultEqual(expected_result, result)
+
+    def test_window(self):
+        SUT = Component('System Under Test') \
+            .add('2s Avg', 'avg(window(A, "2s"))')
+        result = SUT.run(D1_LONG, '2s Avg')
+        expected_result = Dataset({
+            '2s Avg': Series([
+                (0 + 1) / 2,
+                (2 + 3) / 2,
+                (4 + 5) / 2,
+                (6 + 7) / 2,
+                (8 + 9) / 2,                
+            ], [
+                TIME1_LONG[0],
+                TIME1_LONG[2],
+                TIME1_LONG[4],
+                TIME1_LONG[6],
+                TIME1_LONG[8],                
+            ])
+        })
         self.assertResultEqual(expected_result, result)
 
     def test_basic(self):
@@ -238,3 +263,16 @@ class TestComponent(TestCase, ResultAssertions):
         self.assertResultEqual(D1_DEPENDENT_RESULT, SUT.run(D1, ['KPI Two']))
         
         self.assertResultEqual(D1_DEPENDENT_RESULT_BOTH, SUT.run(D1, ['KPI One', 'KPI Two']).dataset)
+
+    def test_result_to_df(self):
+        SUT = Component('System Under Test') \
+            .add('KPI One', 'A + B') \
+            .add('KPI Two', 'C + 2') \
+            .add('KPI Three', 'D + B')
+        assert_frame_equal(pd.DataFrame(data={
+            'KPI One': [1+4, 2+5, 3+6],
+            'KPI Two': [7+2, 8+2, 9+2],
+            'KPI Three': [10+4, 11+5, 12+6],
+        }, index=TIME2), SUT.run(D2, ['KPI One', 'KPI Two', 'KPI Three']).get_dataframe())
+
+test_suite = TestComponent

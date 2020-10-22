@@ -81,7 +81,7 @@ class BatchProcess:
         except CyclicGraphException:
             raise CyclicGraphException('Batch Processes cannot contain recursive KPI computations.')
 
-    def run_all(self, dataset, parameters=[], previous_result=None):
+    def run(self, dataset, parameters=[], previous_result=None):
         '''
         Runs the batch process on the entire DataFrame (without reporting progress, one column at a time)
         '''
@@ -127,14 +127,3 @@ class BatchProcess:
         for window in windows:
             if max_window.total_seconds() % window.total_seconds() != 0:
                 raise Exception('All windows in each KPI computation must be multiples of each other.')
-
-    def run(self, dataset, parameters=[], previous_result=None):
-        '''
-        Runs the batch process taking sub batches of the DataFrame (that have a size which is a multiple of the largest window size in the KPIs).
-
-        For example, if there only one KPI which runs "average(window(Signal, '1s'))", this will process the DataFrame one second at a time. It will take the first second, process it, then move to the next second, until all the data has been processed.
-
-        As another example, if there are two KPIs one which is "average(window(Signal, '1s'))" and another which is "average(window(Signal, '2s'))", this will process the DataFrame two second at a time. It will take the two second, process it, then move to the next two second, until all the data has been processed. Notice how all windows must be multiples of each other (otherwise we will get a window which is missing data).
-        '''
-        return self.run_all(dataset, parameters, previous_result)
-

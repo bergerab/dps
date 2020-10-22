@@ -12,7 +12,8 @@ class SeriesAssertions:
         
     def assertSeriesEqual(self, series1, series2):
         assert_series_equal(series1.series, series2.series)
-        assert_series_equal(series1.cout, series2.cout)
+        if len(series1.cout) != 0 and len(series2.cout) != 0:
+            assert_series_equal(series1.cout, series2.cout, check_dtype=False)
 
 class DatasetAssertions(SeriesAssertions):
     def assertDatasetEquals(self, dataset1, dataset2):

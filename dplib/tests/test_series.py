@@ -99,52 +99,80 @@ class TestSeries(TestCase, SeriesAssertions):
         series = series.when('A', 'B')
         assert_series_equal(series.series, pd.Series(['A', 'B', 'A', 'B'], index=times))
 
-    def test_windows(self):
+    def test_windows_with_cout(self):
         # Windows are created with full buckets of data
         # That is each window is filled until it exceeds the time window.
         # Any data that has not yet exceeded the window, goes into a series called "cout"
 
         times = make_times(7)
-        series = Series(range(7), times).window(timedelta(seconds=2)).average()
+        series = Series(range(7), times, cout_enabled=True).window(timedelta(seconds=2)).average()
         assert_series_equal(series.series, pd.Series([(0+1)/2, (2+3)/2, (4+5)/2], index=[times[0], times[2], times[4]]))
         assert_series_equal(series.cout, pd.Series([6], index=[times[6]]))
 
         times = make_times(4)
-        series = Series(range(4), times).window(timedelta(seconds=2)).average()
+        series = Series(range(4), times, cout_enabled=True).window(timedelta(seconds=2)).average()
         assert_series_equal(series.series, pd.Series([(0+1)/2], index=[times[0]]))
         assert_series_equal(series.cout, pd.Series([2,3], index=[times[2], times[3]]))                
 
         times = make_times(5)
-        series = Series(range(5), times).window(timedelta(seconds=3)).average()
+        series = Series(range(5), times, cout_enabled=True).window(timedelta(seconds=3)).average()
         assert_series_equal(series.series, pd.Series([(0+1+2)/3], index=[times[0]]))
         assert_series_equal(series.cout, pd.Series([3, 4], index=[times[3], times[4]]))        
 
         times = make_times(6)
-        series = Series(range(6), times).window(timedelta(seconds=10)).average()
+        series = Series(range(6), times, cout_enabled=True).window(timedelta(seconds=10)).average()
         self.assertEqual(list(series), [])
         assert_series_equal(series.cout, pd.Series(range(6), index=times))
 
         times = make_times(6)
-        series = Series(range(6), times).window(timedelta(seconds=1)).average()
+        series = Series(range(6), times, cout_enabled=True).window(timedelta(seconds=1)).average()
         assert_series_equal(series.series, pd.Series(range(5), index=times[:-1]), check_dtype=False)
         assert_series_equal(series.cout, pd.Series([5], index=[times[5]]))
 
         now = datetime.now()
         times = [now + timedelta(seconds=n) for n in [0.1, 0.3, 0.9, 0.99, 1, 1.12]]
         values = list(range(6))
-        series = Series(values, times).window(timedelta(seconds=1)).average()
+        series = Series(values, times, cout_enabled=True).window(timedelta(seconds=1)).average()
         assert_series_equal(series.series, pd.Series([sum(values[:5])/5], index=[times[0]]))
         assert_series_equal(series.cout, pd.Series([values[5]], index=[times[5]]))
 
+    def test_windows(self):
+        times = make_times(7)
+        series = Series(range(7), times).window(timedelta(seconds=2)).average()
+        assert_series_equal(series.series, pd.Series([(0+1)/2, (2+3)/2, (4+5)/2, 6/1], index=[times[0], times[2], times[4], times[6]]))
+
+        times = make_times(4)
+        series = Series(range(4), times).window(timedelta(seconds=2)).average()
+        assert_series_equal(series.series, pd.Series([(0+1)/2, (2+3)/2], index=[times[0], times[2]]))
+
+        times = make_times(5)
+        series = Series(range(5), times).window(timedelta(seconds=3)).average()
+        assert_series_equal(series.series, pd.Series([(0+1+2)/3, (3+4)/2], index=[times[0], times[3]]))
+
+        times = make_times(6)
+        series = Series(range(6), times).window(timedelta(seconds=10)).average()
+        assert_series_equal(series.series, pd.Series([(0+1+2+3+4+5)/6], index=[times[0]]))        
+
+        times = make_times(6)
+        series = Series(range(6), times).window(timedelta(seconds=1)).average()
+        assert_series_equal(series.series, pd.Series(range(6), index=times), check_dtype=False)
+
+        now = datetime.now()
+        times = [now + timedelta(seconds=n) for n in [0.1, 0.3, 0.9, 0.99, 1, 1.12]]
+        values = list(range(6))
+        series = Series(values, times).window(timedelta(seconds=1)).average()
+        assert_series_equal(series.series, pd.Series([sum(values[:5])/5, values[5]], index=[times[0], times[5]]))
+
     def test_carry(self):
-        # First 7 values are in sequence, next 7 are in different sequence
+        # First 7 values are in sequence, next 7 are in different sequence with cout
         t1 = make_times(7, t=datetime.now() - timedelta(hours=1))
-        s1 = Series(range(7), t1).window(timedelta(seconds=2)).average()
-        assert_series_equal(s1.series, pd.Series([(0+1)/2, (2+3)/2, (4+5)/2], index=[t1[0], t1[2], t1[4]]))
+        s1 = Series(range(7), t1, cout_enabled=True).window(timedelta(seconds=2)).average()
+        assert_series_equal(s1.series, pd.Series([(0+1)/2, (2+3)/2, (4+5)/2],
+                                                 index=[t1[0], t1[2], t1[4]]))
         assert_series_equal(s1.cout, pd.Series([6], index=[t1[6]]))
 
         t2 = make_times(7, t=datetime.now())
-        s2 = Series(range(7, 7+7), t2, cin=s1.cout).window(timedelta(seconds=2)).average()
+        s2 = Series(range(7, 7+7), t2, cin=s1.cout, cout_enabled=True).window(timedelta(seconds=2)).average()
         assert_series_equal(s2.series, pd.Series([6/1, (7+8)/2, (9+10)/2, (11+12)/2],
                                                  index=[t1[6], t2[0], t2[2], t2[4]]))
         assert_series_equal(s2.cout, pd.Series([13], index=[t2[6]]))
@@ -154,14 +182,14 @@ class TestSeries(TestCase, SeriesAssertions):
         values = list(range(14))
         t1 = times[:7]
         v1 = values[:7]
-        s1 = Series(v1, t1).window(timedelta(seconds=2)).average()
+        s1 = Series(v1, t1, cout_enabled=True).window(timedelta(seconds=2)).average()
         assert_series_equal(s1.series, pd.Series([(v1[0]+v1[1])/2, (v1[2]+v1[3])/2, (v1[4]+v1[5])/2],
                                                  index=[t1[0], t1[2], t1[4]]))
         assert_series_equal(s1.cout, pd.Series([v1[6]], index=[t1[6]]))
         
         t2 = times[-7:]
         v2 = values[-7:]
-        s2 = Series(v2, t2, cin=s1.cout).window(timedelta(seconds=2)).average()
+        s2 = Series(v2, t2, cin=s1.cout, cout_enabled=True).window(timedelta(seconds=2)).average()
         assert_series_equal(s2.series, pd.Series([(v1[6]+v2[0])/2, (v2[1]+v2[2])/2, (v2[3]+v2[4])/2],
                                                  index=[t1[6], t2[1], t2[3]]))
         assert_series_equal(s2.cout, pd.Series([v2[5], v2[6]], index=[t2[5], t2[6]]))
