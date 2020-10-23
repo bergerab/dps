@@ -71,7 +71,7 @@ def _or(series1, series2):
         return series1 or series2
 
 @builtin(aggregate=True)
-def thd(series, base_harmonic):
+def thd(series, base_harmonic=None):
     # At least two values are needed to determine sampling rate.
     # Even more than this are needed to do an FFT as well, but
     # that will return 0 as well, just not error like have under 2 datapoints would.
@@ -80,17 +80,26 @@ def thd(series, base_harmonic):
     
     fft_vals = np.abs(np.fft.fft(series))
 
-    # Determine sampling rate based off first two values (assume even spacing between samples)
-    sample_rate = 1 / (series.index[1] - series.index[0]).total_seconds()
-
-    # How many seconds of data `series` contains
-    seconds_of_data = int(len(series)/sample_rate)
-
-    # Look at twice the amount just in case we miss the base harmonic
-    fund_freq, fund_freq_idx = max([(v,i) for i,v in enumerate(fft_vals[:(1 + seconds_of_data)*base_harmonic])])
+    # If provided a base harmonic, use it
+    if base_harmonic:
+        sample_rate = 1 / (series.index[1] - series.index[0]).total_seconds()
+        # How many seconds of data `series` contains
+        # This determines where the base harmonic exists in fft_vals
+        seconds_of_data = len(series)/sample_rate
+        if seconds_of_data > 0:
+            base_harmonic = int(seconds_of_data*base_harmonic)
+        fund_freq = fft_vals[base_harmonic]
+    else:
+        # Otherwise, derive the base harmonic by finding the first peak
+        fund_freq = 0
+        base_harmonic = 0
+        for frequency, value in enumerate(fft_vals[:int(len(fft_vals)/2)]):
+            if value > fund_freq:
+                fund_freq = value
+                base_harmonic = frequency
 
     sum = 0 
-    harmonic = fund_freq_idx + base_harmonic
+    harmonic = 2*base_harmonic
     offset = int(base_harmonic/2)
 
     while harmonic < len(fft_vals)/2:

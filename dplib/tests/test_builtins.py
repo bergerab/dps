@@ -28,6 +28,7 @@ class TestBuiltins(TestCase):
         '''
         thd = self.thd_test(base_harmonic=30,
                       base_amplitude=1,
+                            duration=2,
                       sample_rate=1000,
                       harmonics={
                           1: 1,
@@ -85,6 +86,20 @@ class TestBuiltins(TestCase):
                           13: 1/4,
                       })
 
+    def test_thd_four_harmonics_derive_base_harmonic(self):
+        '''
+        When there are four harmonics, their amplitudes should be included in the THD.
+        '''
+        self.thd_test(base_harmonic=120,
+                      base_amplitude=1,
+                      duration=2,
+                      sample_rate=5000,
+                      harmonics={
+                          1: 1/17,
+                          2: 1/7,
+                      },
+                      provide_base_harmonic=False)
+
     def test_thd_long_duration(self):
         '''
         THD should still work when the duration of the signal is long.
@@ -103,6 +118,15 @@ class TestBuiltins(TestCase):
                       duration=5,
                       sample_rate=100,
                       window_size="2s",
+                      harmonics={
+                          1: 1/3,
+                      })
+        # Window less than 1 second
+        self.thd_test(base_harmonic=60,
+                      base_amplitude=1,
+                      duration=3,
+                      sample_rate=1000,
+                      window_size="100ms",
                       harmonics={
                           1: 1/3,
                       })
@@ -134,6 +158,57 @@ class TestBuiltins(TestCase):
                           2: 1/8,
                       })
 
+    def test_thd_window_size_with_derived_base_harmonic(self):
+        self.thd_test(base_harmonic=10,
+                      base_amplitude=1,
+                      duration=5,
+                      sample_rate=100,
+                      window_size="2s",
+                      harmonics={
+                          1: 1/3,
+                      },
+                      provide_base_harmonic=False)
+        # Window less than 1 second
+        self.thd_test(base_harmonic=60,
+                      base_amplitude=1,
+                      duration=3,
+                      sample_rate=1000,
+                      window_size="100ms",
+                      harmonics={
+                          1: 1/3,
+                      },
+                      provide_base_harmonic=False)
+        self.thd_test(base_harmonic=10,
+                      base_amplitude=1,
+                      duration=30,
+                      sample_rate=100,
+                      window_size="10s",
+                      harmonics={
+                          1: 1/23,
+                          2: 1/8,
+                      },
+                      provide_base_harmonic=False)
+        self.thd_test(base_harmonic=10,
+                      base_amplitude=1,
+                      duration=100,
+                      sample_rate=100,
+                      window_size="1m",
+                      harmonics={
+                          1: 1/23,
+                          2: 1/8,
+                      },
+                      provide_base_harmonic=False)
+        self.thd_test(base_harmonic=50,
+                      base_amplitude=1,
+                      duration=20,
+                      sample_rate=1000,
+                      window_size="10s",
+                      harmonics={
+                          1: 1/23,
+                          2: 1/8,
+                      },
+                      provide_base_harmonic=False)
+
     def test_thd_with_phase_shift_waves(self):
         for phase_shift in map(lambda x: np.pi*2/x, range(1, 10)):
             self.thd_test(base_harmonic=10,
@@ -153,14 +228,21 @@ class TestBuiltins(TestCase):
         '''
         self.assertLess(abs(i2 - i1), tolerance)
 
-    def thd_test(self, base_harmonic=30, base_amplitude=1, sample_rate=1000, harmonics={}, duration=5, window_size="1s", phase_shift=0):
+    def thd_test(self, base_harmonic=30, base_amplitude=1,
+                 sample_rate=1000, harmonics={},
+                 duration=5, window_size="1s",
+                 phase_shift=0, provide_base_harmonic=True):
         gen = WaveGenerator() \
             .add(frequency=base_harmonic, amplitude=base_amplitude, phase_shift=phase_shift)
         for nth_harmonic, amplitude in harmonics.items():
             frequency = base_harmonic * (nth_harmonic + 1)
             gen.add(frequency=frequency, amplitude=amplitude, phase_shift=phase_shift)
         wave = gen.generate(sample_rate=sample_rate, duration=duration)
-        series = DPL.eval(f'thd(window(A, "{window_size}"), {base_harmonic})', {
+        if provide_base_harmonic:
+            thd_code = f'thd(window(A, "{window_size}"), {base_harmonic})'
+        else:
+            thd_code = f'thd(window(A, "{window_size}"))'            
+        series = DPL.eval(thd_code, {
             'A': wave.to_series(),
         })
         sum_of_squares = np.sqrt(functools.reduce(lambda a, b: a + np.power(b, 2), harmonics.values(), 0))
