@@ -10,6 +10,7 @@ from signal import SIGINT, SIGTERM
 
 import dplib
 
+
 from .util import *
 from .logger import Logger
 from .api import DPSManagerAPIClient, DatabaseManagerAPIClient
@@ -87,6 +88,11 @@ def process_job(session, job):
     signals = get_signal_identifiers(component, batch_process, parameters)
     while dbm.hasdata():
         df = pd.DataFrame(data=data)
+        
+        # When using max_batch_size, always skip the last batch of samples
+        # and start the next query from there next.
+        # This way if the query `limit` cuts off data in the middle of a sample,
+        # The result will still be correct.
 
         # Run the batch process with 
         result       = component.run(df, kpis, mappings)

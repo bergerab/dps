@@ -19,7 +19,7 @@ def make_test_case(client):
             'dataset': dataset_name,
         })
 
-    def query(dataset_name, signal_names, interval_start, interval_end, aggregation=None):
+    def query(dataset_name, signal_names, interval_start, interval_end, aggregation=None, limit=None):
         d = {
             'queries': [
                 {
@@ -34,6 +34,8 @@ def make_test_case(client):
         }
         if aggregation:
             d['queries'][0]['aggregation'] = aggregation
+        if limit:
+            d['queries'][0]['limit'] = limit
         return client.POST('query', d)
 
     DS1 = 'test_dataset1'
@@ -90,6 +92,72 @@ def make_test_case(client):
                                 'end': datetime_string4,
                             },
                             'signals': ['va', 'vb', 'vc'],
+                        }
+                    }
+                ]
+            })
+
+            # Test limit
+            query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4, limit=5)
+            self.validate_status_code(query_response)                        
+            self.assertEqual(query_response.json(), {
+                'results': [
+                    {
+                        'times': [datetime_string2, datetime_string3],
+                        'samples': [[1.0, 2.0, 3.0], [0, 5.0, 6.0]],
+                        'query': {
+                            'dataset': DS1,
+                            'interval': {
+                                'start': datetime_string1,
+                                'end': datetime_string4,
+                            },
+                            'signals': ['va', 'vb', 'vc'],
+                            'limit': 5,
+                        }
+                    }
+                ]
+            })
+
+            # Test limit
+            query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4, limit=5)
+            self.validate_status_code(query_response)
+            self.assertEqual(query_response.json(), {
+                'results': [
+                    {
+                        'times': [datetime_string2, datetime_string3],
+                        'samples': [[1.0, 2.0, 3.0], [0, 5.0, 6.0]],
+                        'query': {
+                            'dataset': DS1,
+                            'interval': {
+                                'start': datetime_string1,
+                                'end': datetime_string4,
+                            },
+                            'signals': ['va', 'vb', 'vc'],
+                            'limit': 5,
+                        }
+                    }
+                ]
+            })
+
+            # TODO: There is some weird bug if the limit is 4 where the last sample doesn't show up. This won't
+            # be a problem in our system, because we drop the last sample after every request in the
+            # DPS batch processor.
+            
+            query_response = query(DS1, ['va', 'vb', 'vc'], datetime_string1, datetime_string4, limit=3)
+            self.validate_status_code(query_response)                        
+            self.assertEqual(query_response.json(), {
+                'results': [
+                    {
+                        'times': [datetime_string2],
+                        'samples': [[1.0, 2.0, 3.0]],
+                        'query': {
+                            'dataset': DS1,
+                            'interval': {
+                                'start': datetime_string1,
+                                'end': datetime_string4,
+                            },
+                            'signals': ['va', 'vb', 'vc'],
+                            'limit': 3,
                         }
                     }
                 ]

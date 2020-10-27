@@ -52,6 +52,7 @@ class TimescaleDBDataStore(dbm.DataStore):
             if limit:
                 q = q.limit(limit)
             signal_datas = q.all()
+            print(limit, signal_datas)
 
         if not signal_datas:
             return
