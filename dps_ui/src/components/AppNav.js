@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Switch,
   Route,
   Link

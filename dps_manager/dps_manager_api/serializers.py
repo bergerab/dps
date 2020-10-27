@@ -6,7 +6,9 @@ from rest_framework import serializers, viewsets
 from .models import Object
 
 import dps_services.util as util
-from dplib import DPL, Component, CyclicGraphException
+
+from dplib.exceptions import CyclicGraphException
+from dplib import DPL, Component
 
 # System
 class KPISerializer(serializers.Serializer):
@@ -18,7 +20,6 @@ class KPISerializer(serializers.Serializer):
 
     def validate(self, data):
         # TODO: Make sure it doesn't reference itself
-
         try:
             DPL().parse(data['computation'])
         except Exception as e:
@@ -59,8 +60,6 @@ class SystemSerializer(serializers.Serializer):
     parameters = ParameterSerializer(many=True, default=[])
     
     def validate(self, data):
-        # TODO: make sure all windows are multiples of each other
-
         parameter_names = []
         for parameter in data['parameters']:
             name = None
@@ -182,7 +181,7 @@ class BatchProcessSerializer(serializers.Serializer):
         system = data['system']
         parameters = []
         for parameter in system['parameters']:
-            identifier = parameter['identifier'] or parameter['name']                        
+            identifier = parameter['identifier'] or parameter['name']
             if parameter['default']:
                 mappings[identifier] = parameter['default']
             parameters.append(identifier)
@@ -193,7 +192,6 @@ class BatchProcessSerializer(serializers.Serializer):
             value = mapping['value']
             if key not in parameters:
                 continue
-            print(value, i)
             try:
                 if not isinstance(DPL().compile(value).run(), numbers.Number):
                     raise Exception('Parameter must be a number.')
@@ -221,7 +219,6 @@ class ProgressSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'time': f'Time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
             })
-
         return data
 
 class RequiredMappingsRequestSerializer(serializers.Serializer):

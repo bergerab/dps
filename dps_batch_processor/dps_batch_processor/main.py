@@ -3,31 +3,37 @@ from datetime import datetime, timedelta
 
 import asyncio
 import aiohttp
+import click
 import pandas as pd
 
 from signal import SIGINT, SIGTERM
 
 import dplib
 
-INTERVAL = 5
-'''
-How many seconds to wait between checking for job.
-'''
+from .util import *
 
-POP_JOB_URL = 'http://localhost:8000/api/v1/pop_job'
+from dps_client import DPSClient
 
-RESULT_URL = 'http://localhost:8000/api/v1/result'
-PROGRESS_URL = 'http://localhost:8000/api/v1/progress'
+@click.command()
+@click.option('--url',      required=True, help='The URL of the DPS manager.')
+@click.option('--interval', default=5,     help='The number of seconds to wait between checking for jobs.')
+@click.option('--verbose',                 help='Show the progress of jobs in the command line.')
+def cli(url, interval=5, verbose=False):
+    logger = Logger(verbose)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(url, interval, logger))
+    loop.add_signal_handler(SIGINT, main_task.cancel)
+    loop.add_signal_handler(SIGTERM, main_task.cancel)
 
-async def main():
+async def main(url, interval, logger):
     while True:
         async with aiohttp.ClientSession() as session:
             async with session.get(POP_JOB_URL) as resp:
                 job = json.loads(await resp.text())
                 if not job:
-                    print('No jobs were available...')
+                    logger.log('No jobs were available...')
                 else:
-                    print('Acquired a job.')
+                    logger.log('Acquired a job.')
                     batch_process = job['batch_process']
                     system = batch_process['system']
                     component = dplib.Component('Temp')
@@ -70,7 +76,7 @@ async def main():
                             data[mappings[key]] = list(range(1, 11))
                     df = pd.DataFrame(data=data)
 
-                    print('final map', mappings)
+                    logger.log('final map', mappings)
                     result = component.run(df, batch_process['kpis'], mappings)
                     aggregations = result.get_aggregations()
 
@@ -86,13 +92,7 @@ async def main():
                             'complete': True,
                             'results': results,
                     }) as resp:
-                        print('Sent results.')
+                        logger.log('Sent results.')
                         print(await resp.text())
 
-
-        await asyncio.sleep(INTERVAL)
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.add_signal_handler(SIGINT, main_task.cancel)
-loop.add_signal_handler(SIGTERM, main_task.cancel)
+        await asyncio.sleep(interval)

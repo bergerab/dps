@@ -10,7 +10,10 @@ setup(
     url='https://github.com/bergerab/dps',
     author='Adam Berger',
     author_email='bergerab@icloud.com',
+    entry_points = {
+        'console_scripts': ['dps_batch_processor=dps_batch_processor:cli'],
+    },
     test_suite='nose.collector',
     tests_require=['nose', 'requests'],
-    install_requires=['numpy', 'pandas', 'asyncio', 'aiohttp'],
+    install_requires=['click', 'numpy', 'pandas', 'asyncio', 'aiohttp'],
 )

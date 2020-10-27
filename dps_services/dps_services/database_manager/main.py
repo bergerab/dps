@@ -8,20 +8,20 @@ from .data_store import DataStore
 def make_app(AppDataStore, debug=False):
     app = Flask(__name__)
 
-    @app.route(util.make_api_url('insert'), methods=['POST'])
+    @app.route('/' + util.make_api_url('insert'), methods=['POST'])
     @util.json_api
     def insert(jo):
         AppDataStore.insert(jo)
         return True
 
     if debug:
-        @app.route(util.make_api_url('delete_dataset'), methods=['POST'])
+        @app.route('/' + util.make_api_url('delete_dataset'), methods=['POST'])
         @util.json_api
         def delete_dataset(jo):
             AppDataStore.delete(jo)
             return True
 
-    @app.route(util.make_api_url('query'), methods=['POST'])    
+    @app.route('/' + util.make_api_url('query'), methods=['POST'])    
     @util.json_api
     def query(jo):
         return AppDataStore.query(jo)
