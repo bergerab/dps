@@ -48,7 +48,7 @@ class DataStore:
                 result = SignalQueryResult(query)
                 self.fetch_signals(result, \
                                    query.dataset, query.signals, \
-                                   query.interval)
+                                   query.interval, query.limit)
             else:
                 result = AggregateQueryResult(query)
                 self.aggregate_signals(result, \
