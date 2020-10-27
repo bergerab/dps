@@ -1,4 +1,5 @@
 import json
+from threading import Lock
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
@@ -14,7 +15,8 @@ from .serializers import \
     RequiredMappingsRequestSerializer, \
     JobSerializer, \
     ResultsSerializer, \
-    GetKPIsSerializer
+    GetKPIsSerializer, \
+    RegisterDatabaseManagerSerializer
 
 from dplib import Component, KPI
 
@@ -39,7 +41,6 @@ class BatchProcessAPI(ObjectAPI):
                               value=json.dumps({
                                   'batch_process_id': obj.object_id,
                                   'batch_process': data,
-                                  'database_manager_url': 'TODO',
                               }))
 
 class ProgressAPI(ObjectAPI):
@@ -126,17 +127,28 @@ def get_required_mappings(request):
         'parameters': parameters,
     })
 
+# Mutex to ensure if multiple batch processes exist, they are
+# assigned separate jobs. If DPS Manager is clustered, this mutex
+# will have to reside somewhere else (e.g. database), so that the
+# memory is shared in the cluster.
+job_mutex = Lock()
 @csrf_exempt
 def pop_job(request):
-    # TODO: add a mutex here for if more than one batch processor is supported
-    job_obj = Object.objects.filter(kind=JobAPI.kind).order_by('created_at').first()
-    if not job_obj:
-        return JsonResponse({}, status=404)
-    response = JsonResponse(
-        json.loads(job_obj.value)
-    )
-    job_obj.delete()
-    return response
+    job_mutex.acquire()
+    try:
+        job_obj = Object.objects.filter(kind=JobAPI.kind).order_by('created_at').first()
+        if not job_obj:
+            return JsonResponse({}, status=404)
+        value = json.loads(job_obj)
+        response = JsonResponse(
+            value,
+        )
+        job_obj.delete()
+        return response
+    except Exception as e:
+        return JsonResponse({ 'error': e }, status=500)        
+    finally:
+        job_mutex.release()
 
 @csrf_exempt
 def get_kpis(request):
@@ -147,7 +159,7 @@ def get_kpis(request):
     system_id = data['system_id']
     objs = Object.objects.filter(kind='KPIResult', ref=system_id) \
                          .order_by('-created_at').all()
-        # .distinct('name')
+        # .distinct('name') # TODO: after updating database backend, uncomment
 
     SEEN = set()
     kpis = []

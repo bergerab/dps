@@ -61,7 +61,7 @@ class DataStore:
     def insert_signals(self, dataset, signals, samples, times):
         raise Exception('DataStore.insert_signals not implemented.')
 
-    def fetch_signals(self, result, dataset_name, signal_names, interval):
+    def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         '''
         Writes the results of the query to the `SignalQueryResult` object (using `results.add(values, time)`)
         '''

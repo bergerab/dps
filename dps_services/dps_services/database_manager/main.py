@@ -21,7 +21,7 @@ def make_app(AppDataStore, debug=False):
             AppDataStore.delete(jo)
             return True
 
-    @app.route('/' + util.make_api_url('query'), methods=['POST'])    
+    @app.route('/' + util.make_api_url('query'), methods=['POST'])
     @util.json_api
     def query(jo):
         return AppDataStore.query(jo)

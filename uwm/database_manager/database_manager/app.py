@@ -41,14 +41,17 @@ class TimescaleDBDataStore(dbm.DataStore):
             session.commit()
             session.expunge_all()
 
-    def fetch_signals(self, result, dataset_name, signal_names, interval):
+    def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))
 
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
-        with dbc.scope() as session:        
-            signal_datas = self.time_filter(session.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc()).all()
+        with dbc.scope() as session:
+            q = self.time_filter(session.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc())
+            if limit:
+                q = q.limit(limit)
+            signal_datas = q.all()
 
         if not signal_datas:
             return

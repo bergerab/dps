@@ -11,88 +11,92 @@ from signal import SIGINT, SIGTERM
 import dplib
 
 from .util import *
+from .logger import Logger
+from .api import DPSManagerAPIClient, DatabaseManagerAPIClient
 
-from dps_client import DPSClient
+DBM_URL = os.environ.get('DBM_URL')
+if not DBM_URL:
+    raise Exception('DPS Manager requires that you specify a `DBM_URL` environment variable. The value should be a URL to a DPS Database Manager.')
+else:
+    if not url_is_valid(DBM_URL):
+        raise Exception('`DBM_URL` environment variable has an invalid URL value of "%s". Ensure the URL has a scheme (http:// or https://).' % DBM_URL)
+
 
 @click.command()
-@click.option('--url',      required=True, help='The URL of the DPS manager.')
-@click.option('--interval', default=5,     help='The number of seconds to wait between checking for jobs.')
-@click.option('--verbose',                 help='Show the progress of jobs in the command line.')
-def cli(url, interval=5, verbose=False):
+@click.option('--dps_manager-url',      required=True,  help='The URL of the DPS Manager.')
+@click.option('--database-manager-url', required=True,  help='The URL of the DPS Database Manager.')
+@click.option('--polling-interval',     default=5,      help='The number of seconds to wait between checking for jobs.')
+@click.option('--max-batch-size',       default=100000, help='The maximum number of datapoints to process in one batch.')
+@click.option('--interval',             default=5,      help='The number of seconds to wait between checking for jobs.')
+@click.option('--verbose',                              help='Show the progress of jobs in the command line.')
+def cli(dps_manager_url, database_manager_url, max_batch_size, interval=5, verbose=False):
+    if not url_is_valid(dps_manager_url):
+        raise Exception(f'DPS Manager URL is invalid: "{dps_manager_url}". Ensure the URL is properly formatted and includes a scheme.')
+    elif not url_is_valid(database_manager_url):
+        raise Exception(f'DPS Database Manager URL is invalid: "{database_manager_url}". Ensure the URL is properly formatted and includes a scheme.')
+    
     logger = Logger(verbose)
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(url, interval, logger))
+    # `main` is written as a `asyncio` co-routine, so that if multiple batch processors
+    # are supported (running multiple batch processes at once), this capability could be added,
+    # by spawning another instance of the `main` co-routine.
+    loop.run_until_complete(main(dps_manager_url, database_manager_url, max_batch_size, interval, logger))
+    # Windows requires explicitly attaching signal handlers to
+    # process signals for SIGINT/SIGTERM (for Ctrl-C to quit).
     loop.add_signal_handler(SIGINT, main_task.cancel)
     loop.add_signal_handler(SIGTERM, main_task.cancel)
 
-async def main(url, interval, logger):
+async def main(dps_manager_url, database_manager_url, max_batch_size, interval=5, logger):
+    api = DPSManagerAPIClient(url)
     while True:
         async with aiohttp.ClientSession() as session:
-            async with session.get(POP_JOB_URL) as resp:
-                job = json.loads(await resp.text())
+            async with api.pop_job(session) as job:
                 if not job:
-                    logger.log('No jobs were available...')
+                    logger.log('No jobs were available.')
                 else:
                     logger.log('Acquired a job.')
-                    batch_process = job['batch_process']
-                    system = batch_process['system']
-                    component = dplib.Component('Temp')
-                    for kpi in system['kpis']:
-                        identifier = kpi['identifier']
-                        if identifier == '':
-                            identifier = None
-                        component.add(kpi['name'], kpi['computation'], id=identifier)
-
-                    mappings = { mapping['key']: mapping['value']
-                                 for mapping in batch_process['mappings']}
-
-                    parameters = []
-                    for parameter in system['parameters']:
-                        identifier = parameter['identifier'] or parameter['name']                        
-                        if parameter['default']:
-                            mappings[identifier] = parameter['default']
-                        parameters.append(identifier)
-
-                    for key in mappings:
-                        if key in parameters:
-                            value = mappings[key]
-                            mappings[key] = dplib.DPL().compile(value).run(mappings)
-                    
-                    bp = component.make_pruned_bp(batch_process['kpis'], mappings)
-
-                    max_window = bp._get_max_window(mappings)
-
-                    signals = []
-                    for name in component.get_required_inputs(batch_process['kpis']):
-                        if name not in parameters:
-                            signals.append(name)
-
-                    now = datetime.now()
-                    data = {
-                        'Time': map(lambda x: now + timedelta(seconds=x), range(1, 11))
-                    }
-                    for key in mappings:
-                        if key in signals:
-                            data[mappings[key]] = list(range(1, 11))
-                    df = pd.DataFrame(data=data)
-
-                    logger.log('final map', mappings)
-                    result = component.run(df, batch_process['kpis'], mappings)
-                    aggregations = result.get_aggregations()
-
-                    results = []
-                    for key in aggregations:
-                        results.append({
-                            'key': key,
-                            'value': aggregations[key],
-                        })
-                    
-                    async with session.post(RESULT_URL, json={
-                            'batch_process_id': job['batch_process_id'],
-                            'complete': True,
-                            'results': results,
-                    }) as resp:
-                        logger.log('Sent results.')
-                        print(await resp.text())
-
+                    process_job(session, job)
         await asyncio.sleep(interval)
+
+def process_job(session, job):
+    # Extract values from response.
+    batch_process    = job['batch_process']
+    batch_process_id = job['batch_process_id']
+    system           = batch_process['system']
+    kpis             = batch_process['kpis']
+    interval         = batch_process['interval']
+    start_time       = interval['start']
+    end_time         = interval['end']
+
+    # Extract the signal/parameter mappings from the `batch_process`.
+    # Then, evaluate the parameter strings as DPL (Python) source code
+    # and yield a Python object (typically a number).
+    mappings   = get_mappings(batch_process)
+    parameters = get_system_parameters(system)
+    evaluate_parameters(mappings, parameters)
+
+    # Create a `dplib.Component` that can compute any KPI for the entire system.
+    # Then using `component`, create a batch process that only computes the
+    # KPIs in the job (assigned to `bp`).
+    component = make_component(system)
+    bp        = component.make_pruned_bp(kpis, mappings)
+
+    # Get the identifiers of each signal who's data is required to run the batch process
+    # Then, begin processing the data by fetching data from the Database Manager
+    # in batches of `max_batch_size`.
+    signals = get_signal_identifiers(component, batch_process, parameters)
+    while dbm.hasdata():
+        df = pd.DataFrame(data=data)
+
+        # Run the batch process with 
+        result       = component.run(df, kpis, mappings)
+        aggregations = result.get_aggregations()
+
+    # TODO: write the intermediate results to the database using the batch process ID.
+
+    async with api.send_result(session,
+                               batch_process_id,
+                               aggregations,
+                               True) as resp:
+        logger.log('Sent results.')
+        print(resp)

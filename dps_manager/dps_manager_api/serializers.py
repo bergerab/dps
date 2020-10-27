@@ -228,7 +228,6 @@ class RequiredMappingsRequestSerializer(serializers.Serializer):
 class JobSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
     batch_process = BatchProcessSerializer()
-    database_manager_url = serializers.CharField()
 
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
@@ -243,3 +242,6 @@ class KPIResultSerializer(serializers.Serializer):
 
 class GetKPIsSerializer(serializers.Serializer):
     system_id = serializers.IntegerField() 
+
+class RegisterDatabaseManagerSerializer(serializers.Serializer):
+    url = serializers.CharField()

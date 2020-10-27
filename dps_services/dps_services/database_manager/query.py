@@ -3,31 +3,35 @@ import json
 import dps_services.util as util
 
 class Query:
-    def __init__(self, dataset, signals, interval, aggregation=None):
+    def __init__(self, dataset, signals, interval, aggregation=None, limit=None):
         self.dataset = dataset
         self.signals = signals
         self.interval = interval
         self.aggregation = aggregation
+        self.limit = limit
 
     def __eq__(self, other):
         if isinstance(self, other.__class__):
             return self.dataset == other.dataset and \
                    self.signals == other.signals and \
                    self.interval == other.interval and \
-                   self.aggregation == other.aggregation
+                   self.aggregation == other.aggregation and \
+                   self.limit == other.limit
         return False
 
     def __repr__(self):
-        return f'Query(dataset={self.dataset}, signals={self.signals}, interval={self.interval}, aggregation={self.aggregation})'
+        return f'Query(dataset={self.dataset}, signals={self.signals}, interval={self.interval}, aggregation={self.aggregation}, limit={self.limit})'
 
     def to_dict(self):
         d = {
             'dataset': self.dataset,
             'signals': self.signals,
-            'interval': self.interval.to_dict()
+            'interval': self.interval.to_dict(),
         }
         if self.aggregation:
             d['aggregation'] = self.aggregation
+        if self.limit:
+            d['limit'] = self.limit
         return d
             
 class Interval:
@@ -73,10 +77,11 @@ def load_query_json(query_json):
                 dataset = validator.require('dataset', str)
                 signals = validator.require('signals', list)
                 interval = validator.require('interval', object)
+                limit = validator.require('limit', int, optional=True)
                 with validator.scope('interval'):
                     interval_start = validator.require('start', datetime_format_string=util.DATETIME_FORMAT_STRING)
                     interval_end = validator.require('end', datetime_format_string=util.DATETIME_FORMAT_STRING)
                 aggregation = validator.require('aggregation', str, optional=True,
                                                 one_of=['average', 'count', 'min', 'max'])
-            queries.append(Query(dataset, signals, Interval(interval_start, interval_end), aggregation))
+            queries.append(Query(dataset, signals, Interval(interval_start, interval_end), aggregation, limit))
         return queries
