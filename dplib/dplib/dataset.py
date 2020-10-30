@@ -39,14 +39,23 @@ class Dataset:
     def get(self, name):
         return self.dataset[name]
 
+    def count(self):
+        return sum([len(series) for series in self.dataset.values()])
+
     def to_dataframe(self):
         if len(self.dataset.items()) == 0:
             return pd.DataFrame()
         data = {
             key: value.series for key, value in self.dataset.items()
         }
-        index = list(self.dataset.values())[0].series.index
-        return pd.DataFrame(data=data, index=index)
+        values = list(self.dataset.values())
+        max_index_len = len(values[0].series.index)
+        max_index = values[0].series.index
+        for value in values:
+            if len(value.series.index) > max_index_len:
+                max_index_len = len(value.series.index)
+                max_index = value.series.index
+        return pd.DataFrame(data=data, index=max_index)
 
     def __eq__(self, other):
         for name, series in self.dataset.items():

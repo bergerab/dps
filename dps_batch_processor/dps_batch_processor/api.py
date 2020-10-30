@@ -73,6 +73,9 @@ class DatabaseManagerAPIClient(APIClient):
     async def send_data(self, session, dataset_name, dataset):
         signals      = list(dataset.dataset.keys())
         df           = dataset.to_dataframe()
+        # print(df)
+        # print('COUNT', dataset.count())
+        # print(list(dataset.get('Average B')))
         samples      = []        
         times        = [ddt.format_datetime(time) for time in df.index]
         for index, row in df.iterrows():
@@ -81,7 +84,7 @@ class DatabaseManagerAPIClient(APIClient):
                 batch.append(row[signal])
             samples.append(batch)
 
-        return await self.post(session, self.INSERT_POSTFIX, {
+        data = {
             "inserts": [
                 {
                     "dataset": dataset_name,
@@ -90,4 +93,7 @@ class DatabaseManagerAPIClient(APIClient):
                     "times": times,
                 }
             ]
-        })
+        }
+
+        # print('DFOIJWEF', data)
+        return await self.post(session, self.INSERT_POSTFIX, data)

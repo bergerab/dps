@@ -68,8 +68,10 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     # Extract the signal/parameter mappings from the `batch_process`.
     # Then, evaluate the parameter strings as DPL (Python) source code
     # and yield a Python object (typically a number).
-    mappings   = get_mappings(batch_process)
+    mappings   = get_mappings(batch_process) # Gets the signal names in the mapping
     parameters = get_system_parameters(system)
+    mapped_signals = [value for id, value in mappings.items() if id not in parameters]
+    print('MAPPED', mapped_signals)
     evaluate_parameters(mappings, parameters)
 
     # Create a `dplib.Component` that can compute any KPI for the entire system.
@@ -88,8 +90,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     samples            = []
     times              = []
     result             = None
+    inter_results      = dp.Dataset() # Intermediate results
     while dbm_has_data:
-        data = await dbc.get_data(session, '', signals,
+        data = await dbc.get_data(session, '', mapped_signals,
                      current_start_time, end_time,
                      limit=max_batch_size)
         if 'results' not in data:
@@ -139,12 +142,12 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             windowed_series = [series.series] # Extract the pandas series from the `dp.Series`
             times   = []
             samples = []
-        
+
         # Convert the response from the Database Manager server into a `pd.DataFrame`.
         for window in windowed_series:
             df_data = defaultdict(list)
             for batch in window:
-                for i, signal in enumerate(signals):
+                for i, signal in enumerate(mapped_signals):
                     df_data[signal].append(batch[i])
 
             # Create a DataFrame `df` based on the data in the window.
@@ -156,23 +159,29 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             aggregations = result.get_aggregations()
             logger.log('Aggregations', aggregations)
 
-            # Send the intermediate results to the database.
-            logger.log('Sending intermediate results.')                                    
-            resp = await dbc.send_data(session, 'batch_process' + str(batch_process_id), values)
-            logger.log(resp)                        
-            resp = await api.send_result(session,
-                                         batch_process_id,
-                                         result.get_aggregations(),
-                                         False)
-            logger.log(resp)
-            
-            
+            # Send the intermediate results to the database if we have accumulated more
+            # or equal to the max batch size.
+            inter_results = inter_results.merge(values)
+            if inter_results.count() >= max_batch_size:
+                await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result)
+                inter_results = dp.Dataset()
 
-    # TODO: write the intermediate results to the database using the batch process ID.
+    # Write any remaining intermediate results
+    await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result)
     
     resp = await api.send_result(session,
                           batch_process_id,
                           result.get_aggregations(),
                           True)
     logger.log('Finished processing job.')
+    logger.log(resp)
+
+async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result):
+    logger.log('Sending intermediate results.')                                    
+    resp = await dbc.send_data(session, 'batch_process' + str(batch_process_id), inter_results)
+    logger.log(resp)
+    resp = await api.send_result(session,
+                                 batch_process_id,
+                                 result.get_aggregations(),
+                                 False)
     logger.log(resp)
