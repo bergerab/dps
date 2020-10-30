@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 
 from sqlalchemy import and_
@@ -48,48 +49,30 @@ class TimescaleDBDataStore(dbm.DataStore):
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
         with dbc.scope() as session:
-            q = self.time_filter(session.query(SignalData), interval, dataset_id).order_by(SignalData.time.asc())
+            q = self.time_filter(session.query(SignalData), interval, dataset_id, signal_ids).order_by(SignalData.time.asc())
             if limit:
                 q = q.limit(limit)
             signal_datas = q.all()
-            print(limit, signal_datas)
 
         if not signal_datas:
             return
 
         buffer = []
-        time = signal_datas[0].time
+        previous_time = signal_datas[0].time
         for i, signal_data in enumerate(signal_datas):
-            is_last = i == len(signal_datas) - 1
             # If the time has changed, or if this is the last batch,
             # flush the buffer (call result.add(frame, time) with it)
-            if signal_data.time != time or is_last:
-                if is_last:
-                    buffer.append(signal_data)
-                    
-                frame = []
-                for signal_id in signal_ids:
-                    # Search if the signal is present in the buffer, if it is, that
-                    # means there is a value we must send for that signal.
-                    # Otherwise if the signal isn't present, send a 0.
-                    signal_existed = False
-                    for signal in buffer: # If the signal is in the buffer (there was data for this signal at this time)
-                        if signal.signal_id == signal_id:
-                            frame.append(signal.value)
-                            signal_existed = True 
-                            break
-                    if not signal_existed:
-                        frame.append(0)
-                result.add(frame, time)
-                time = signal_data.time
-                
-                if not is_last:
-                    buffer = [signal_data]
+            if signal_data.time != previous_time:
+                flush_buffer(result, buffer, previous_time, signal_ids)
+                previous_time = signal_data.time
+                buffer = [signal_data]
             else:
                 # When the time value doesn't change since the last one,
                 # append the data to the buffer (so it can all be sent
                 # with the same time value).
                 buffer.append(signal_data)
+        if buffer:
+            flush_buffer(result, buffer, previous_time, signal_ids)
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
@@ -112,14 +95,32 @@ class TimescaleDBDataStore(dbm.DataStore):
         with dbc.scope() as session:
             for signal_id, signal_name in zip(signal_ids, signal_names):
                 signal_datas = session.query(f(SignalData.value)).filter(SignalData.signal_id == signal_id)
-                result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id).scalar())
+                result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id, signal_ids).scalar())
 
-    def time_filter(self, query, interval, dataset_id):
-        return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end))
+    def time_filter(self, query, interval, dataset_id, signal_ids):
+        return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
 
     # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):
         dbc.delete_dataset(dataset_name)
+
+# A helper function used for `fetch_signals`
+def flush_buffer(result, buffer, previous_time, signal_ids):
+    frame = []
+    for signal_id in signal_ids:
+        # Search if the signal is present in the buffer, if it is, that
+        # means there is a value we must send for that signal.
+        # Otherwise if the signal isn't present, send a 0.
+        signal_existed = False
+        for signal in buffer: # If the signal is in the buffer (there was data for this signal at this time)
+            if signal.signal_id == signal_id:
+                frame.append(signal.value)
+                signal_existed = True 
+                break
+        if not signal_existed:
+            frame.append(0)
+    result.add(frame, previous_time)
+    
         
 def make_app():
     global dbc
@@ -128,6 +129,6 @@ def make_app():
 
 if __name__ == '__main__':
     try:
-        make_app().run(debug=DEBUG, port=3001)
+        make_app().run(debug=DEBUG, port=3002)
     finally:
         dbc.engine.dispose()

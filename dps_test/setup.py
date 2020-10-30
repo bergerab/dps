@@ -7,11 +7,11 @@ setup(
     license='MIT',
     description='Integration tests for DPS',
     long_description=open('README.org').read(),
-    entry_points = {
-        'console_scripts': ['dps_test=dps_test:cli'],
-    },
     url='https://github.com/bergerab/dps',
     author='Adam Berger',
     author_email='bergerab@icloud.com',
+    entry_points = {
+        'console_scripts': ['dps_test=dps_test:cli'],
+    },
     install_requires=['click', 'requests'],    
 )

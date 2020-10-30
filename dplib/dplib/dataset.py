@@ -39,6 +39,15 @@ class Dataset:
     def get(self, name):
         return self.dataset[name]
 
+    def to_dataframe(self):
+        if len(self.dataset.items()) == 0:
+            return pd.DataFrame()
+        data = {
+            key: value.series for key, value in self.dataset.items()
+        }
+        index = list(self.dataset.values())[0].series.index
+        return pd.DataFrame(data=data, index=index)
+
     def __eq__(self, other):
         for name, series in self.dataset.items():
             if name not in other.dataset:

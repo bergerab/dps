@@ -139,7 +139,7 @@ def pop_job(request):
         job_obj = Object.objects.filter(kind=JobAPI.kind).order_by('created_at').first()
         if not job_obj:
             return JsonResponse({}, status=404)
-        value = json.loads(job_obj)
+        value = json.loads(job_obj.value)
         response = JsonResponse(
             value,
         )

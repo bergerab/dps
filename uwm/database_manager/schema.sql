@@ -1,6 +1,6 @@
 CREATE TABLE datasets(
     dataset_id INT GENERATED ALWAYS AS IDENTITY,
-    name       VARCHAR(200) NOT NULL,
+    name       VARCHAR(200),
     PRIMARY KEY (dataset_id)
 );
 

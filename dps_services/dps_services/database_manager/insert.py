@@ -49,7 +49,7 @@ def load_insert_json(insert_json):
         sub_insert_jsons = validator.require('inserts', list, default=[])
         for i, sub_insert_json in enumerate(sub_insert_jsons):
             with validator.scope_list('inserts', i):
-                dataset = validator.require('dataset', str)
+                dataset = validator.require('dataset', str, optional=True)
                 signals = validator.require('signals', list)
                 samples = validator.require('samples', list)
                 times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING)

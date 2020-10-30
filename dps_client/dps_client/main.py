@@ -3,10 +3,10 @@ import requests
 
 from datetime import datetime
 
-from google.protobuf.timestamp_pb2 import Timestamp
-from google.protobuf.json_format import MessageToJson
+# from google.protobuf.timestamp_pb2 import Timestamp
+# from google.protobuf.json_format import MessageToJson
 
-from .insert_pb2 import InsertRequest, Samples, Batch
+# from .insert_pb2 import InsertRequest, Samples, Batch
 
 
 DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'
@@ -108,12 +108,13 @@ class Client:
             return requests.post(url, data=pb_string)
         elif self.protocol == 'json':
             o = self._flush()
-            print('FLUSH ', o)            
-            return requests.post(url, json={
+            response = requests.post(url, json={
                 'inserts': [
                     o
                 ]
             })
+            if response.status_code != 200:
+                raise Exception(response.text)
         else:
             raise Exception(f'Invalid DPS Client protocol "{self.protocol}"')
 

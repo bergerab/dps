@@ -1,5 +1,7 @@
 import re
 
+import dplib as dp
+
 def url_is_valid(url):
     regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
@@ -12,9 +14,9 @@ def url_is_valid(url):
 
 def make_component(system):
     '''
-    Creates a `dplib.Component` from a system description.
+    Creates a `dp.Component` from a system description.
     '''
-    component = dplib.Component('Temp')
+    component = dp.Component('Temp')
     for kpi in system['kpis']:
         identifier = kpi['identifier']
         if identifier == '':
@@ -22,7 +24,7 @@ def make_component(system):
         component.add(kpi['name'], kpi['computation'], id=identifier)
     return component
 
-def get_parameter_identifiers(system):
+def get_system_parameters(system):
     '''
     Returns all parameter identifiers for the `system`.
     '''
@@ -34,7 +36,7 @@ def get_parameter_identifiers(system):
         parameters.append(identifier)
     return parameters
 
-def get_signal_identifiers(component, batch_proces, parameters):
+def get_signal_identifiers(component, batch_process, parameters):
     '''
     Returns the identifier names of each signal required for the `batch_process`.
     '''
@@ -63,7 +65,7 @@ def evaluate_parameters(mappings, parameters):
     for key in mappings:
         if key in parameters:
             value = mappings[key]
-            mappings[key] = dplib.DPL().compile(value).run(mappings)
+            mappings[key] = dp.DPL().compile(value).run(mappings)
 
 def dict_to_mappings(d):
     '''
@@ -74,7 +76,7 @@ def dict_to_mappings(d):
     for key in d:
         results.append({
             'key': key,
-            'value': aggregations[key],
+            'value': d[key],
         })
     return results
     

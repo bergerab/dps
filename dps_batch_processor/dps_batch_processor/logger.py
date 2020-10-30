@@ -8,11 +8,11 @@ class Logger:
         self.verbose = verbose
 
     def _print(self, *args):
-        print(datetime.now(), ': ', *args)
+        print('DPS BP', str(datetime.now()) + ':', *args)
             
-    def error(*args):
+    def error(self, *args):
         self._print(*args)        
 
-    def log(*args):
-        if verbose:
+    def log(self, *args):
+        if self.verbose:
             self._print(*args)

@@ -74,7 +74,7 @@ def load_query_json(query_json):
         sub_query_jsons = validator.require('queries', list, default=[])
         for i, sub_query_json in enumerate(sub_query_jsons):
             with validator.scope_list('queries', i):
-                dataset = validator.require('dataset', str)
+                dataset = validator.require('dataset', str, optional=True)
                 signals = validator.require('signals', list)
                 interval = validator.require('interval', object)
                 limit = validator.require('limit', int, optional=True)

@@ -43,7 +43,7 @@ class KPI:
         self.dpl = DPL()
         self.dpl.compile(code)
 
-    def run(self, name, input, mapping={}, parameters=[], previous_result=None):
+    def run(self, name, input, mapping={}, parameters=[], previous_result=None, cout=None):
         '''
         Create a mapping from KPI inputs to Dataset column names, then execute the KPI immediately.
         '''
