@@ -15,7 +15,8 @@ from .serializers import \
     JobSerializer, \
     ResultsSerializer, \
     GetKPIsSerializer, \
-    RegisterDatabaseManagerSerializer
+    RegisterDatabaseManagerSerializer, \
+    BatchProcessRequestSerializer
 
 from dplib import Component, KPI
 
@@ -164,11 +165,41 @@ def get_kpis(request):
         
     return JsonResponse({ 'kpis': kpis })
 
+@csrf_exempt
 def batch_process_results(request):
-    objs = Object.objects.filter(kind=BatchProcessAPI.kind) \
-                         .order_by('-created_at').all()
+    serializer = BatchProcessRequestSerializer(data=json.loads(request.body))
+    if not serializer.is_valid():
+        return JsonResponse(serializer.errors, status=400)
+    data = serializer.validated_data
+    page_size = data['page_size']
+    page_number = data['page_number']
+    offset = page_size * page_number
+    limit = page_size
     
-
+    count = Object.objects.filter(kind=BatchProcessAPI.kind).count()
+    objs = Object.objects.filter(kind=BatchProcessAPI.kind) \
+                         .order_by('-created_at').all()[offset:offset+limit]
+    results = []
+    for obj in objs:
+        # TODO: get result for batch_process
+        result_obj = Object.objects.filter(kind=ResultsAPI.kind, ref=obj.object_id).first()
+        # If no result, make one
+        if result_obj:
+            result = json.loads(result_obj.value)
+        else:
+            result = {
+                'batch_process_id': obj.object_id,
+                'results': [],
+                'status': 3, # Queued
+            }
+        result['batch_process'] = json.loads(obj.value)
+        results.append(result)
+    return JsonResponse({
+        'total': count,
+        'page': page_number,
+        'data': results,
+    })
+        
 def info(request):
     return JsonResponse({
         'type': 'dps-manager',

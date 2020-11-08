@@ -222,6 +222,7 @@ class ResultsSerializer(serializers.Serializer):
     # 0 = error
     # 1 = running
     # 2 = complete
+    # 3 = queued
     status = serializers.IntegerField()
     message = serializers.CharField(required=False)
     time = serializers.CharField(required=False) # The latest time that was processed
@@ -245,3 +246,7 @@ class GetKPIsSerializer(serializers.Serializer):
 
 class RegisterDatabaseManagerSerializer(serializers.Serializer):
     url = serializers.CharField()
+
+class BatchProcessRequestSerializer(serializers.Serializer):
+    page_size = serializers.IntegerField()
+    page_number = serializers.IntegerField()

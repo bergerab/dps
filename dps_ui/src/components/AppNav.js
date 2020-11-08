@@ -43,6 +43,7 @@ import BatchProcessPage from './BatchProcessPage';
 import Home from './Home';
 
 import EntityPage from './EntityPage';
+import ResultsPage from './Results';
 
 import { list } from '../api';
 import util from '../util';
@@ -272,36 +273,8 @@ class MiniDrawer extends React.Component {
               <Route
                 path="/bp"
                 render={props =>
-		        (<EntityPage
-                         key={'Batch Process'}
-                         readOnly={true}
-		           {...props}
-		           fields={[
-                             ['Created At', bp => {
-                               return util.dateToPrettyDate(new Date(bp.created_at));
-                             }],
-			     ['System', bp => {
-                               return bp.system.name;
-                             }],
-                             ['KPIs', bp => {
-                               return (<span>{bp.kpis
-                                              .map(kpi => <Chip
-                                                            key={kpi}
-                                                            label={kpi}
-                                                            style={{ margin: '5px' }}/>)}
-                                       </span>)
-                             }],
-                             ['Start Time', bp => {
-                               return util.dateToPrettyDate(util.stringToUTCDate(bp.interval.start));
-                             }],
-                             ['End Time', bp => {
-                               return util.dateToPrettyDate(util.stringToUTCDate(bp.interval.end));
-                             }],
-                           ]}
-		           entityUrl="batch_process"
-		           entityName="Batch Process"
-                         />)}
-	      />
+		        (<ResultsPage {...props} />)}
+              />
 
               <Route
                 path="/job"
