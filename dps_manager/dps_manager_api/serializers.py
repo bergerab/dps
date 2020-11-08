@@ -225,14 +225,11 @@ class ResultsSerializer(serializers.Serializer):
     # 3 = queued
     status = serializers.IntegerField()
     message = serializers.CharField(required=False)
-    time = serializers.CharField(required=False) # The latest time that was processed
+    processed_samples = serializers.IntegerField(required=False)
+    total_samples = serializers.IntegerField(required=False)
 
     def validate(self, data):
         # TODO: Make sure batch_process_id refers to a valid object
-        if 'time' in data and not util.validate_datetime(data['time']):
-            raise serializers.ValidationError({
-                'time': f'Time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
-            })
         return data
 
 class KPIResultSerializer(serializers.Serializer):

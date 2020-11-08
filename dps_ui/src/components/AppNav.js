@@ -214,12 +214,6 @@ class MiniDrawer extends React.Component {
                   <ListItemText primary="Batch Processes" />
                 </ListItem>
               </Link>
-              <Link to="/job" style={linkStyle}>
-                <ListItem button>
-                  <ListItemIcon><WorkIcon/></ListItemIcon>
-                  <ListItemText primary="Jobs" />
-                </ListItem>
-              </Link>
             </List>
             <Divider />
             <List>
@@ -275,41 +269,6 @@ class MiniDrawer extends React.Component {
                 render={props =>
 		        (<ResultsPage {...props} />)}
               />
-
-              <Route
-                path="/job"
-                render={props =>
-		        (<EntityPage
-                           key={'Job'}
-                           readOnly={true}
-		           {...props}
-		           fields={[
-                             ['Created At', j => {
-                               return util.dateToPrettyDate(new Date(j.created_at));
-                             }],
-			     ['System', j => {
-                               return j.batch_process.system.name;
-                             }],
-                             ['KPIs', j => {
-                               return (<span>{j.batch_process.kpis
-                                              .map(kpi => <Chip
-                                                            key={kpi}
-                                                            label={kpi}
-                                                            style={{ margin: '5px' }}/>)}
-                                       </span>)
-                             }],
-                             ['Start Time', j => {
-                               return util.dateToPrettyDate(util.stringToUTCDate(j.batch_process.interval.start));
-                             }],
-                             ['End Time', j => {
-                               return util.dateToPrettyDate(util.stringToUTCDate(j.batch_process.interval.end));
-                             }],
-                           ]}
-		           entityUrl="job"
-		           entityName="Job"
-                         />)}
-	      />
-              
               {this.state.systems.map(system => (
                 <Route
                   key={system.system_id}

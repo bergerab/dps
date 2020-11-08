@@ -25,7 +25,7 @@ from .api import DPSManagerAPIClient, \
 @click.option('--dps-manager-url',      required=True,  help='The URL of the DPS Manager.')
 @click.option('--database-manager-url', required=True,  help='The URL of the DPS Database Manager.')
 @click.option('--polling-interval',     default=5,      help='The number of seconds to wait between checking for jobs.')
-@click.option('--max-batch-size',       default=100000, help='The maximum number of datapoints to process in one batch.')
+@click.option('--max-batch-size',       default=10000, help='The maximum number of datapoints to process in one batch.')
 @click.option('--interval',             default=5,      help='The number of seconds to wait between checking for jobs.')
 @click.option('--verbose',                              help='Show the progress of jobs in the command line.')
 def cli(dps_manager_url, database_manager_url, polling_interval, max_batch_size, interval=5, verbose=False):
@@ -72,15 +72,6 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     start_time       = ddt.parse_datetime(interval['start'])
     end_time         = ddt.parse_datetime(interval['end'])
 
-    try:
-        result = await api.send_result(session,
-                                       batch_process_id,
-                                       {},
-                                       STATUS_RUNNING)
-        result_id = result['result_id']
-    except aiohttp.client_exceptions.ClientConnectorError:
-        logger.error('Failed to connect to DPS Database Manager server when sending results.')
-
     # Extract the signal/parameter mappings from the `batch_process`.
     # Then, evaluate the parameter strings as DPL (Python) source code
     # and yield a Python object (typically a number).
@@ -106,6 +97,34 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     times              = []
     result             = None
     inter_results      = dp.Dataset() # Intermediate results
+    total_samples      = 0 # A counter to keep track of the number of samples to process    
+    processed_samples  = 0 # A counter to keep track of the number of samples that we have processed
+
+    try:
+        logger.log('Getting sample count.')
+        data = await dbc.get_count(session, '', mapped_signals,
+                                  current_start_time, end_time)
+        if 'results' in data:
+            total_samples = sum(data['results'][0]['values'])
+            logger.log(f'Got total samples (was {total_samples}).')
+        else:
+            logger.error('"results" was not present in result from Database Manager')
+            return
+    except aiohttp.client_exceptions.ClientConnectorError:
+        logger.error('Failed connecting to DPS Database Manager server.')
+        return
+
+    try:
+        temp_result = await api.send_result(session,
+                                       batch_process_id,
+                                       {},
+                                       STATUS_RUNNING,
+                                       processed_samples=processed_samples,
+                                       total_samples=total_samples)
+        result_id = temp_result['result_id']
+    except aiohttp.client_exceptions.ClientConnectorError:
+        logger.error('Failed to connect to DPS Database Manager server when sending results.')
+
     while dbm_has_data:
         try:
             data = await dbc.get_data(session, '', mapped_signals,
@@ -114,7 +133,6 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         except aiohttp.client_exceptions.ClientConnectorError:
             logger.error('Failed connecting to DPS Database Manager server.')
             return
-
         # If no results are returned, print it as an error and return.
         if 'results' not in data:
             logger.error(data)
@@ -122,6 +140,8 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         results = data['results'][0]
         samples += results['samples']
         times   += [ddt.parse_datetime(time) for time in results['times']]
+        
+        processed_samples += len(results['samples'])
 
         # If there is no more data after this, end the process after this batch completes.
         if len(signals) * len(samples) < max_batch_size:
@@ -132,6 +152,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             # could be missing if the limit is not a multiple of the # of signals.
             samples.pop()
             current_start_time = times.pop()
+            processed_samples -= 1
 
         # If the computation contains a window,
         # and if we have not accumulated enough data to fill the largest window,
@@ -194,7 +215,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                                  result.get_aggregations() if result is not None else {},
                                                  STATUS_ERROR,
                                                  result_id=result_id,
-                                                 message=str(e))
+                                                 message=str(e),
+                                                 processed_samples=processed_samples,
+                                                 total_samples=total_samples)
                     logger.log(f'Sent error that occured when running KPI computation to server: {e}')
                     return
                 except aiohttp.client_exceptions.ClientConnectorError:
@@ -208,21 +231,26 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                 await flush_inter_results(api, logger,
                                           dbc, session,
                                           batch_process_id, inter_results,
-                                          result, result_id)
+                                          result, result_id,
+                                          processed_samples, total_samples)
                 inter_results = dp.Dataset()
 
     # Write any remaining intermediate results
     await flush_inter_results(api, logger,
                               dbc, session,
                               batch_process_id, inter_results,
-                              result, result_id)
+                              result, result_id,
+                              processed_samples, total_samples)
 
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
                                      result.get_aggregations() if result is not None else {},
                                      STATUS_COMPLETE,
-                                     result_id=result_id)
+                                     result_id=result_id,
+                                     processed_samples=processed_samples,
+                                     total_samples=total_samples)
+        
         logger.log(resp)        
     except aiohttp.client_exceptions.ClientConnectorError:
         logger.error('Failed to connect to DPS Database Manager server when sending results.')
@@ -230,7 +258,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     logger.log('Finished processing job.')
     logger.log(resp)
 
-async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result, result_id):
+async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result, result_id, processed_samples, total_samples):
     try:
         logger.log('Sending intermediate results.')        
         resp = await dbc.send_data(session, 'batch_process' + str(batch_process_id), inter_results)
@@ -243,7 +271,9 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
                                      batch_process_id,
                                      result.get_aggregations() if result is not None else {},
                                      STATUS_RUNNING,
-                                     result_id=result_id)
+                                     result_id=result_id,
+                                     processed_samples=processed_samples,
+                                     total_samples=total_samples)
         logger.log(resp)
     except aiohttp.client_exceptions.ClientConnectorError:
         logger.error('Failed to connect to DPS Database Manager server when sending results.')

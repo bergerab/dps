@@ -26,11 +26,12 @@ class APIClient:
 STATUS_ERROR    = 0
 STATUS_RUNNING  = 1
 STATUS_COMPLETE = 2
+STATUS_QUEUED   = 3
 class DPSManagerAPIClient(APIClient):
     POP_JOB_POSTFIX  = 'api/v1/pop_job'
     RESULT_POSTFIX   = 'api/v1/result'
     
-    async def send_result(self, session, batch_process_id, aggregations, status=0, message=None, result_id=None, time=None):
+    async def send_result(self, session, batch_process_id, aggregations, status=0, message=None, result_id=None, processed_samples=None, total_samples=None):
         if status not in [STATUS_ERROR, STATUS_RUNNING, STATUS_COMPLETE]:
             raise Exception('Invalid result status. Must be either STATUS_ERROR=0, STATUS_RUNNING=1, or STATUS_COMPLETE=2.')
         results = dict_to_mappings(aggregations)
@@ -39,10 +40,13 @@ class DPSManagerAPIClient(APIClient):
             'results':          results,
             'status':           status,
         }
-        if time is not None:
-            data['time'] = ddt.format_datetime(time)
+        if processed_samples is not None:
+            data['processed_samples'] = processed_samples
+        if total_samples is not None:
+            data['total_samples'] = total_samples
         if message is not None:
             data['message'] = message
+        print('DATA', data)
         if result_id is None:
             return await self.post(session, self.RESULT_POSTFIX, data)
         else:
@@ -77,6 +81,23 @@ class DatabaseManagerAPIClient(APIClient):
 
         if limit:
             data['queries'][0]['limit'] = limit
+        result = await self.post(session, self.QUERY_POSTFIX, data)
+        return result
+
+    async def get_count(self, session, dataset, signals, start_time, end_time):
+        data = {
+            "queries": [
+                {
+                    "dataset": dataset,
+                    "signals": signals,
+                    "interval": {
+                        "start": ddt.format_datetime(start_time),
+                        "end": ddt.format_datetime(end_time),
+                    },
+                    "aggregation": "count",
+                }
+            ]
+        }
         result = await self.post(session, self.QUERY_POSTFIX, data)
         return result
 

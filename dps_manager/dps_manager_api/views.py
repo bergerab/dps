@@ -5,6 +5,8 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+import dps_services.util as util
+
 from .models import Object
 
 from .object_api import ObjectAPI
@@ -59,6 +61,7 @@ class ResultsAPI(ObjectAPI):
     ref_name = 'batch_process_id'
 
     def after_update(self, data, obj):
+        print(data)
         if data['status'] == 2: # If complete
             bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
             bp = json.loads(bp_obj.value)
@@ -192,7 +195,9 @@ def batch_process_results(request):
                 'results': [],
                 'status': 3, # Queued
             }
-        result['batch_process'] = json.loads(obj.value)
+        bp = json.loads(obj.value)
+        result['batch_process'] = bp
+        result['batch_process_time'] = obj.created_at
         results.append(result)
     return JsonResponse({
         'total': count,
