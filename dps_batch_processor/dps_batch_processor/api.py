@@ -46,7 +46,6 @@ class DPSManagerAPIClient(APIClient):
             data['total_samples'] = total_samples
         if message is not None:
             data['message'] = message
-        print('DATA', data)
         if result_id is None:
             return await self.post(session, self.RESULT_POSTFIX, data)
         else:

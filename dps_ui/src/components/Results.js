@@ -126,7 +126,7 @@ export default class ResultsPage extends React.Component {
               } else if (data.status === 0) { // If error,
                 return (
                   <span style={{ color: 'red' }}>
-                    Error: {data.message}
+                    {data.message}
                   </span>
                   );
               } else if (data.status === 2) { // If complete,

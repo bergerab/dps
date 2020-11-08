@@ -108,7 +108,17 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             total_samples = sum(data['results'][0]['values'])
             logger.log(f'Got total samples (was {total_samples}).')
         else:
-            logger.error('"results" was not present in result from Database Manager')
+            try:
+                resp = await api.send_result(session,
+                                             batch_process_id,
+                                             [],
+                                             STATUS_ERROR,
+                                             message=str(data['error'][-1]),
+                                             processed_samples=processed_samples,
+                                             total_samples=total_samples)
+                logger.log(f'Sent error that occured when getting sample count from Database Manager.')
+            except aiohttp.client_exceptions.ClientConnectorError:
+                logger.error('Failed to connect to DPS Manager server when sending results.')
             return
     except aiohttp.client_exceptions.ClientConnectorError:
         logger.error('Failed connecting to DPS Database Manager server.')
@@ -141,7 +151,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         samples += results['samples']
         times   += [ddt.parse_datetime(time) for time in results['times']]
         
-        processed_samples += len(results['samples'])
+        processed_samples += len(results['samples']) * len(signals)
 
         # If there is no more data after this, end the process after this batch completes.
         if len(signals) * len(samples) < max_batch_size:
@@ -152,7 +162,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             # could be missing if the limit is not a multiple of the # of signals.
             samples.pop()
             current_start_time = times.pop()
-            processed_samples -= 1
+            processed_samples -= len(signals)
 
         # If the computation contains a window,
         # and if we have not accumulated enough data to fill the largest window,

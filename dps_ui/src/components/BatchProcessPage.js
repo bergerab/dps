@@ -61,7 +61,7 @@ export default class BatchProcessPage extends React.Component {
   getParameterIdentifier(name) {
     for (const parameter of this.state.system.parameters) {
       if (parameter.name === name) {
-        console.log(parameter.name, name, parameter.identifier);
+        // console.log(parameter.name, name, parameter.identifier);
         return typeof parameter.identifier === 'string' &&
           parameter.identifier !== '' ? parameter.identifier : parameter.name;
       }
@@ -116,7 +116,7 @@ export default class BatchProcessPage extends React.Component {
   localLoad() {
     const o = JSON.parse(localStorage.getItem(this.getLocalStorageItemName())) || {};
     if (o.kpis !== undefined) {
-      console.log(o.kpis);
+      // console.log(o.kpis);
       const s = new Set();
       // Only add KPIs which exist in the system (for the case where a kpi name has changed since the last load)
       const allKpis = this.state.system.kpis.map(x => x.name);
@@ -175,7 +175,7 @@ export default class BatchProcessPage extends React.Component {
         results[kpi.name] = kpi;
       }
       this.setState({ kpiResults: results });
-      console.log(results);
+      // console.log(results);
     });
   }
 
