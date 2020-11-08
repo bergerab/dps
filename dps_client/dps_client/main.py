@@ -1,7 +1,8 @@
 '''DPS Client - A client for communicating with the DPS Manager, and sending signal data.'''
 import requests
+import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # from google.protobuf.timestamp_pb2 import Timestamp
 # from google.protobuf.json_format import MessageToJson
@@ -22,14 +23,13 @@ class Client:
 
     Protocol can be either "protobuf" or "json"
     '''
-    def __init__(self, url, dataset, protocol='protobuf'):
+    def __init__(self, url, dataset='', protocol='json'):
         self.url = _normalize_url(url)
         self.dataset = dataset
         self.batches = []
         self.protocol = protocol
 
     def make_batch(self, time=None):
-        
         '''Create a :class:`BatchClient` for sending multiple signal values
         at the same time (more efficient and organizes the time values for ease of processing).
         '''
@@ -38,6 +38,46 @@ class Client:
         batch = BatchClient(self, time)
         self.batches.append(batch)
         return batch
+
+    def send_csv(self, filepath, time_column, batch_size=1000, start_time=None, timestep_units='s', verbose=False, columns=None):
+        '''
+        Sends the CSV to the client's URL in batches.
+
+        If `start_time` is specified, it is assumed that the `time_column` represents a relative time
+        (e.g. time since the data collection began). The `start_time` will be used to create absolute timestamps
+        where the `time_column` is delta time.
+
+        Otherwise, it is assumed `time_column` is an absolute date.
+
+        `columns` allows for only sending certain columns to the database (set it to a list of strings where the strings match
+        column names).
+        '''
+        if start_time is None and timestep_units is not None:
+            raise Exception('`start_time` is required when specifying `timestep_units`.')
+        
+        if start_time is None:
+            df = pd.read_csv(filepath, parse_dates=[time_column])
+        else:
+            df = pd.read_csv(filepath)
+            
+        row_count = len(df)
+        sent_count = 0.0
+
+        for _, row in df.iterrows():
+            if start_time is None:
+                batch = self.make_batch(row[time_column])
+            else:
+                offset = timestep_units_to_timedelta(row[time_column], timestep_units)
+                batch = self.make_batch(start_time + offset)
+            for key in df:
+                if key != time_column or (columns is not None and key not in columns):
+                    batch.add(key, row[key])
+            if len(self.batches) >= batch_size:
+                sent_count += len(self.batches)
+                self.send()
+                if verbose:
+                    print(f'send_csv: {(sent_count / row_count) * 100}% complete.')
+        self.send()
 
     def _flush(self, datetimes_to_string=True):
         '''
@@ -61,7 +101,6 @@ class Client:
                     batch.append(0.0)
             batches.append(batch)
 
-
         times = []
         for batch in self.batches:
             if datetimes_to_string:                
@@ -80,7 +119,6 @@ class Client:
         }
 
     def send(self):
-
         url = self.url + 'insert'
         
         if self.protocol == 'protobuf':
@@ -140,3 +178,11 @@ def connect(url, dataset):
     :returns: A :class:`Client`
     '''
     return Client(url, dataset)
+
+def timestep_units_to_timedelta(n, units):
+    if units == 's':
+        return timedelta(seconds=n)
+    elif units == 'ms':
+        return timedelta(milliseconds=n)
+    else:
+        raise Exception(f'Unsupported timestep unit of "{units}".')

@@ -120,7 +120,6 @@ def flush_buffer(result, buffer, previous_time, signal_ids):
         if not signal_existed:
             frame.append(0)
     result.add(frame, previous_time)
-    
         
 def make_app():
     global dbc

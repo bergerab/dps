@@ -204,21 +204,6 @@ class BatchProcessSerializer(serializers.Serializer):
                 'mappings': errors,
             })
             
-            
-        return data
-
-# Batch Process Progress
-class ProgressSerializer(serializers.Serializer):
-    batch_process_id = serializers.IntegerField()
-    state = serializers.CharField()
-    time = serializers.CharField()
-
-    def validate(self, data):
-        # TODO: Make sure batch_process_id refers to a valid object
-        if not util.validate_datetime(data['time']):
-            raise serializers.ValidationError({
-                'time': f'Time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
-            })
         return data
 
 class RequiredMappingsRequestSerializer(serializers.Serializer):
@@ -232,7 +217,22 @@ class JobSerializer(serializers.Serializer):
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
     results = MappingSerializer(many=True)
-    complete = serializers.BooleanField()
+    
+    # Statuses:
+    # 0 = error
+    # 1 = running
+    # 2 = complete
+    status = serializers.IntegerField()
+    message = serializers.CharField(required=False)
+    time = serializers.CharField(required=False) # The latest time that was processed
+
+    def validate(self, data):
+        # TODO: Make sure batch_process_id refers to a valid object
+        if 'time' in data and not util.validate_datetime(data['time']):
+            raise serializers.ValidationError({
+                'time': f'Time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
+            })
+        return data
 
 class KPIResultSerializer(serializers.Serializer):
     system_id = serializers.IntegerField()

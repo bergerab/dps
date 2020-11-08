@@ -54,7 +54,7 @@ class DatabaseClient:
         if signal:
             return signal
         # If the signal is still not found, error.
-        raise Exception(f'Attempted to find signal "{signal_name}" in cache, but could not find it.')
+        raise Exception(f'Signal "{signal_name}" does not exist.')
 
     def get_cached_dataset(self, dataset_name):
         def lookup():
@@ -70,7 +70,7 @@ class DatabaseClient:
         if dataset:
             return dataset
         # If the signal is still not found, error.
-        raise Exception(f'Attempted to find dataset "{dataset_name}" in cache, but could not find it.')
+        raise Exception(f'Dataset "{dataset_name}" does not exist.')
 
     def get_dataset_by_name(self, dataset_name):
         for dataset in self.datasets:

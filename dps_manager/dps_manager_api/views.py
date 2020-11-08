@@ -11,7 +11,6 @@ from .object_api import ObjectAPI
 from .serializers import \
     SystemSerializer, \
     BatchProcessSerializer, \
-    ProgressSerializer, \
     RequiredMappingsRequestSerializer, \
     JobSerializer, \
     ResultsSerializer, \
@@ -43,13 +42,6 @@ class BatchProcessAPI(ObjectAPI):
                                   'batch_process': data,
                               }))
 
-class ProgressAPI(ObjectAPI):
-    serializer = ProgressSerializer
-    kind = 'Progress'
-    id_name = 'progress_id'
-    api_name = 'progress'
-    plural_api_name = 'progresses'
-
 class JobAPI(ObjectAPI):
     serializer = JobSerializer
     kind = 'Job'
@@ -66,7 +58,7 @@ class ResultsAPI(ObjectAPI):
     ref_name = 'batch_process_id'
 
     def after_update(self, data, obj):
-        if data['complete']:
+        if data['status'] == 2: # If complete
             bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
             bp = json.loads(bp_obj.value)
             system_id = bp['system_id']
@@ -171,6 +163,11 @@ def get_kpis(request):
             SEEN.add(obj.name)        
         
     return JsonResponse({ 'kpis': kpis })
+
+def batch_process_results(request):
+    objs = Object.objects.filter(kind=BatchProcessAPI.kind) \
+                         .order_by('-created_at').all()
+    
 
 def info(request):
     return JsonResponse({

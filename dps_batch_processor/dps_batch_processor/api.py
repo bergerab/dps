@@ -19,25 +19,34 @@ class APIClient:
         resp = await session.post(self.url + postfix, json=data)
         return json.loads(await resp.text())
 
+    async def put(self, session, postfix, id, data):
+        resp = await session.put(self.url + postfix + '/' + str(id), json=data)
+        return json.loads(await resp.text())
+
+STATUS_ERROR    = 0
+STATUS_RUNNING  = 1
+STATUS_COMPLETE = 2
 class DPSManagerAPIClient(APIClient):
     POP_JOB_POSTFIX  = 'api/v1/pop_job'
     RESULT_POSTFIX   = 'api/v1/result'
-    PROGRESS_POSTFIX = 'api/v1/progress'
     
-    async def send_result(self, session, batch_process_id, aggregations, complete):
+    async def send_result(self, session, batch_process_id, aggregations, status=0, message=None, result_id=None, time=None):
+        if status not in [STATUS_ERROR, STATUS_RUNNING, STATUS_COMPLETE]:
+            raise Exception('Invalid result status. Must be either STATUS_ERROR=0, STATUS_RUNNING=1, or STATUS_COMPLETE=2.')
         results = dict_to_mappings(aggregations)
-        return await self.post(session, self.RESULT_POSTFIX, {
+        data = {
             'batch_process_id': batch_process_id,
             'results':          results,
-            'complete':         complete,            
-        })
-
-    async def send_progress(self, session, batch_process_id, time, state):
-        return await self.post(session, PROGRESS_POSTFIX, {
-            'batch_process_id': batch_process_id,
-            'time':             time,
-            'state':            str(state),
-        })
+            'status':           status,
+        }
+        if time is not None:
+            data['time'] = ddt.format_datetime(time)
+        if message is not None:
+            data['message'] = message
+        if result_id is None:
+            return await self.post(session, self.RESULT_POSTFIX, data)
+        else:
+            return await self.put(session, self.RESULT_POSTFIX, result_id, data)
 
     async def pop_job(self, session):
         return await self.get(session, self.POP_JOB_POSTFIX)
@@ -68,14 +77,12 @@ class DatabaseManagerAPIClient(APIClient):
 
         if limit:
             data['queries'][0]['limit'] = limit
-        return await self.post(session, self.QUERY_POSTFIX, data)
+        result = await self.post(session, self.QUERY_POSTFIX, data)
+        return result
 
     async def send_data(self, session, dataset_name, dataset):
         signals      = list(dataset.dataset.keys())
         df           = dataset.to_dataframe()
-        # print(df)
-        # print('COUNT', dataset.count())
-        # print(list(dataset.get('Average B')))
         samples      = []        
         times        = [ddt.format_datetime(time) for time in df.index]
         for index, row in df.iterrows():
@@ -83,6 +90,10 @@ class DatabaseManagerAPIClient(APIClient):
             for signal in signals:
                 batch.append(row[signal])
             samples.append(batch)
+
+        # Don't bother sending if there is no data to send.
+        if not samples:
+            return
 
         data = {
             "inserts": [
@@ -95,5 +106,4 @@ class DatabaseManagerAPIClient(APIClient):
             ]
         }
 
-        # print('DFOIJWEF', data)
         return await self.post(session, self.INSERT_POSTFIX, data)

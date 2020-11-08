@@ -7,7 +7,6 @@ from .object_api import Router
 router = Router()
 router.add(views.SystemAPI)
 router.add(views.BatchProcessAPI)
-router.add(views.ProgressAPI)
 router.add(views.JobAPI)
 router.add(views.ResultsAPI)
 
