@@ -31,6 +31,7 @@ import SaveAlt from '@material-ui/icons/SaveAlt';
 import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 
+
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
   Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
@@ -68,7 +69,7 @@ export default class ResultsPage extends React.Component {
            loading={this.state.loading}>
         <MaterialTable
           icons={tableIcons}
-          title="Remote Data Preview"
+          title="Batch Processes"
           tableRef={tableRef}
           options={{
             search: false,
@@ -141,8 +142,17 @@ export default class ResultsPage extends React.Component {
                   </span>
                 );
               }
-            }},                   
-            
+            }},
+            {
+              title: '',
+              render: data => {
+                return (
+                  <Button variant="outlined" color="primary" style={{ marginRight: '10px' }}>
+                    View
+                  </Button>
+                )
+              }
+            }
           ]}
           data={query =>
                 new Promise((resolve, reject) => {

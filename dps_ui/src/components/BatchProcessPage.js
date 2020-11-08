@@ -224,8 +224,6 @@ export default class BatchProcessPage extends React.Component {
                   }}/>,
         kpi.name,
         <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
-        this.getKPIResultByName(kpi.name) !== undefined ? moment(this.getKPIResultByName(kpi.name).created_at).format('LL LTS') : '',
-        this.getKPIResultByName(kpi.name) !== undefined ? this.getKPIResultByName(kpi.name).value : '',
       ]
     });
 
@@ -263,30 +261,28 @@ export default class BatchProcessPage extends React.Component {
                                                          });
                                                        }
                                                      }}
-                                           />, 'KPI', 'Description', 'Last Run', 'Result'];
+                                           />, 'KPI', 'Description'];
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
-                                                                        header={makeKPITableHeader(true)}
-                                             rows={[1,2,3,4,5].map((_, i) => [
-                                               <CheckBox checked={false} color="primary" key={'cb' + i} />,
-                                               <Skeleton key={'s1' + i} />,
-                                               <Skeleton key={'s2' + i} />,
-                                               <Skeleton key={'s3' + i} />,
-                                               <Skeleton key={'s4' + i} />,
-                                             ])}/>) :
+             header={makeKPITableHeader(true)}
+             rows={[1,2,3,4,5].map((_, i) => [
+               <CheckBox checked={false} color="primary" key={'cb' + i} />,
+               <Skeleton key={'s1' + i} />,
+               <Skeleton key={'s2' + i} />,
+             ])}/>) :
           (<PrettyTable
-                                               header={makeKPITableHeader(false)}
-                                               rows={rows}
-                                />);
+             header={makeKPITableHeader(false)}
+             rows={rows}
+           />);
 
     const description =
           this.state.system.description !== '' &&
           this.state.system.description !== null &&
           this.state.system.description !== undefined ?
           (<Grid item xs={12}>
-                                                                                                       <div className="system-description" dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
-                                                                                                     </Grid>) :
+             <div className="system-description" dangerouslySetInnerHTML={{ __html: this.state.system.description }}></div>
+           </Grid>) :
           null;
 
     const hasStartTimeError = this.state.intervalErrors !== null &&
