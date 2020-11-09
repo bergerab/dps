@@ -38,8 +38,9 @@ export default function PrettyTable(props) {
   ));
   
   return (
-    <TableContainer component={Paper} style={props.style}>
-      <Table className={classes.table} aria-label="simple table">
+    <TableContainer component={Paper} style={props.style}             style={{ overflow: 'visible' }}
+    >
+      <Table className={classes.table} aria-label="simple table" >
         <TableHead>
           <TableRow>
             {props.header.map((header, i) => (

@@ -16,5 +16,6 @@ urlpatterns = router.get_urls() + [
     path('api/v1/pop_job', views.pop_job),
     path('api/v1/get_kpis', views.get_kpis),
     path('api/v1/batch_process_results', views.batch_process_results),
-    path('api/v1/get_batch_process_result/<int:id>', views.get_batch_process_result),    
+    path('api/v1/get_batch_process_result/<int:id>', views.get_batch_process_result),
+    path('api/v1/get_signal_names', views.get_signal_names),        
 ]

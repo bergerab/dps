@@ -113,6 +113,7 @@ export default class BatchResultTable extends React.Component {
             field: 'processed_samples',
             sorting: false,
             render: data => {
+              if (!data.processed_samples) return data.processed_samples
               return data.processed_samples.toLocaleString();
             }
           },

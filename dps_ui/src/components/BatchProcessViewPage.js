@@ -1,6 +1,7 @@
 import React from 'react';
 
 import moment from 'moment';
+import {CSVLink, CSVDownload} from 'react-csv';
 
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -48,7 +49,7 @@ export default class BatchProcessViewPage extends React.Component {
     let processStats;
     if (result.status === 0) { // If process errored
       processStats = (<div>
-                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                        <Grid item xs={12}>            
                           <TextField
                             label="Status"
                             InputProps={{
@@ -130,7 +131,7 @@ export default class BatchProcessViewPage extends React.Component {
                        </div>)
     } else if (result.status === 2) { // If process has completed
       processStats = (<div>
-                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                        <Grid item xs={12}>            
                           <TextField
                             label="Status"
                             InputProps={{
@@ -180,6 +181,7 @@ export default class BatchProcessViewPage extends React.Component {
                       </div>)
     }
 
+    let kpiHeaders = ['KPI', 'Description', 'Value'];
     let kpiResults = {};
     result.results.map(x => { kpiResults[x.key] = x.value });
     let kpiRows = system.kpis.filter(kpi => {
@@ -208,7 +210,7 @@ export default class BatchProcessViewPage extends React.Component {
             <Grid item xs={12}>
               <InputLabel>KPIs</InputLabel>
               <PrettyTable
-                header={['KPI', 'Description', 'Value']}
+                header={kpiHeaders}
                 rows={kpiRows}
               />
             </Grid>
@@ -248,12 +250,16 @@ export default class BatchProcessViewPage extends React.Component {
                 style={{ width: '20em' }}/>              
             </Grid>
 
-            <Grid item xs={12}>          
-              <Button style={{ margin: '1em 0 0 0' }}
-                      variant="contained"
-                      color="primary">
-                Export
-              </Button>
+            <Grid item xs={12}>
+              <CSVLink
+                data={kpiHeaders + kpiRows}
+                target="_blank" >
+                <Button style={{ margin: '1em 0 0 0' }}
+                        variant="contained"
+                        color="primary">
+                  Export
+                </Button>
+              </CSVLink>                      
             </Grid>
 
           </Grid>

@@ -5,6 +5,8 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+import requests
+
 import dps_services.util as util
 
 from .models import Object
@@ -229,3 +231,14 @@ def info(request):
         'protocols': ['application/json'],
         'debug': settings.DEBUG,
     })
+
+@csrf_exempt
+def get_signal_names(request):
+    jo = json.loads(request.body)
+    resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
+        'dataset': jo['dataset'],
+        'query': jo['query'],
+        'offset': jo['offset'],
+        'limit': jo['limit'],
+    }).json()['results'][0]
+    return JsonResponse(resp)

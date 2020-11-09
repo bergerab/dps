@@ -6,6 +6,8 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import FormLabel from '@material-ui/core/FormLabel';
 import { useHistory } from "react-router-dom";
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
 
 import Skeleton from '@material-ui/lab/Skeleton';
 
@@ -17,13 +19,14 @@ import Box from './Box';
 import PrettyTable from './PrettyTable';
 import InputLabel from './InputLabel';
 import Errors from './Errors';
+import SignalSelect from './SignalSelect';
 
 import util from '../util';
 import api from '../api';
 
 import moment from 'moment';
 
-import { get, get_required_mappings } from '../api';
+import { get, post, get_required_mappings } from '../api';
 
 export default class BatchProcessPage extends React.Component {
   constructor(props) {
@@ -155,10 +158,10 @@ export default class BatchProcessPage extends React.Component {
     get('system', this.props.system_id).then(system => {
       this.setState({
         system,
-          loading: false,
-        }, () => {
-          this.localLoad();
-        });
+        loading: false,
+      }, () => {
+        this.localLoad();
+      });
       });
     
     this.updateKPIResults(this.props.system_id);
@@ -307,7 +310,7 @@ export default class BatchProcessPage extends React.Component {
                                        </Grid>) : null
         }
         <Box
-          header={name}
+          header={name + ' - Batch Process'}
           loading={this.state.loading}
         >
           <Grid container spacing={2}
@@ -318,6 +321,7 @@ export default class BatchProcessPage extends React.Component {
               <InputLabel>Identifier</InputLabel>              
               <TextField
                 label="Name"
+                fullWidth={true}                
                 value={this.state.name}
                 onChange={e => this.setState({ name: e.target.value })}
                 error={this.state.nameErrors !== null}
@@ -340,18 +344,24 @@ export default class BatchProcessPage extends React.Component {
                   
                   return [
                     signal,
-                    (<TextField
-                                                  fullWidth={true}
-                                                  name="name"
-                                                  error={hasError}
-                                                  helperText={hasError ? this.state.mappingErrors[i].value : ''}
-                                                  value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''}
-                                                  onChange={e => {
-                                                    this.state.signalInputs[signal] = e.target.value;
-                                                    // Force an update
-                                                    this.setState({ signals: this.state.signals });
-                                                  }}
-                                        />)
+                    (<SignalSelect
+                       dataset=""
+                       limit={10}
+                     />)
+                    /* (<Select */
+                    /*    fullWidth={true} */
+                    /*    name="name" */
+                    /*    error={hasError} */
+                    /*    helperText={hasError ? this.state.mappingErrors[i].value : ''} */
+                    /*    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''} */
+                    /*    onChange={e => { */
+                    /*      this.state.signalInputs[signal] = e.target.value; */
+                    /*      // Force an update */
+                                           /*      this.setState({ signals: this.state.signals }); */
+                                           /*    }} */
+                                           /*  > */
+                    /*    {this.state.signalNames.map(x => (<MenuItem key={x}>{x}</MenuItem>))} */
+                    /*  </Select>) */
                   ];
                 })}
               />
@@ -371,9 +381,9 @@ export default class BatchProcessPage extends React.Component {
                   return [
                     parameter,
                     (<TextField
-                                            fullWidth={true}
-                                            name="name"
-                                            error={hasError}
+                       fullWidth={true}
+                       name="name"
+                       error={hasError}
                                             helperText={hasError ? this.state.mappingErrors[mappingIndex].value : ''}
                                             value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
                                             onChange={e => {

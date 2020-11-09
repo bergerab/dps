@@ -51,7 +51,11 @@ export function post(entityUrl, entity) {
 }
 
 export function get(entityUrl, id) {
-  return fetch(API_PREFIX + entityUrl + '/' + id, {
+  let postfix;
+  if (id === undefined) postfix = '';
+  else postfix = '/' + id;
+  
+  return fetch(API_PREFIX + entityUrl + postfix, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'

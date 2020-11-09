@@ -30,6 +30,13 @@ class DataStore:
         ds = DataStoreClass()
         ds.execute_delete(load_delete_json(delete_request))
 
+    @classmethod
+    def execute_get_signal_names(DataStoreClass, request):
+        ds = DataStoreClass()
+        results = GetSignalNamesResult()
+        ds.get_signal_names(results, request['dataset'], request['query'], request['limit'], request['offset'])
+        return DataStore.to_results_response([results])
+
     def execute_delete(self, delete):
         self.delete_dataset(delete.dataset)
 
@@ -66,6 +73,12 @@ class DataStore:
         Writes the results of the query to the `SignalQueryResult` object (using `results.add(values, time)`)
         '''
         raise Exception('DataStore.fetch_signals not implemented.')
+
+    def get_signal_names(self, result, dataset_name):
+        '''
+        Writes the results of the query to the `GetSignalNamesResult` object (using `results.add(name)`)
+        '''
+        raise Exception('DataStore.get_signal_names not implemented.')
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         '''
@@ -126,4 +139,16 @@ class AggregateQueryResult:
         return {
             'values': list(self.results.values()),
             'query': self.query.to_dict()
+        }
+
+class GetSignalNamesResult:
+    def __init__(self):
+        self.results = []
+
+    def add(self, name):
+        self.results.append(name)
+
+    def to_dict(self):
+        return {
+            'values': self.results,
         }

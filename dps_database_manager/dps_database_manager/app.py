@@ -42,6 +42,15 @@ class TimescaleDBDataStore(dbm.DataStore):
             session.commit()
             session.expunge_all()
 
+    def get_signal_names(self, result, dataset_name, query, limit, offset):
+        dataset = dbc.get_dataset_by_name(dataset_name)
+        with dbc.scope() as session:
+            for signal in session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
+                                               .filter(Signal.name.like(f'%{query}%')) \
+                                               .order_by(Signal.name).all()[offset:offset+limit]:
+                if signal.dataset_id == dataset.dataset_id:
+                    result.add(signal.name)
+
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))
