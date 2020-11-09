@@ -200,70 +200,72 @@ export default class BatchProcessViewPage extends React.Component {
         .map(x => [x.key, x.value]);
     
     return (
-      <Box header={this.state.result.batch_process.name}
-           loading={this.state.loading}>
-        <Grid container spacing={2}
-              style={{maxWidth: '1500px'}}>
+      <div>
+        <Box header={this.state.result.batch_process.name + " Results"}
+             loading={this.state.loading}>
+          <Grid container spacing={2}
+                style={{maxWidth: '1500px'}}>
+            <Grid item xs={12}>
+              <InputLabel>KPIs</InputLabel>
+              <PrettyTable
+                header={['KPI', 'Description', 'Value']}
+                rows={kpiRows}
+              />
+            </Grid>
 
+            <Grid item xs={6}>
+              <InputLabel>Signals</InputLabel>
+              <PrettyTable
+                header={['KPI Input', 'Signal Name']}
+                rows={signalMappings}
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              <InputLabel>Parameters</InputLabel>          
+              <PrettyTable
+                header={['Name', 'Value']}
+                rows={parameterMappings}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <InputLabel>Date Range</InputLabel>
+              {/* Hack to get moment to parse datetime as UTC: */}
+              <TextField
+                label="Start Time"
+                InputProps={{
+                  readOnly: true,
+                }}              
+                value={moment(bp.interval.start + 'Z').format('LL LTS')}
+                style={{ marginRight: '10px', width: '20em' }}/>
+              <TextField
+                InputProps={{
+                  readOnly: true,
+                }}              
+                label="End Time"
+                value={moment(bp.interval.end + 'Z').format('LL LTS')}
+                style={{ width: '20em' }}/>              
+            </Grid>
+
+            <Grid item xs={12}>          
+              <Button style={{ margin: '1em 0 0 0' }}
+                      variant="contained"
+                      color="primary">
+                Export
+              </Button>
+            </Grid>
+
+          </Grid>
+        </Box>
+        
+        <Box
+          header="Stats">
           <Grid item xs={12}>
-            <InputLabel>KPIs</InputLabel>
-            <PrettyTable
-              header={['KPI', 'Description', 'Value']}
-              rows={kpiRows}
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <InputLabel>Signals</InputLabel>
-            <PrettyTable
-              header={['KPI Input', 'Signal Name']}
-              rows={signalMappings}
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <InputLabel>Parameters</InputLabel>          
-            <PrettyTable
-              header={['Name', 'Value']}
-              rows={parameterMappings}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <InputLabel>Date Range</InputLabel>
-            {/* Hack to get moment to parse datetime as UTC: */}
-            <TextField
-              label="Start Time"
-              InputProps={{
-                readOnly: true,
-              }}              
-              value={moment(bp.interval.start + 'Z').format('LL LTS')}
-              style={{ marginRight: '10px', width: '20em' }}/>
-            <TextField
-              InputProps={{
-                readOnly: true,
-              }}              
-              label="End Time"
-              value={moment(bp.interval.end + 'Z').format('LL LTS')}
-              style={{ width: '20em' }}/>              
-          </Grid>
-
-          <Grid item xs={12}>
-            <InputLabel>Process Stats</InputLabel>
             {processStats}
-            
           </Grid>
-
-          <Grid item xs={12}>          
-            <Button style={{ margin: '1em 0 0 0' }}
-                    variant="contained"
-                    color="primary">
-              Export
-            </Button>
-          </Grid>
-
-        </Grid>
-      </Box>
+        </Box>
+      </div>
     );
   }
 }

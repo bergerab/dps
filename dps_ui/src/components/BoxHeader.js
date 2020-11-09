@@ -3,8 +3,9 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
     boxHeader: {
-        padding: theme.spacing(2),
-        margin: 0,
+      padding: theme.spacing(2),
+      paddingBottom: 0,
+      margin: 0,
     },    
 }));
 
