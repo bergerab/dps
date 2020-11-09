@@ -55,15 +55,26 @@ const tableIcons = {
 export default class BatchResultTable extends React.Component {
   constructor(props) {
     super(props);
+    this.tableRef = React.createRef();
+    this.previousResultETag = '';
   }
+
+  componentDidMount() {
+    // this.intervalId = setInterval(() => {
+    //   this.tableRef.current.onQueryChange();
+    // }, 10000);
+  }
+
+  componentWillUnmount() {
+    // clearInterval(this.intervalId);
+  }  
   
   render () {
-    const tableRef = React.createRef();
     return (
       <MaterialTable
         icons={tableIcons}
         title="Batch Processes"
-        tableRef={tableRef}
+        tableRef={this.tableRef}
         options={{
           search: true,
           sorting: true,
@@ -75,7 +86,7 @@ export default class BatchResultTable extends React.Component {
             icon: Refresh,
             tooltip: 'Refresh Data',
             isFreeAction: true,
-            onClick: () => tableRef.current && tableRef.current.onQueryChange(),
+            onClick: () => this.tableRef.current && this.tableRef.current.onQueryChange(),
           }
         ]}          
         columns={[
@@ -117,7 +128,7 @@ export default class BatchResultTable extends React.Component {
                 );
               } else if (data.status === 0) { // If error,
                 return (
-                  <LinearProgressWithLabel variant="determinate" color="secondary" label={"Error"} />
+                  <LinearProgressWithLabel variant="determinate" color="secondary" label={"Error"} value={100} />
                 );
               } else if (data.status === 2) { // If complete,
                 return (
@@ -128,7 +139,7 @@ export default class BatchResultTable extends React.Component {
                   <LinearProgressWithLabel label="Queued" />
                 );
               }
-          }},
+            }},
           {
             title: '',
             sorting: false,
@@ -144,25 +155,26 @@ export default class BatchResultTable extends React.Component {
               )
             }
           }
-          ]}
-          data={query =>
-                new Promise((resolve, reject) => {
-                  api.post('batch_process_results', { 'page_size':       query.pageSize,
-                                                      'page_number':     query.page,
-                                                      'search':          query.search,
-                                                      'system_id':       this.props.system_id,
-                                                      'order_direction': query.orderDirection,
-                                                    })
-                    .then(result => {
-                      resolve({
-                        data: result.data,
-                        page: result.page,
-                        totalCount: result.total,
-                      })
+        ]}
+        data={query =>
+              new Promise((resolve, reject) => {
+                api.post('batch_process_results', { 'page_size':       query.pageSize,
+                                                    'page_number':     query.page,
+                                                    'search':          query.search,
+                                                    'system_id':       this.props.system_id,
+                                                    'order_direction': query.orderDirection,
+                                                  })
+                  .then(result => {
+                    this.previousResultETag = JSON.stringify(result);
+                    resolve({
+                      data: result.data,
+                      page: result.page,
+                      totalCount: result.total,
                     })
-                })
-               }
-        />        
+                  })
+              })
+             }
+      />        
     );
   }
 }

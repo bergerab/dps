@@ -23,10 +23,9 @@ const useStyles = makeStyles((theme) => ({
 
 function getSteps() {
   return [
-    'Add a Database Connection',
-    'Add a System',
-    'Add a Dataset',
-    'Run a Batch Process'
+    'Add a System',    
+    'Send data',
+    'Run a Batch Process',
   ];
 }
 

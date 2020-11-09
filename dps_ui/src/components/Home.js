@@ -11,10 +11,6 @@ export default function Home(props) {
       <Box header="System Setup">            
         <ActionsStepper />              
       </Box>                
-
-      <Box header="System Log">            
-	<ActionsTable />                        
-      </Box>                
     </div>
   );
 }

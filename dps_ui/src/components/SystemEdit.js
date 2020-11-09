@@ -255,7 +255,7 @@ render () {
               fullWidth={true}
               name="name"
               value={this.state.name}
-              onChange={e => this.setState({ nameErrors: null, name: e.value })}
+              onChange={e => this.setState({ nameErrors: null, name: e.target.value })}
               error={this.state.nameErrors !== null}
               helperText={this.state.nameErrors === null ? '' : this.state.nameErrors.join('\n')}
               label="Name"

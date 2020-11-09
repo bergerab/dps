@@ -41,8 +41,6 @@ export default class BatchProcessViewPage extends React.Component {
     const bp = result.batch_process;
     const system = bp.system;
 
-    console.log(bp, system)
-
     let percentComplete = '0%';
     if (result.total_samples !== 0)
       percentComplete = (result.processed_samples / result.total_samples) * 100 + '%';
@@ -57,7 +55,6 @@ export default class BatchProcessViewPage extends React.Component {
                               readOnly: true,
                             }}              
                             value={"Failed"}
-                            error={true}
                           />
                         </Grid>
                         <Grid item xs={12} style={{ paddingTop: '1em' }}>            
@@ -71,7 +68,6 @@ export default class BatchProcessViewPage extends React.Component {
                             rows={5}
                             fullWidth={true}
                             variant="outlined"
-                            error={true}
                             style={{ color: 'red' }}
                           />
                         </Grid>
@@ -183,6 +179,25 @@ export default class BatchProcessViewPage extends React.Component {
                         </Grid>
                       </div>)
     }
+
+    let kpiResults = {};
+    result.results.map(x => { kpiResults[x.key] = x.value });
+    let kpiRows = system.kpis.filter(kpi => {
+      return bp.kpis.includes(kpi.name);
+    }).map(kpi => {
+      return [kpi.name,
+              (<div className="system-description" dangerouslySetInnerHTML={{ __html: kpi.description }}></div>),
+              kpiResults[kpi.name]];
+    });
+
+    let parameterIdentifiersToNames = {};
+    system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
+    let parameterMappings = bp.mappings
+        .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
+        .map(x => [parameterIdentifiersToNames[x.key], x.value]);
+    let signalMappings = bp.mappings
+        .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
+        .map(x => [x.key, x.value]);
     
     return (
       <Box header={this.state.result.batch_process.name}
@@ -194,7 +209,7 @@ export default class BatchProcessViewPage extends React.Component {
             <InputLabel>KPIs</InputLabel>
             <PrettyTable
               header={['KPI', 'Description', 'Value']}
-              rows={[]}
+              rows={kpiRows}
             />
           </Grid>
 
@@ -202,7 +217,7 @@ export default class BatchProcessViewPage extends React.Component {
             <InputLabel>Signals</InputLabel>
             <PrettyTable
               header={['KPI Input', 'Signal Name']}
-              rows={[]}
+              rows={signalMappings}
             />
           </Grid>
 
@@ -210,7 +225,7 @@ export default class BatchProcessViewPage extends React.Component {
             <InputLabel>Parameters</InputLabel>          
             <PrettyTable
               header={['Name', 'Value']}
-              rows={[]}
+              rows={parameterMappings}
             />
           </Grid>
 
@@ -239,13 +254,13 @@ export default class BatchProcessViewPage extends React.Component {
             
           </Grid>
 
-      <Grid item xs={12}>          
-      <Button style={{ margin: '1em 0 0 0' }}
-                  variant="contained"
-                  color="primary">
-            Export
-      </Button>
-      </Grid>
+          <Grid item xs={12}>          
+            <Button style={{ margin: '1em 0 0 0' }}
+                    variant="contained"
+                    color="primary">
+              Export
+            </Button>
+          </Grid>
 
         </Grid>
       </Box>
