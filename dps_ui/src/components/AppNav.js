@@ -43,7 +43,8 @@ import BatchProcessPage from './BatchProcessPage';
 import Home from './Home';
 
 import EntityPage from './EntityPage';
-import ResultsPage from './Results';
+import EndUserSystemPage from './EndUserSystemPage';
+import BatchProcessViewPage from './BatchProcessViewPage';
 
 import { list } from '../api';
 import util from '../util';
@@ -202,16 +203,10 @@ class MiniDrawer extends React.Component {
             </List>
             <Divider />
             <List>
-              <Link to="/system" style={linkStyle}>
+              <Link to="/admin/system" style={linkStyle}>
                 <ListItem button key="Systems">
                   <ListItemIcon><MemoryIcon/></ListItemIcon>
                   <ListItemText primary="Systems" />
-                </ListItem>
-              </Link>
-              <Link to="/bp" style={linkStyle}>
-                <ListItem button>
-                  <ListItemIcon><TableChartIcon/></ListItemIcon>
-                  <ListItemText primary="Batch Processes" />
                 </ListItem>
               </Link>
             </List>
@@ -220,7 +215,7 @@ class MiniDrawer extends React.Component {
               {this.state.systems.map((system, i) => (
                 <Link
                   key={system.system_id}
-                  to={"/batch-process/" + system.system_id}
+                  to={"/system/" + system.system_id}
                   style={linkStyle}>
                   <ListItem button key={system.name}>
                     <ListItemIcon>{indexToIcon(i)}</ListItemIcon>
@@ -236,8 +231,10 @@ class MiniDrawer extends React.Component {
               <Route path="/home">
                 <Home />
               </Route>
+              <Route path="/batch-process/:id" component={BatchProcessViewPage}>
+              </Route>
               <Route
-                path="/system/:action?/:id?"
+                path="/admin/system/:action?/:id?"
                 render={props =>
 		        (<EntityPage
                            key={'System'}
@@ -246,37 +243,43 @@ class MiniDrawer extends React.Component {
 			            ['KPIs', system => {
                                       return (<span>{system.kpis.filter(kpi => !kpi.hidden)
                                                      .map(kpi => <Chip
-                                                                      key={kpi.name}
-                                                                      label={kpi.name}
-                                                                      style={{ margin: '5px' }}/>)}
-                                                    </span>)
+                                                                   key={kpi.name}
+                                                                   label={kpi.name}
+                                                                   style={{ margin: '5px' }}/>)}
+                                              </span>)
                                     }],
 			            ['Parameters', system => {
                                       return (<span>{system.parameters.filter(param => !param.hidden)
                                                      .map(parameter => <Chip
-                                                                            key={parameter.name}
-                                                                            label={parameter.name}
-                                                                            style={{ margin: '5px' }}/>)}
-                                                             </span>)                                       
+                                                                         key={parameter.name}
+                                                                         label={parameter.name}
+                                                                         style={{ margin: '5px' }}/>)}
+                                              </span>)                                       
                                     }]]}
-		              entityUrl="system"
-		              entityName="System"
-		              editComponent={SystemEdit}
+		           entityUrl="system"
+		           entityName="System"
+		           editComponent={SystemEdit}
       />)}
 	      />
-              <Route
-                path="/bp"
-                render={props =>
-		        (<ResultsPage {...props} />)}
-              />
+              /* Add batch process pages. */
               {this.state.systems.map(system => (
                 <Route
                   key={system.system_id}
-                  path="/batch-process"
-
+                  path={"/system/" + system.system_id + "/batch-process"}
                 /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
-                  
-                  render={(props) => (<BatchProcessPage key={Date.now()} {...props} />)} />
+                  render={(props) => (<BatchProcessPage key={Date.now()} system_id={system.system_id} {...props} />)} />
+              ))}
+
+              /* Add system pages. */
+              {this.state.systems.map(system => (
+                <Route
+                  key={system.system_id}
+                  path={"/system/" + system.system_id}
+                /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
+                  render={(props) => (<EndUserSystemPage
+                                        system_id={system.system_id}
+                                        system_name={system.name}                                        
+                                        key={Date.now()} {...props} />)} />
               ))}
             </Switch>
           </main>

@@ -5,6 +5,7 @@ import CheckBox from '@material-ui/core/CheckBox';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import FormLabel from '@material-ui/core/FormLabel';
+import { useHistory } from "react-router-dom";
 
 import Skeleton from '@material-ui/lab/Skeleton';
 
@@ -50,6 +51,9 @@ export default class BatchProcessPage extends React.Component {
       signals: [],
       signalInputs: {},
 
+      name: '',
+      nameErrors: null,
+
       intervalErrors: null,
       startDate: defaultStartDate,
       endDate: new Date(),
@@ -82,6 +86,7 @@ export default class BatchProcessPage extends React.Component {
     const startDate = util.dateToString(util.dateToUTCDate(this.state.startDate));
     const endDate = util.dateToString(util.dateToUTCDate(this.state.endDate));
     return {
+      name: this.state.name,
       mappings: mappings,
       system: this.state.system,
       system_id: this.state.system.system_id,
@@ -98,6 +103,7 @@ export default class BatchProcessPage extends React.Component {
       kpis: Array.from(this.state.kpis),
       parameterInputs: this.state.parameterInputs,
       signalInputs: this.state.signalInputs,
+      name: this.state.name,
 
       // Don't save the dates (let it use default of one month in the past)
       // startDate: this.state.startDate.toJSON(),
@@ -146,19 +152,18 @@ export default class BatchProcessPage extends React.Component {
   }
   
   async componentDidMount() {
-      const id = window.location.href.split('/').pop();
-      get('system', id).then(system => {
-        this.setState({
-          system,
+    get('system', this.props.system_id).then(system => {
+      this.setState({
+        system,
           loading: false,
         }, () => {
           this.localLoad();
         });
       });
     
-    this.updateKPIResults(id);
+    this.updateKPIResults(this.props.system_id);
     this.intervalId = setInterval(() => {
-      this.updateKPIResults(id);
+      this.updateKPIResults(this.props.system_id);
     }, 1000);
   }
 
@@ -301,7 +306,6 @@ export default class BatchProcessPage extends React.Component {
                                          />
                                        </Grid>) : null
         }
-
         <Box
           header={name}
           loading={this.state.loading}
@@ -309,6 +313,16 @@ export default class BatchProcessPage extends React.Component {
           <Grid container spacing={2}
                 style={{maxWidth: '1500px'}}>
             {description}
+
+            <Grid item xs={6}>
+              <InputLabel>Identifier</InputLabel>              
+              <TextField
+                label="Name"
+                value={this.state.name}
+                onChange={e => this.setState({ name: e.target.value })}
+                error={this.state.nameErrors !== null}
+                helperText={this.state.nameErrors}/>
+            </Grid>
             
             <Grid item xs={12}>
               <InputLabel>KPIs</InputLabel>
@@ -400,7 +414,8 @@ export default class BatchProcessPage extends React.Component {
               <DateTimePicker value={this.state.endDate}
                               onChange={date => this.setState({ endDate: date })}
                               error={hasEndTimeError}
-                              helperText={hasEndTimeError ? this.state.intervalErrors.end : ''}                                           label="End Time"
+                              helperText={hasEndTimeError ? this.state.intervalErrors.end : ''}
+                              label="End Time"
                               required />
             </Grid>
 
@@ -416,21 +431,25 @@ export default class BatchProcessPage extends React.Component {
                             errors: null,
                             mappingErrors: null,
                             intervalErrors: null,
+                            nameErrors: null,                            
                           });
+                          this.props.history.push('/system/' + this.props.system_id);
                         }).catch(e => {
+                          console.log(e);
                           e.then(errors => {
                             const mappingErrors = util.objectPop(errors, 'mappings');
                             const intervalErrors = util.objectPop(errors, 'interval');
+                            const nameErrors = util.objectPop(errors, 'name');                            
                             this.setState({
                               errors,
                               mappingErrors,
                               intervalErrors,
+                              nameErrors,
                             });
                           });
                         });
                       }}
               >Run</Button>
-              <Button variant="contained" color="primary">Export</Button>            
             </Grid>
           </Grid>
         </Box>

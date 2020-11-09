@@ -61,7 +61,6 @@ class ResultsAPI(ObjectAPI):
     ref_name = 'batch_process_id'
 
     def after_update(self, data, obj):
-        print(data)
         if data['status'] == 2: # If complete
             bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
             bp = json.loads(bp_obj.value)
@@ -174,36 +173,51 @@ def batch_process_results(request):
     if not serializer.is_valid():
         return JsonResponse(serializer.errors, status=400)
     data = serializer.validated_data
-    page_size = data['page_size']
-    page_number = data['page_number']
-    offset = page_size * page_number
-    limit = page_size
     
-    count = Object.objects.filter(kind=BatchProcessAPI.kind).count()
-    objs = Object.objects.filter(kind=BatchProcessAPI.kind) \
-                         .order_by('-created_at').all()[offset:offset+limit]
+    page_size   = data['page_size']
+    page_number = data['page_number']
+    system_id   = data['system_id']
+    
+    offset = page_size * page_number
+    limit  = page_size
+
+    count = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id).count()
+    objs  = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id) \
+                          .order_by('-created_at').all()[offset:offset+limit]
     results = []
     for obj in objs:
-        # TODO: get result for batch_process
-        result_obj = Object.objects.filter(kind=ResultsAPI.kind, ref=obj.object_id).first()
-        # If no result, make one
-        if result_obj:
-            result = json.loads(result_obj.value)
-        else:
-            result = {
-                'batch_process_id': obj.object_id,
-                'results': [],
-                'status': 3, # Queued
-            }
-        bp = json.loads(obj.value)
-        result['batch_process'] = bp
-        result['batch_process_time'] = obj.created_at
+        result = get_result(obj)
         results.append(result)
     return JsonResponse({
         'total': count,
         'page': page_number,
         'data': results,
     })
+
+@csrf_exempt
+def get_batch_process_result(request, id):
+    obj = Object.objects.filter(object_id=id).first()
+    if not obj:
+        return JsonResponse({}, status=404)
+    result = get_result(obj)
+    return JsonResponse(result)
+
+def get_result(batch_process_obj):
+    result_obj = Object.objects.filter(kind=ResultsAPI.kind, ref=batch_process_obj.object_id).first()
+    # If no result, make a fake one
+    if result_obj:
+        result = json.loads(result_obj.value)
+        result['batch_process_result_id'] = result_obj.object_id
+    else:
+        result = {
+            'batch_process_id': batch_process_obj.object_id,
+            'results': [],
+            'status': 3, # Queued
+        }
+    bp = json.loads(batch_process_obj.value)
+    result['batch_process'] = bp
+    result['batch_process_time'] = batch_process_obj.created_at
+    return result
         
 def info(request):
     return JsonResponse({

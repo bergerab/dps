@@ -7,7 +7,7 @@ import Row from './Row';
 import Link from './Link';
 import BatchResultTable from './BatchResultTable';
 
-export default class ResultsPage extends React.Component {
+export default class EndUserSystemPage extends React.Component {
   constructor(props) {
     super(props);
 
@@ -19,10 +19,16 @@ export default class ResultsPage extends React.Component {
   render () {
     const tableRef = React.createRef();
     return (
-      <Box header={"Batch Processes"}
+      <Box header={this.props.system_name}
            loading={this.state.loading}>
         <BatchResultTable
-          system_id={292}/>
+          system_id={this.props.system_id}/>
+
+        <Link to={'/system/' + this.props.system_id + '/batch-process'}> 
+          <Button variant="contained" color="primary" style={{ marginTop: '15px' }}>
+            Create Batch Process
+          </Button>
+        </Link>
       </Box>
     );
   }

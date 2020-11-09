@@ -168,6 +168,7 @@ class IntervalSerializer(serializers.Serializer):
         return data
 
 class BatchProcessSerializer(serializers.Serializer):
+    name = serializers.CharField()
     system_id = serializers.IntegerField()
     system = SystemSerializer()
     mappings = MappingSerializer(many=True, required=False)
@@ -247,3 +248,4 @@ class RegisterDatabaseManagerSerializer(serializers.Serializer):
 class BatchProcessRequestSerializer(serializers.Serializer):
     page_size = serializers.IntegerField()
     page_number = serializers.IntegerField()
+    system_id = serializers.IntegerField()    
