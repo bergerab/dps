@@ -174,16 +174,19 @@ def batch_process_results(request):
         return JsonResponse(serializer.errors, status=400)
     data = serializer.validated_data
     
-    page_size   = data['page_size']
-    page_number = data['page_number']
-    system_id   = data['system_id']
+    page_size       = data['page_size']
+    page_number     = data['page_number']
+    system_id       = data['system_id']
+    search          = data['search']
+    order_direction = data.get('order_direction', '') 
     
     offset = page_size * page_number
     limit  = page_size
 
-    count = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id).count()
-    objs  = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id) \
-                          .order_by('-created_at').all()[offset:offset+limit]
+    order = 'created_at' if order_direction == 'asc' else '-created_at'
+    count = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id, name__contains=search).count()
+    objs  = Object.objects.filter(kind=BatchProcessAPI.kind, ref=system_id, name__contains=search) \
+                          .order_by(order).all()[offset:offset+limit]
     results = []
     for obj in objs:
         result = get_result(obj)

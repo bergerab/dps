@@ -169,8 +169,11 @@ class MiniDrawer extends React.Component {
                 })}>
                 <MenuIcon />
               </IconButton>
-              <Typography variant="h6" noWrap>
-                Data Processing System
+              <Typography variant="h4" noWrap style={{
+                fontWeight: 'bold',
+                fontStyle: 'italic',
+              }} >
+                DPS
               </Typography>
             </Toolbar>
           </AppBar>

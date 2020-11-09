@@ -65,8 +65,8 @@ export default class BatchResultTable extends React.Component {
         title="Batch Processes"
         tableRef={tableRef}
         options={{
-          search: false,
-          sorting: false,
+          search: true,
+          sorting: true,
           exportButton: false,
           pageSize: 5,
         }}          
@@ -83,21 +83,31 @@ export default class BatchResultTable extends React.Component {
             field: 'name',
             render: data => {
               return data.batch_process.name;
-            }
+            },
+            sorting: false
           },
           { title: 'Ran At',
             field: 'batch_process_time',
             render: data => {
               return moment(Date.parse(data.batch_process_time)).format('LL LTS');
+            },
+            defaultSort: 'desc',
+            sorting: false,
+          },
+          /* { title: 'Total Samples', */
+          /*   field: 'total_samples', */
+          /*   sorting: false, */
+          /* }, */
+          { title: 'Samples Processed',
+            field: 'processed_samples',
+            sorting: false,
+            render: data => {
+              return data.processed_samples.toLocaleString();
             }
-            },
-            { title: 'Total Samples',
-              field: 'total_samples',
-            },
-            { title: 'Processed Samples',
-              field: 'processed_samples',
-            },
-            { title: 'Status', render: data => {
+          },
+          { title: 'Status',
+            sorting: false,
+            render: data => {
               if (data.status === 1) { // If running,
                 let progress = 0;
                 if (data.total_samples > 0)
@@ -107,12 +117,7 @@ export default class BatchResultTable extends React.Component {
                 );
               } else if (data.status === 0) { // If error,
                 return (
-                  <div style={{ color: 'red' }}>
-                    Failed
-                    <div>
-                      {data.message}
-                    </div>
-                  </div>
+                  <LinearProgressWithLabel variant="determinate" color="secondary" label={"Error"} />
                 );
               } else if (data.status === 2) { // If complete,
                 return (
@@ -123,27 +128,31 @@ export default class BatchResultTable extends React.Component {
                   <LinearProgressWithLabel label="Queued" />
                 );
               }
-            }},
-            {
-              title: '',
-              render: data => {
-                return (
-                  <Link to={"/batch-process/" + data.batch_process_id}>
-                    <Button variant="outlined"
-                            color="primary"
-                            style={{ marginRight: '10px' }}>
-                      View
-                    </Button>
-                  </Link>
-                )
-              }
+          }},
+          {
+            title: '',
+            sorting: false,
+            render: data => {
+              return (
+                <Link to={"/batch-process/" + data.batch_process_id}>
+                  <Button variant="outlined"
+                          color="primary"
+                          style={{ marginRight: '10px' }}>
+                    View
+                  </Button>
+                </Link>
+              )
             }
+          }
           ]}
           data={query =>
                 new Promise((resolve, reject) => {
-                  api.post('batch_process_results', { 'page_size':   query.pageSize,
-                                                      'page_number': query.page,
-                                                      'system_id':   this.props.system_id})
+                  api.post('batch_process_results', { 'page_size':       query.pageSize,
+                                                      'page_number':     query.page,
+                                                      'search':          query.search,
+                                                      'system_id':       this.props.system_id,
+                                                      'order_direction': query.orderDirection,
+                                                    })
                     .then(result => {
                       resolve({
                         data: result.data,

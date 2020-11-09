@@ -46,45 +46,182 @@ export default class BatchProcessViewPage extends React.Component {
     let percentComplete = '0%';
     if (result.total_samples !== 0)
       percentComplete = (result.processed_samples / result.total_samples) * 100 + '%';
+
+    let processStats;
+    if (result.status === 0) { // If process errored
+      processStats = (<div>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Status"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={"Failed"}
+                            error={true}
+                          />
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Error Message"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={result.message}
+                            multiline={true}
+                            rows={5}
+                            fullWidth={true}
+                            variant="outlined"
+                            error={true}
+                            style={{ color: 'red' }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Started At"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={moment(result.batch_process_time).format('LL LTS')}
+                            style={{ width: '20em' }}/>
+                        </Grid>
+                      </div>)
+    } else if (result.status === 1) { // If process is running
+      processStats = (<div>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Status"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={"Running"}
+                          />
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Started At"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={moment(result.batch_process_time).format('LL LTS')}
+                            style={{ width: '20em' }}/>
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Total Samples"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={result.total_samples.toLocaleString()}
+                            style={{ paddingRight: '1em' }}
+                          />
+                          <TextField
+                            label="Samples Processed"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={result.processed_samples.toLocaleString()}/>
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Percent Complete"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={percentComplete}
+                            style={{ paddingRight: '1em' }}
+                          />
+                        </Grid>
+                       </div>)
+    } else if (result.status === 2) { // If process has completed
+      processStats = (<div>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Status"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={"Complete"}
+                          />
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Started At"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={moment(result.batch_process_time).format('LL LTS')}
+                            style={{ width: '20em' }}/>
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Samples Processed"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={result.processed_samples.toLocaleString()}/>
+                        </Grid>
+                       </div>)
+    } else if (result.status === 3) { // If process has been queued
+      processStats = (<div>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Status"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={"Queued"}
+                          />
+                        </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Started At"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={moment(result.batch_process_time).format('LL LTS')}
+                            style={{ width: '20em' }}/>
+                        </Grid>
+                      </div>)
+    }
     
     return (
-          <Box header={this.state.result.batch_process.name}
-               loading={this.state.loading}>
-            <Grid container spacing={2}
-                  style={{maxWidth: '1500px'}}>
+      <Box header={this.state.result.batch_process.name}
+           loading={this.state.loading}>
+        <Grid container spacing={2}
+              style={{maxWidth: '1500px'}}>
 
-              <Grid item xs={12}>
-                <InputLabel>KPIs</InputLabel>
-                <PrettyTable
-                  header={['KPI', 'Description', 'Value']}
-                  rows={[]}
-                />
-              </Grid>
+          <Grid item xs={12}>
+            <InputLabel>KPIs</InputLabel>
+            <PrettyTable
+              header={['KPI', 'Description', 'Value']}
+              rows={[]}
+            />
+          </Grid>
 
-              <Grid item xs={6}>
-                <InputLabel>Signals</InputLabel>
-                <PrettyTable
-                  header={['KPI Input', 'Signal Name']}
-                  rows={[]}
-                />
-              </Grid>
+          <Grid item xs={6}>
+            <InputLabel>Signals</InputLabel>
+            <PrettyTable
+              header={['KPI Input', 'Signal Name']}
+              rows={[]}
+            />
+          </Grid>
 
-              <Grid item xs={6}>
-                <InputLabel>Parameters</InputLabel>          
-                <PrettyTable
-                  header={['Name', 'Value']}
-                  rows={[]}
-                />
-              </Grid>
+          <Grid item xs={6}>
+            <InputLabel>Parameters</InputLabel>          
+            <PrettyTable
+              header={['Name', 'Value']}
+              rows={[]}
+            />
+          </Grid>
 
-              <Grid item xs={12}>
-                <InputLabel>Date Range</InputLabel>
-                {/* Hack to get moment to parse datetime as UTC: */}
-                <TextField
-                  label="Start Time"
-                  InputProps={{
-                    readOnly: true,
-                  }}              
+          <Grid item xs={12}>
+            <InputLabel>Date Range</InputLabel>
+            {/* Hack to get moment to parse datetime as UTC: */}
+            <TextField
+              label="Start Time"
+              InputProps={{
+                readOnly: true,
+              }}              
               value={moment(bp.interval.start + 'Z').format('LL LTS')}
               style={{ marginRight: '10px', width: '20em' }}/>
             <TextField
@@ -96,45 +233,22 @@ export default class BatchProcessViewPage extends React.Component {
               style={{ width: '20em' }}/>              
           </Grid>
 
-              <Grid item xs={12}>
-                <InputLabel>Process Stats</InputLabel>
-                <TextField
-                  label="Started At"
-                  InputProps={{
-                    readOnly: true,
-                  }}              
-                  value={moment(result.batch_process_time).format('LL LTS')}
-                  style={{ width: '20em' }}/>
-                <Grid item xs={12} style={{ paddingTop: '1em' }}>            
-                  <TextField
-                    label="Total Samples"
-                    InputProps={{
-                      readOnly: true,
-                    }}              
-                    value={result.total_samples.toLocaleString()}
-                    style={{ paddingRight: '1em' }}
-                  />
-                  <TextField
-                    label="Samples Processed"
-                    InputProps={{
-                      readOnly: true,
-                    }}              
-                    value={result.processed_samples.toLocaleString()}/>
-                </Grid>
-                <Grid item xs={12} style={{ paddingTop: '1em' }}>            
-                  <TextField
-                    label="Percent Complete"
-                    InputProps={{
-                      readOnly: true,
-                    }}              
-                    value={percentComplete}
-                    style={{ paddingRight: '1em' }}
-                  />
-                </Grid>
-              </Grid>
+          <Grid item xs={12}>
+            <InputLabel>Process Stats</InputLabel>
+            {processStats}
+            
+          </Grid>
 
-            </Grid>
-          </Box>
+      <Grid item xs={12}>          
+      <Button style={{ margin: '1em 0 0 0' }}
+                  variant="contained"
+                  color="primary">
+            Export
+      </Button>
+      </Grid>
+
+        </Grid>
+      </Box>
     );
   }
 }

@@ -1,4 +1,4 @@
-export const API_PREFIX = 'http://localhost:8000/api/v1/';
+export const API_PREFIX = 'http://127.0.0.1:8000/api/v1/';
 
 export function list(entityUrl) {
   return fetch(API_PREFIX + entityUrl, {

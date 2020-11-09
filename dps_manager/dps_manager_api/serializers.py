@@ -248,4 +248,6 @@ class RegisterDatabaseManagerSerializer(serializers.Serializer):
 class BatchProcessRequestSerializer(serializers.Serializer):
     page_size = serializers.IntegerField()
     page_number = serializers.IntegerField()
-    system_id = serializers.IntegerField()    
+    system_id = serializers.IntegerField()
+    search = serializers.CharField(required=False, allow_blank=True)
+    order_direction = serializers.CharField(required=False, allow_blank=True)
