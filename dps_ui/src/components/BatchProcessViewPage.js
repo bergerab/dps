@@ -37,49 +37,54 @@ export default class BatchProcessViewPage extends React.Component {
   render () {
     if (this.state.loading) return (<div></div>);
 
-    const bp = this.state.result.batch_process;
+    const result = this.state.result;
+    const bp = result.batch_process;
     const system = bp.system;
 
     console.log(bp, system)
+
+    let percentComplete = '0%';
+    if (result.total_samples !== 0)
+      percentComplete = (result.processed_samples / result.total_samples) * 100 + '%';
     
     return (
-      <Box header={'Batch Process #' + this.state.result.batch_process_id}
-           loading={this.state.loading}>
-        <Grid container spacing={2}
-              style={{maxWidth: '1500px'}}>
+          <Box header={this.state.result.batch_process.name}
+               loading={this.state.loading}>
+            <Grid container spacing={2}
+                  style={{maxWidth: '1500px'}}>
 
-          <Grid item xs={12}>
-            <InputLabel>KPIs</InputLabel>
-            <PrettyTable
-              header={['KPI', 'Description', 'Value']}
-              rows={[]}
-            />
-          </Grid>
+              <Grid item xs={12}>
+                <InputLabel>KPIs</InputLabel>
+                <PrettyTable
+                  header={['KPI', 'Description', 'Value']}
+                  rows={[]}
+                />
+              </Grid>
 
-          <Grid item xs={6}>
-            <InputLabel>Signals</InputLabel>
-            <PrettyTable
-              header={['KPI Input', 'Signal Name']}
-              rows={[]}
-            />
-          </Grid>
+              <Grid item xs={6}>
+                <InputLabel>Signals</InputLabel>
+                <PrettyTable
+                  header={['KPI Input', 'Signal Name']}
+                  rows={[]}
+                />
+              </Grid>
 
-          <Grid item xs={6}>
-            <InputLabel>Parameters</InputLabel>          
-            <PrettyTable
-              header={['Name', 'Value']}
-              rows={[]}
-            />
-          </Grid>
+              <Grid item xs={6}>
+                <InputLabel>Parameters</InputLabel>          
+                <PrettyTable
+                  header={['Name', 'Value']}
+                  rows={[]}
+                />
+              </Grid>
 
-          <Grid item xs={12}>
-            <InputLabel>Date Range</InputLabel>
-            {/* Hack to get moment to parse datetime as UTC: */}
-            <TextField
-              label="Start Time"
-              InputProps={{
-                readOnly: true,
-              }}              
+              <Grid item xs={12}>
+                <InputLabel>Date Range</InputLabel>
+                {/* Hack to get moment to parse datetime as UTC: */}
+                <TextField
+                  label="Start Time"
+                  InputProps={{
+                    readOnly: true,
+                  }}              
               value={moment(bp.interval.start + 'Z').format('LL LTS')}
               style={{ marginRight: '10px', width: '20em' }}/>
             <TextField
@@ -91,8 +96,45 @@ export default class BatchProcessViewPage extends React.Component {
               style={{ width: '20em' }}/>              
           </Grid>
 
-        </Grid>
-      </Box>
+              <Grid item xs={12}>
+                <InputLabel>Process Stats</InputLabel>
+                <TextField
+                  label="Started At"
+                  InputProps={{
+                    readOnly: true,
+                  }}              
+                  value={moment(result.batch_process_time).format('LL LTS')}
+                  style={{ width: '20em' }}/>
+                <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                  <TextField
+                    label="Total Samples"
+                    InputProps={{
+                      readOnly: true,
+                    }}              
+                    value={result.total_samples.toLocaleString()}
+                    style={{ paddingRight: '1em' }}
+                  />
+                  <TextField
+                    label="Samples Processed"
+                    InputProps={{
+                      readOnly: true,
+                    }}              
+                    value={result.processed_samples.toLocaleString()}/>
+                </Grid>
+                <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                  <TextField
+                    label="Percent Complete"
+                    InputProps={{
+                      readOnly: true,
+                    }}              
+                    value={percentComplete}
+                    style={{ paddingRight: '1em' }}
+                  />
+                </Grid>
+              </Grid>
+
+            </Grid>
+          </Box>
     );
   }
 }
