@@ -46,7 +46,7 @@ class TimescaleDBDataStore(dbm.DataStore):
         dataset = dbc.get_dataset_by_name(dataset_name)
         with dbc.scope() as session:
             for signal in session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
-                                               .filter(Signal.name.like(f'%{query}%')) \
+                                               .filter(Signal.name.ilike(f'%{query}%')) \
                                                .order_by(Signal.name).all()[offset:offset+limit]:
                 if signal.dataset_id == dataset.dataset_id:
                     result.add(signal.name)

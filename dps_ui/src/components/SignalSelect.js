@@ -88,14 +88,13 @@ import api from '../api';
 
 import AsyncSelect from 'react-select/async';
 
-
 const customStyles = {
   menu: (provided, state) => ({
     ...provided,
     width: state.selectProps.width,
     borderBottom: '1px dotted pink',
     color: state.selectProps.menuColor,
-    padding: 20,
+    padding: 0,
   }),  
 }
 
@@ -103,17 +102,19 @@ class SignalSelect extends Component {
   render() {
     return (
       <AsyncSelect
-        styles={customStyles}        
+        styles={customStyles}
+        onChange={this.props.onChange}
+        value={this.props.value}        
         cacheOptions
         defaultOptions
-        loadOptions={query => {
+          loadOptions={query => {
           return api.post('get_signal_names', {
-            dataset: this.props.dataset,
-            query: query,
-            limit: this.props.limit,
-            offset: 0,
+          dataset: this.props.dataset,
+          query: query,
+          limit: this.props.limit,
+          offset: 0,
           }).then(x => x.values.map(x => ({ label: x, value: x })));
-        }} />
+          }} />
     );
   }
 }

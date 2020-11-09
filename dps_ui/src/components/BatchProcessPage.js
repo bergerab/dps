@@ -79,7 +79,7 @@ export default class BatchProcessPage extends React.Component {
   makeObject() {
     const mappings = this.state.signals.map((x, i) => ({
       key: x,
-      value: this.state.signalInputs[x]
+      value: this.state.signalInputs[x].value
     })).concat(
       this.state.parameters.map((x, i) => ({
         key: this.getParameterIdentifier(x),
@@ -341,28 +341,34 @@ export default class BatchProcessPage extends React.Component {
                   const hasError = this.state.mappingErrors !== null &&
                         i in this.state.mappingErrors &&
                         !util.objectIsEmpty(this.state.mappingErrors[i]);
-                  
+                  const signalValue = signal in this.state.signalInputs ? this.state.signalInputs[signal] : '';
                   return [
                     signal,
                     (<SignalSelect
                        dataset=""
+                       value={signalValue}
+                       onChange={e => {
+                         this.state.signalInputs[signal] = e;
+                         // Force an update
+                         this.setState({ signals: this.state.signals });
+                       }}
                        limit={10}
-                     />)
+                                 />)
                     /* (<Select */
                     /*    fullWidth={true} */
                     /*    name="name" */
-                    /*    error={hasError} */
-                    /*    helperText={hasError ? this.state.mappingErrors[i].value : ''} */
-                    /*    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''} */
-                    /*    onChange={e => { */
-                    /*      this.state.signalInputs[signal] = e.target.value; */
-                    /*      // Force an update */
-                                           /*      this.setState({ signals: this.state.signals }); */
-                                           /*    }} */
-                                           /*  > */
-                    /*    {this.state.signalNames.map(x => (<MenuItem key={x}>{x}</MenuItem>))} */
-                    /*  </Select>) */
-                  ];
+                          /*    error={hasError} */
+                          /*    helperText={hasError ? this.state.mappingErrors[i].value : ''} */
+                          /*    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''} */
+                          /*    onChange={e => { */
+                          /*      this.state.signalInputs[signal] = e.target.value; */
+                          /*      // Force an update */
+                          /*      this.setState({ signals: this.state.signals }); */
+                          /*    }} */
+                          /*  > */
+                          /*    {this.state.signalNames.map(x => (<MenuItem key={x}>{x}</MenuItem>))} */
+                          /*  </Select>) */
+                        ];
                 })}
               />
             </Grid>

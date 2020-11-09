@@ -194,13 +194,12 @@ export default class BatchProcessViewPage extends React.Component {
 
     let parameterIdentifiersToNames = {};
     system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
-    let parameterMappings = bp.mappings
-        .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
-        .map(x => [parameterIdentifiersToNames[x.key], x.value]);
+      let parameterMappings = bp.mappings
+          .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
+          .map(x => [parameterIdentifiersToNames[x.key], x.value]);
     let signalMappings = bp.mappings
         .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
         .map(x => [x.key, x.value]);
-    
     return (
       <div>
         <Box header={this.state.result.batch_process.name + " Results"}
@@ -252,8 +251,11 @@ export default class BatchProcessViewPage extends React.Component {
 
             <Grid item xs={12}>
               <CSVLink
-                data={kpiHeaders + kpiRows}
-                target="_blank" >
+                data={[kpiHeaders].concat(kpiRows.map(x => x.map(x => typeof(x) === 'object' ? removeTags(x.props.dangerouslySetInnerHTML.__html) : x )))}
+                target="_blank"
+                style={{ textDecoration: 'none' }}
+                filename={this.state.result.batch_process.name + " Results.csv"}
+              >
                 <Button style={{ margin: '1em 0 0 0' }}
                         variant="contained"
                         color="primary">
@@ -275,3 +277,11 @@ export default class BatchProcessViewPage extends React.Component {
     );
   }
 }
+
+ function removeTags(str) {
+      if ((str===null) || (str===''))
+      return false;
+      else
+      str = str.toString();
+      return str.replace( /(<([^>]+)>)/ig, '');
+ }
