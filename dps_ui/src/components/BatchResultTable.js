@@ -120,9 +120,7 @@ export default class BatchResultTable extends React.Component {
                 );
               } else if (data.status === 3) { // If queued,
                 return (
-                  <span style={{ color: 'blue' }}>
-                    Queued
-                  </span>
+                  <LinearProgressWithLabel label="Queued" />
                 );
               }
             }},

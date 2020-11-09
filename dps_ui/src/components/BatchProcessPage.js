@@ -162,14 +162,14 @@ export default class BatchProcessPage extends React.Component {
       });
     
     this.updateKPIResults(this.props.system_id);
-    this.intervalId = setInterval(() => {
-      this.updateKPIResults(this.props.system_id);
-    }, 1000);
+    // this.intervalId = setInterval(() => {
+    //   this.updateKPIResults(this.props.system_id);
+    // }, 1000);
   }
 
-  componentWillUnmount() {
-    clearInterval(this.intervalId);
-  }  
+  // componentWillUnmount() {
+  //   clearInterval(this.intervalId);
+  // }  
 
   updateKPIResults(system_id) {
     api.post('get_kpis', {

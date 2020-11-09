@@ -6,15 +6,23 @@ import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 
 export default function LinearProgressWithLabel(props) {
+  const label = props.label || `${Math.round(
+          props.value,
+        )}%`;
+
+  let progress = null;
+  if (props.label) progress = (<LinearProgress {...props} />);
+  else  progress = (<LinearProgress variant="determinate" {...props} />);
+
   return (
     <Box display="flex" alignItems="center">
       <Box width="100%" mr={1}>
-        <LinearProgress variant="determinate" {...props} />
+        {progress}
       </Box>
       <Box minWidth={35}>
-        <Typography variant="body2" color="textSecondary">{`${Math.round(
-          props.value,
-        )}%`}</Typography>
+        <Typography variant="body2" color="textSecondary">{
+          label
+        }</Typography>
       </Box>
     </Box>
   );
