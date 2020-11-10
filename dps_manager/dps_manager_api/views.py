@@ -199,6 +199,53 @@ def batch_process_results(request):
         'data': results,
     })
 
+
+@csrf_exempt
+def signal_names_table(request):
+    jo = json.loads(request.body)
+    
+    page_size       = jo['page_size']
+    page_number     = jo['page_number']
+    dataset         = jo['dataset']    
+    search          = jo['search']
+    order_direction = jo.get('order_direction', '') 
+    
+    offset = page_size * page_number
+    limit  = page_size
+
+    resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
+        'dataset': dataset,
+        'query': search,
+        'offset': offset,
+        'limit': limit,
+    }).json()['results'][0]
+
+    total = resp['total']
+    queries = []
+    for value in resp['values']:
+        queries.append({
+            'signals': [value],
+            'aggregation': 'count',
+            'dataset': dataset,
+        })
+
+    resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
+        'queries': queries,
+    }).json()['results']
+
+    results = []
+    for result in resp:
+        results.append({
+            'name': result['query']['signals'][0],
+            'count': result['values'][0],
+        })
+
+    return JsonResponse({
+        'total': total,
+        'page': page_number,
+        'data': results,
+    })
+
 @csrf_exempt
 def get_batch_process_result(request, id):
     obj = Object.objects.filter(object_id=id).first()

@@ -352,15 +352,15 @@ export default class BatchProcessPage extends React.Component {
                          // Force an update
                          this.setState({ signals: this.state.signals });
                        }}
+                        error={hasError}
+                       helperText={hasError ? this.state.mappingErrors[i].value : ''}
                        limit={10}
-                                 />)
+                     />)
                     /* (<Select */
                     /*    fullWidth={true} */
                     /*    name="name" */
-                          /*    error={hasError} */
-                          /*    helperText={hasError ? this.state.mappingErrors[i].value : ''} */
                           /*    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''} */
-                          /*    onChange={e => { */
+                    /*    onChange={e => { */
                           /*      this.state.signalInputs[signal] = e.target.value; */
                           /*      // Force an update */
                           /*      this.setState({ signals: this.state.signals }); */

@@ -107,7 +107,7 @@ class SignalQueryResult:
         if validate:
             if len(values) != len(self.signals):
                 raise Exception('Must provide a value for every signal value.')
-            if time < self.query.interval.start or time > self.query.interval.end:
+            if self.query.interval and (time < self.query.interval.start or time > self.query.interval.end):
                 start = util.quoted(self.query.interval.start)
                 end = util.quoted(self.query.interval.end)
                 raise Exception(f'Given time {util.quoted(time)} is out-of-bounds of the query interval (between {start} and {end}).')
@@ -144,11 +144,16 @@ class AggregateQueryResult:
 class GetSignalNamesResult:
     def __init__(self):
         self.results = []
+        self.total = 0
 
     def add(self, name):
         self.results.append(name)
 
+    def set_total(self, total):
+        self.total = total
+
     def to_dict(self):
         return {
             'values': self.results,
+            'total': self.total,
         }

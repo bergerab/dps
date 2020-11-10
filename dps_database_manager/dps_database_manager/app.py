@@ -45,11 +45,13 @@ class TimescaleDBDataStore(dbm.DataStore):
     def get_signal_names(self, result, dataset_name, query, limit, offset):
         dataset = dbc.get_dataset_by_name(dataset_name)
         with dbc.scope() as session:
-            for signal in session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
+            q = session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
                                                .filter(Signal.name.ilike(f'%{query}%')) \
-                                               .order_by(Signal.name).all()[offset:offset+limit]:
+                                               .order_by(Signal.name)            
+            for signal in q.all()[offset:offset+limit]:
                 if signal.dataset_id == dataset.dataset_id:
                     result.add(signal.name)
+            result.set_total(q.count())
 
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
@@ -107,7 +109,10 @@ class TimescaleDBDataStore(dbm.DataStore):
                 result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id, signal_ids).scalar())
 
     def time_filter(self, query, interval, dataset_id, signal_ids):
-        return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
+        if interval:
+            return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
+        else:
+            return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.signal_id.in_(signal_ids)))            
 
     # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):

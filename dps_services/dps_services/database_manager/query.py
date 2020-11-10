@@ -26,12 +26,13 @@ class Query:
         d = {
             'dataset': self.dataset,
             'signals': self.signals,
-            'interval': self.interval.to_dict(),
         }
         if self.aggregation:
             d['aggregation'] = self.aggregation
         if self.limit:
             d['limit'] = self.limit
+        if self.interval:
+            d['interval'] = self.interval.to_dict()
         return d
             
 class Interval:
@@ -76,12 +77,14 @@ def load_query_json(query_json):
             with validator.scope_list('queries', i):
                 dataset = validator.require('dataset', str, optional=True)
                 signals = validator.require('signals', list)
-                interval = validator.require('interval', object)
                 limit = validator.require('limit', int, optional=True)
-                with validator.scope('interval'):
-                    interval_start = validator.require('start', datetime_format_string=util.DATETIME_FORMAT_STRING)
-                    interval_end = validator.require('end', datetime_format_string=util.DATETIME_FORMAT_STRING)
+                interval = validator.require('interval', object, optional=True)
+                if interval:
+                    with validator.scope('interval'):
+                        interval_start = validator.require('start', datetime_format_string=util.DATETIME_FORMAT_STRING)
+                        interval_end = validator.require('end', datetime_format_string=util.DATETIME_FORMAT_STRING)
+                        interval = Interval(interval_start, interval_end)
                 aggregation = validator.require('aggregation', str, optional=True,
                                                 one_of=['average', 'count', 'min', 'max'])
-            queries.append(Query(dataset, signals, Interval(interval_start, interval_end), aggregation, limit))
+            queries.append(Query(dataset, signals, interval, aggregation, limit))
         return queries

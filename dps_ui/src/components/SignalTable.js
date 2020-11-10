@@ -52,34 +52,23 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-export default class BatchResultTable extends React.Component {
+export default class SignalTable extends React.Component {
   constructor(props) {
     super(props);
     this.tableRef = React.createRef();
-
   }
-
-  componentDidMount() {
-    // this.intervalId = setInterval(() => {
-    //   this.tableRef.current.onQueryChange();
-    // }, 10000);
-  }
-
-  componentWillUnmount() {
-    // clearInterval(this.intervalId);
-  }  
   
   render () {
     return (
       <MaterialTable
         icons={tableIcons}
-        title="Batch Processes"
+        title=""
         tableRef={this.tableRef}
         options={{
           search: true,
           sorting: true,
           exportButton: false,
-          pageSize: 5,
+          pageSize: 10,
         }}          
         actions={[
           {
@@ -93,78 +82,26 @@ export default class BatchResultTable extends React.Component {
           { title: 'Name',
             field: 'name',
             render: data => {
-              return data.batch_process.name;
+              return data.name;
             },
             sorting: false
           },
-          { title: 'Ran At',
-            field: 'batch_process_time',
+          { title: 'Samples',
+            field: 'count',
             render: data => {
-              return moment(Date.parse(data.batch_process_time)).format('LL LTS');
+              return data.count.toLocaleString();
             },
-            defaultSort: 'desc',
-            sorting: false,
+            sorting: false
           },
-          /* { title: 'Total Samples', */
-          /*   field: 'total_samples', */
-          /*   sorting: false, */
-          /* }, */
-          { title: 'Samples Processed',
-            field: 'processed_samples',
-            sorting: false,
-            render: data => {
-              if (!data.processed_samples) return data.processed_samples
-              return data.processed_samples.toLocaleString();
-            }
-          },
-          { title: 'Status',
-            sorting: false,
-            render: data => {
-              if (data.status === 1) { // If running,
-                let progress = 0;
-                if (data.total_samples > 0)
-                  progress = (data.processed_samples / data.total_samples) * 100
-                return (
-                  <LinearProgressWithLabel variant="determinate" value={progress} />
-                );
-              } else if (data.status === 0) { // If error,
-                return (
-                  <LinearProgressWithLabel variant="determinate" color="secondary" label={"Error"} value={100} />
-                );
-              } else if (data.status === 2) { // If complete,
-                return (
-                  <LinearProgressWithLabel variant="determinate" value={100} />
-                );
-              } else if (data.status === 3) { // If queued,
-                return (
-                  <LinearProgressWithLabel label="Queued" />
-                );
-              }
-            }},
-          {
-            title: '',
-            sorting: false,
-            render: data => {
-              return (
-                <Link to={"/batch-process/" + data.batch_process_id}>
-                  <Button variant="outlined"
-                          color="primary"
-                          style={{ marginRight: '10px' }}>
-                    View
-                  </Button>
-                </Link>
-              )
-            }
-          }
         ]}
         data={query =>
               new Promise((resolve, reject) => {
-                api.post('batch_process_results', { 'page_size':       query.pageSize,
-                                                    'page_number':     query.page,
-                                                    'search':          query.search,
-                                                    'system_id':       this.props.system_id,
-                                                    'order_direction': query.orderDirection,
-                                                  })
+                api.post('signal_names_table', { 'page_size':       query.pageSize,
+                                                 'page_number':     query.page,
+                                                 'search':          query.search,
+                                                 'dataset':         '',
+                                                 'order_direction': query.orderDirection,
+                                               })
                   .then(result => {
                     resolve({
                       data: result.data,

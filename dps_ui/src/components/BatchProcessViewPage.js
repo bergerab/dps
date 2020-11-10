@@ -44,27 +44,27 @@ export default class BatchProcessViewPage extends React.Component {
 
     let percentComplete = '0%';
     if (result.total_samples !== 0)
-      percentComplete = (result.processed_samples / result.total_samples) * 100 + '%';
+      percentComplete = ((result.processed_samples / result.total_samples) * 100).toFixed(2) + '%';
 
     let processStats;
     if (result.status === 0) { // If process errored
       processStats = (<div>
-                        <Grid item xs={12}>            
+                      <Grid item xs={12}>            
                           <TextField
                             label="Status"
-                            InputProps={{
+                     InputProps={{
                               readOnly: true,
-                            }}              
-                            value={"Failed"}
-                          />
-                        </Grid>
-                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
-                          <TextField
-                            label="Error Message"
-                            InputProps={{
-                              readOnly: true,
-                            }}              
-                            value={result.message}
+                              }}              
+                      value={"Failed"}
+                                  />
+                     </Grid>
+                     <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                                   <TextField
+                      label="Error Message"
+                                 InputProps={{
+                                   readOnly: true,
+                                           }}              
+                      value={result.message}
                             multiline={true}
                             rows={5}
                             fullWidth={true}
@@ -128,23 +128,23 @@ export default class BatchProcessViewPage extends React.Component {
                             style={{ paddingRight: '1em' }}
                           />
                         </Grid>
-                       </div>)
+                      </div>)
     } else if (result.status === 2) { // If process has completed
       processStats = (<div>
-                        <Grid item xs={12}>            
-                          <TextField
-                            label="Status"
-                            InputProps={{
-                              readOnly: true,
-                            }}              
-                            value={"Complete"}
-                          />
-                        </Grid>
-                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
-                          <TextField
-                            label="Started At"
-                            InputProps={{
-                              readOnly: true,
+                         <Grid item xs={12}>            
+                           <TextField
+                             label="Status"
+                             InputProps={{
+                               readOnly: true,
+                             }}              
+                             value={"Complete"}
+                           />
+                         </Grid>
+                         <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                           <TextField
+                             label="Started At"
+                             InputProps={{
+                               readOnly: true,
                             }}              
                             value={moment(result.batch_process_time).format('LL LTS')}
                             style={{ width: '20em' }}/>
@@ -189,14 +189,14 @@ export default class BatchProcessViewPage extends React.Component {
     }).map(kpi => {
       return [kpi.name,
               (<div className="system-description" dangerouslySetInnerHTML={{ __html: kpi.description }}></div>),
-              kpiResults[kpi.name]];
+              formatNumber(kpiResults[kpi.name])];
     });
 
     let parameterIdentifiersToNames = {};
     system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
       let parameterMappings = bp.mappings
           .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
-          .map(x => [parameterIdentifiersToNames[x.key], x.value]);
+          .map(x => [parameterIdentifiersToNames[x.key], formatNumber(x.value)]);
     let signalMappings = bp.mappings
         .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
         .map(x => [x.key, x.value]);
@@ -285,3 +285,9 @@ export default class BatchProcessViewPage extends React.Component {
       str = str.toString();
       return str.replace( /(<([^>]+)>)/ig, '');
  }
+
+function formatNumber(s) {
+  const n = +s
+  if (Number.isNaN(n)) return s;
+  return n.toLocaleString();
+}

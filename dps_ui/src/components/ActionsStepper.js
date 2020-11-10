@@ -6,7 +6,7 @@ import StepLabel from '@material-ui/core/StepLabel';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
-import { list } from '../api';
+import { get, post, list } from '../api';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -35,21 +35,24 @@ export default function HorizontalLabelPositionBelowStepper() {
   const steps = getSteps();
 
   useEffect(() => {
-    list('/data-connector/').then(r => r.json()).then(jo => {
+    list('batch_process').then(jo => {
       if (jo.length > 0) {
-	setActiveStep(1);
-	list('/system/').then(r => r.json()).then(jo => {
-	  if (jo.length > 0) {
-	    setActiveStep(2);
-	    list('/data-set/').then(r => r.json()).then(jo => {
-	      if (jo.length > 0) {
-		setActiveStep(3);
+	setActiveStep(3);
+      } else {
+        list('system').then(jo => {
+          if (jo.length > 0) {
+	    setActiveStep(1);
+	    post('get_signal_names', { dataset: '', limit: 1, offset: 0, query: '', }).then(jo => {
+              console.log(jo.values);
+	      if (jo.values.length > 0) {
+	        setActiveStep(2);
 	      }
 	    });
-	  }
-	});
+          }
+        });
       }
     });
+
   }, []);
 
   const handleReset = () => {
@@ -66,12 +69,8 @@ export default function HorizontalLabelPositionBelowStepper() {
 	))}
       </Stepper>
       <div>
-	{activeStep === steps.length ? (
-	  <div>
-	    <Typography className={classes.instructions}>All steps completed</Typography>
-	    <Button onClick={handleReset}>Reset</Button>
-	  </div>
-	) : (
+	{activeStep === steps.length ? (<div></div>
+	                               ) : (
 	  <div>
 	    <Typography className={classes.instructions}>
 	      {
