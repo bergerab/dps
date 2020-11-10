@@ -215,9 +215,9 @@ def signal_names_table(request):
 
     resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
         'dataset': dataset,
-        'query': search,
-        'offset': offset,
-        'limit': limit,
+        'query':   search,
+        'offset':  offset,
+        'limit':   limit,
     }).json()['results'][0]
 
     total = resp['total']
@@ -255,6 +255,11 @@ def get_batch_process_result(request, id):
     return JsonResponse(result)
 
 def get_result(batch_process_obj):
+    '''
+    A helper function for `get_batch_process_result` and `batch_process_results`.
+
+    It takes a batch process, and returns some results object for it (even if it has to create a fake one).
+    '''
     result_obj = Object.objects.filter(kind=ResultsAPI.kind, ref=batch_process_obj.object_id).first()
     # If no result, make a fake one
     if result_obj:
@@ -267,16 +272,16 @@ def get_result(batch_process_obj):
             'status': 3, # Queued
         }
     bp = json.loads(batch_process_obj.value)
-    result['batch_process'] = bp
+    result['batch_process']      = bp
     result['batch_process_time'] = batch_process_obj.created_at
     return result
         
 def info(request):
     return JsonResponse({
-        'type': 'dps-manager',
-        'version': '1.0.0',
+        'type':      'dps-manager',
+        'version':   '1.0.0',
         'protocols': ['application/json'],
-        'debug': settings.DEBUG,
+        'debug':     settings.DEBUG,
     })
 
 @csrf_exempt
@@ -284,8 +289,115 @@ def get_signal_names(request):
     jo = json.loads(request.body)
     resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
         'dataset': jo['dataset'],
-        'query': jo['query'],
-        'offset': jo['offset'],
-        'limit': jo['limit'],
+        'query':   jo['query'],
+        'offset':  jo['offset'],
+        'limit':   jo['limit'],
     }).json()['results'][0]
     return JsonResponse(resp)
+
+@csrf_exempt
+def get_chart_data(request):
+    '''
+    The request should be like this:
+    {
+        "series": [
+            {
+                'signal': 'Va',
+                'dataset': '',
+                'aggregation': 'max'
+            },
+            {
+                'signal': 'Vb',
+                'dataset': '',
+                'aggregation': 'avg'
+            }
+        ],
+        "interval": {
+            "start": "...",
+            "end":   "..."
+        },
+        "samples": 10
+    }
+
+    The result should be like this:
+    {
+        "series": [
+            {
+                "label": "Va",
+                "data":  [[t0, v0], [t1, v1], [t2, v2]]
+            },
+            {
+                "label": "Vb",
+                "data":  [[t0, v0], [t1, v1], [t2, v2]]
+            }
+        ]
+    }
+
+    Where t0 - t2 indicate times, and v0 - v2 are values. This response matches the API for "react-charts"
+    which is why I decided to do it this way.
+    '''
+    jo = json.loads(request.body)
+
+    # We will be building up several "query" objects that the Database Manager understands
+    queries = []
+    
+    series    = jo['series']
+    interval  = jo['interval']
+    samples   = jo['samples']
+    intervals = get_sample_ranges(util.parse_datetime(interval['start']),
+                                  util.parse_datetime(interval['end']),
+                                  samples)
+    for s in series:
+        signal      = s['signal']
+        dataset     = s['dataset']
+        aggregation = s['aggregation']
+
+        for start, end in intervals:
+            queries.append({
+                'signals':     [signal],
+                'dataset':     dataset,
+                'aggregation': aggregation,
+                'interval': {
+                    'start': util.format_datetime(start),
+                    'end':   util.format_datetime(end),
+                }
+            })
+        
+    resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
+        'queries': queries,
+    }).json()['results']
+
+    results = []
+    for i, s in enumerate(series):
+        data = []
+        for j, (start, end) in enumerate(intervals):
+            result = resp[(i * samples) + j]
+            
+            # Get the time between start and end to use in chart
+            dt = end - start
+            start += dt/2
+            data.append((start, result['values'][0]))
+        results.append({ 'label': s['signal'],
+                         'data':  data })
+    return JsonResponse({ 'series': results })
+        
+def get_sample_ranges(start_time, end_time, sample_count):
+    '''
+    Given a time range, and number of desired samples, return a list of ranges of size equal to `sample_count`.
+
+    This is used for creating charts.
+
+    Samples linearly.
+    '''
+    dt   = end_time - start_time
+    step = dt/sample_count
+    t0   = start_time
+    t1   = start_time + step
+    
+    ranges = [(t0, t1)]
+    while t1 < end_time:
+        t0 += step
+        t1 += step
+        ranges.append((t0, t1))
+    return ranges
+    

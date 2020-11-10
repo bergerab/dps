@@ -142,6 +142,6 @@ def make_app():
 
 if __name__ == '__main__':
     try:
-        make_app().run(debug=DEBUG, port=3002)
+        make_app().run(debug=DEBUG, port=3002, threaded=True)
     finally:
         dbc.engine.dispose()

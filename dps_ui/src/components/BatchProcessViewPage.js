@@ -9,6 +9,7 @@ import TextField from '@material-ui/core/TextField';
 
 import Box from './Box';
 import Row from './Row';
+import SignalChart from './Chart';
 import Link from './Link';
 import InputLabel from './InputLabel';
 import PrettyTable from './PrettyTable';
@@ -52,19 +53,19 @@ export default class BatchProcessViewPage extends React.Component {
                       <Grid item xs={12}>            
                           <TextField
                             label="Status"
-                     InputProps={{
+                            InputProps={{
                               readOnly: true,
-                              }}              
-                      value={"Failed"}
-                                  />
-                     </Grid>
-                     <Grid item xs={12} style={{ paddingTop: '1em' }}>            
-                                   <TextField
-                      label="Error Message"
-                                 InputProps={{
-                                   readOnly: true,
-                                           }}              
-                      value={result.message}
+                            }}              
+                            value={"Failed"}
+                          />
+                      </Grid>
+                        <Grid item xs={12} style={{ paddingTop: '1em' }}>            
+                          <TextField
+                            label="Error Message"
+                            InputProps={{
+                              readOnly: true,
+                            }}              
+                            value={result.message}
                             multiline={true}
                             rows={5}
                             fullWidth={true}
@@ -200,6 +201,20 @@ export default class BatchProcessViewPage extends React.Component {
     let signalMappings = bp.mappings
         .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
         .map(x => [x.key, x.value]);
+
+
+    let charts;
+    charts =
+      kpiRows.map(x => x[0]).map(kpiName =>
+                                 (<SignalChart
+                                    signals={[{
+                                      'signal': kpiName,
+                                    }]}
+                                    key={kpiName}
+                                    startTime={moment(bp.interval.start + 'Z')}
+                                    endTime={moment(bp.interval.end + 'Z')}
+                                    samples={50}
+                                />))
     return (
       <div>
         <Box header={this.state.result.batch_process.name + " Results"}
@@ -266,15 +281,22 @@ export default class BatchProcessViewPage extends React.Component {
 
           </Grid>
         </Box>
-        
-        <Box
-          header="Stats">
-          <Grid item xs={12}>
-            {processStats}
-          </Grid>
-        </Box>
-      </div>
-    );
+
+            <Box
+              header="Output">
+              <Grid item xs={12}>
+                {charts}
+              </Grid>
+            </Box>
+            
+            <Box
+              header="Stats">
+              <Grid item xs={12}>
+                {processStats}
+              </Grid>
+            </Box>
+          </div>
+        );
   }
 }
 
