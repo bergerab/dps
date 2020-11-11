@@ -376,7 +376,10 @@ def get_chart_data(request):
             # Get the time between start and end to use in chart
             dt = end - start
             start += dt/2
-            data.append((start, result['values'][0]))
+            data.append((
+                start,
+                result['values'][0],
+            ))
         results.append({ 'label': s['signal'],
                          'data':  data })
     return JsonResponse({ 'series': results })
