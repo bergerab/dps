@@ -206,15 +206,18 @@ export default class BatchProcessViewPage extends React.Component {
     let charts;
     charts =
       kpiRows.map(x => x[0]).map(kpiName =>
-                                 (<SignalChart
-                                    signals={[{
-                                      'signal': kpiName,
-                                    }]}
-                                    key={kpiName}
-                                    startTime={moment(bp.interval.start + 'Z')}
-                                    endTime={moment(bp.interval.end + 'Z')}
-                                    samples={50}
-                                />))
+                                 (<Grid item xs={6} key={kpiName}>
+                                    <SignalChart
+                                      signals={[{
+                                        'signal': kpiName,
+                                      }]}
+                                      batch_process_id={result.batch_process_id}
+                                      key={kpiName}
+                                      startTime={moment(bp.interval.start + 'Z')}
+                                      endTime={moment(bp.interval.end + 'Z')}
+                                      samples={50}
+                                    />
+                                  </Grid>))
     return (
       <div>
         <Box header={this.state.result.batch_process.name + " Results"}
@@ -284,7 +287,7 @@ export default class BatchProcessViewPage extends React.Component {
 
             <Box
               header="Output">
-              <Grid item xs={12}>
+              <Grid container>
                 {charts}
               </Grid>
             </Box>
