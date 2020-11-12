@@ -36,7 +36,7 @@ function SignalChart(props) {
       }]
     },
     pan: {
-      enabled: true,
+      enabled: false,
       mode: 'x',
       onPan: function({chart}) {
         const timeScales = chart.scales['x-axis-0'];
@@ -46,7 +46,7 @@ function SignalChart(props) {
       }
     },
     zoom: {
-      /* drag: true, */
+      drag: true,
       enabled: true,         
       mode: 'x',
       threshold: 10,
