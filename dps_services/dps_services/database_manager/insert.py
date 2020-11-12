@@ -55,3 +55,18 @@ def load_insert_json(insert_json):
                 times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING)
             inserts.append(Insert(dataset, signals, samples, times))
         return inserts
+
+
+def load_insert_protobuf(insert_protobuf):
+    '''
+    Converts a protobuf object to the objects the DBM expects.
+
+    This skips all validation to increase speed.
+    '''
+    inserts = []
+    for insert in insert_protobuf.inserts:
+        samples = [sampleBatch.value for sampleBatch in insert.samples.batches]
+        times = [time.ToDatetime() for time in insert.times]
+        inserts.append(Insert(insert.dataset, insert.signals, samples, times))
+    return inserts
+    

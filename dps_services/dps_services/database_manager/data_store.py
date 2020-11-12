@@ -1,7 +1,6 @@
 import dps_services.util as util
 
 from .query import load_query_json
-from .insert import load_insert_json
 from .delete import load_delete_json
 
 class DataStore:
@@ -17,7 +16,7 @@ class DataStore:
     @classmethod
     def insert(DataStoreClass, insert_request):
         ds = DataStoreClass()
-        ds.execute_inserts(load_insert_json(insert_request))
+        ds.execute_inserts(insert_request)
     
     @classmethod
     def query(DataStoreClass, query_request):

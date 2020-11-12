@@ -11,7 +11,7 @@ message InsertRequest {
 message Insert {
   string dataset = 1;
   repeated string signals = 2;
-  repeated Samples samples = 3;
+  Samples samples = 3;
   repeated google.protobuf.Timestamp times = 4;
 }
 

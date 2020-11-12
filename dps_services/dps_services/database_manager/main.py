@@ -1,18 +1,29 @@
 import json
 
 from flask import Flask
+from flask import request, make_response
 
 import dps_services.util as util
+import dps_client.insert_pb2 as insert_pb2
+
 from .data_store import DataStore
+from .insert import load_insert_protobuf
+from .insert import load_insert_json
 
 def make_app(AppDataStore, debug=False):
     app = Flask(__name__)
 
     @app.route('/' + util.make_api_url('insert'), methods=['POST'])
-    @util.json_api
-    def insert(jo):
-        AppDataStore.insert(jo)
-        return True
+    def insert():
+        if request.content_type == 'application/protobuf':
+            insert_request = insert_pb2.InsertRequest()
+            insert_request.ParseFromString(request.data)
+            o = load_insert_protobuf(insert_request)
+            print('loaded object')
+        else: # Otherwise, assume JSON.
+            o = load_insert_json(request.get_json())
+        AppDataStore.insert(o)
+        return make_response({})
 
     if debug:
         @app.route('/' + util.make_api_url('delete_dataset'), methods=['POST'])

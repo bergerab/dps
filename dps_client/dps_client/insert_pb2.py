@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cinsert.proto\x12\x03\x64ps\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n\rInsertRequest\x12\x1c\n\x07inserts\x18\x01 \x03(\x0b\x32\x0b.dps.Insert\"t\n\x06Insert\x12\x0f\n\x07\x64\x61taset\x18\x01 \x01(\t\x12\x0f\n\x07signals\x18\x02 \x03(\t\x12\x1d\n\x07samples\x18\x03 \x03(\x0b\x32\x0c.dps.Samples\x12)\n\x05times\x18\x04 \x03(\x0b\x32\x1a.google.protobuf.Timestamp\"&\n\x07Samples\x12\x1b\n\x07\x62\x61tches\x18\x01 \x03(\x0b\x32\n.dps.Batch\"\x16\n\x05\x42\x61tch\x12\r\n\x05value\x18\x02 \x03(\x01\x62\x06proto3'
+  serialized_pb=b'\n\x0cinsert.proto\x12\x03\x64ps\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n\rInsertRequest\x12\x1c\n\x07inserts\x18\x01 \x03(\x0b\x32\x0b.dps.Insert\"t\n\x06Insert\x12\x0f\n\x07\x64\x61taset\x18\x01 \x01(\t\x12\x0f\n\x07signals\x18\x02 \x03(\t\x12\x1d\n\x07samples\x18\x03 \x01(\x0b\x32\x0c.dps.Samples\x12)\n\x05times\x18\x04 \x03(\x0b\x32\x1a.google.protobuf.Timestamp\"&\n\x07Samples\x12\x1b\n\x07\x62\x61tches\x18\x01 \x03(\x0b\x32\n.dps.Batch\"\x16\n\x05\x42\x61tch\x12\r\n\x05value\x18\x02 \x03(\x01\x62\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -83,8 +83,8 @@ _INSERT = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='samples', full_name='dps.Insert.samples', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),

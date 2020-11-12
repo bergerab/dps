@@ -4,10 +4,11 @@ import pandas as pd
 
 from datetime import datetime, timedelta
 
-# from google.protobuf.timestamp_pb2 import Timestamp
-# from google.protobuf.json_format import MessageToJson
+from google.protobuf.json_format import MessageToJson
+from google.protobuf.timestamp_pb2 import Timestamp
 
-# from .insert_pb2 import InsertRequest, Samples, Batch
+from .insert_pb2 import InsertRequest, Samples, Batch
+
 
 
 DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'
@@ -23,7 +24,7 @@ class Client:
 
     Protocol can be either "protobuf" or "json"
     '''
-    def __init__(self, url, dataset='', protocol='json'):
+    def __init__(self, url, dataset='', protocol='protobuf'):
         self.url = _normalize_url(url)
         self.dataset = dataset
         self.batches = []
@@ -123,7 +124,6 @@ class Client:
         
         if self.protocol == 'protobuf':
             o = self._flush(False)
-            print('FLUSH ', o)
             inserts_request = InsertRequest()
             insert_request = inserts_request.inserts.add()
             insert_request.dataset = self.dataset
@@ -135,15 +135,15 @@ class Client:
                 ts.FromDatetime(time)
                 insert_request.times.append(ts)
 
-            samples_request = insert_request.samples.add()
+            samples_request = insert_request.samples
             for batch in o['samples']:
                 batch_request = samples_request.batches.add()
                 batch_request.value.extend(batch)
 
             pb_string = inserts_request.SerializeToString()
-            print(pb_string)
-            print(MessageToJson(inserts_request))
-            return requests.post(url, data=pb_string)
+            return requests.post(url, data=pb_string, headers={
+                'Content-Type': 'application/protobuf',
+            })
         elif self.protocol == 'json':
             o = self._flush()
             response = requests.post(url, json={
