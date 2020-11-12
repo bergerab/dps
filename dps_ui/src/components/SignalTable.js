@@ -6,6 +6,7 @@ import MaterialTable from 'material-table';
 
 import Box from './Box';
 import Row from './Row';
+import SignalChart from './Chart';
 import Link from './Link';
 import LinearProgressWithLabel from './LinearProgressWithLabel';
 import api from '../api';
@@ -68,7 +69,7 @@ export default class SignalTable extends React.Component {
           search: true,
           sorting: true,
           exportButton: false,
-          pageSize: 10,
+          pageSize: 5,
         }}          
         actions={[
           {
@@ -90,6 +91,19 @@ export default class SignalTable extends React.Component {
             field: 'count',
             render: data => {
               return data.count.toLocaleString();
+            },
+            sorting: false
+          },
+          { title: 'Data',
+            render: data => {
+              return (<div style={{ width: '400px' }}>
+                        <SignalChart
+                          signals={[{
+                            'signal': data.name,
+                          }]}
+                          minimal={true}
+                        />
+                      </div>);
             },
             sorting: false
           },

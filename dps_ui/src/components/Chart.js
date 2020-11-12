@@ -8,39 +8,69 @@ import moment from 'moment';
 import api from '../api';
 import util from '../util';
 
+import debounce from 'lodash/debounce';
+
 function SignalChart(props) {
 
   const [data, setData] = React.useState([]);
   React.useEffect(() => {
-    fetchData(props.signals, props.startTime,
-              props.endTime, props.samples,
+    doFetch();
+  }, []);
+
+  const doFetch = debounce((startTime=props.startTime, endTime=props.endTime) => {
+    console.log('fetching');
+    fetchData(props.signals, startTime,
+              endTime, props.samples,
               props.batch_process_id).then(series => {
                 setData(series);
               });
-  }, []);
+  }, 500);
+
+  const options = {
+    animation: {
+      duration: 0, // disable animations
+    },
+    scales: {
+      xAxes: [{
+        type: 'time'
+      }]
+    },
+    pan: {
+      enabled: true,
+      mode: 'x',
+      onPan: function({chart}) {
+        const timeScales = chart.scales['x-axis-0'];
+        const startTime = new Date(timeScales.min);
+        const endTime = new Date(timeScales.max);            
+        doFetch(startTime, endTime);
+      }
+    },
+    zoom: {
+      /* drag: true, */
+      enabled: true,         
+      mode: 'x',
+      threshold: 10,
+      onZoom: function({chart}) {
+        const timeScales = chart.scales['x-axis-0'];
+        const startTime = new Date(timeScales.min);
+        const endTime = new Date(timeScales.max);            
+        doFetch(startTime, endTime);            
+      }
+    },
+  };
+
+  if (props.minimal) {
+    options.legend = {
+      display: false,
+    };
+  }
   
   return (
     // A react-chart hyper-responsively and continuously fills the available
     // space of its parent element automatically
     <Line
       data={data}
-      options={{
-        scales: {
-          xAxes: [{
-            type: 'time'
-          }]
-        },
-        pan: {
-          enabled: true,
-          mode: 'x',
-        },
-      zoom: {
-        /* drag: true, */
-        enabled: true,         
-        mode: 'x',
-        threshold: 10,
-      },
-      }}
+      options={options}
     />
   );
 }
