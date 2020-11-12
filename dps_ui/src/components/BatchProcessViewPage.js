@@ -202,7 +202,6 @@ export default class BatchProcessViewPage extends React.Component {
         .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
         .map(x => [x.key, x.value]);
 
-
     let charts;
     charts =
       kpiRows.map(x => x[0]).map(kpiName =>

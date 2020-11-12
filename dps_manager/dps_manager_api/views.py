@@ -5,7 +5,11 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+import math
+
 import requests
+from dateutil.relativedelta import relativedelta
+from datetime import datetime, timedelta
 
 import dps_services.util as util
 
@@ -374,8 +378,8 @@ def get_chart_data(request):
             result = resp[(i * samples) + j]
             
             # Get the time between start and end to use in chart
-            dt = end - start
-            start += dt/2
+            # dt = end - start
+            # start += dt/2
             data.append({
                 'x': start,
                 'y': result['values'][0],
@@ -383,22 +387,79 @@ def get_chart_data(request):
         results.append({ 'label': s['signal'],
                          'data':  data })
     return JsonResponse({ 'datasets': results })
+
+def get_interval(start_time, end_time):
+    d = end_time - start_time
+    seconds = int(d.total_seconds())    
+    microseconds = int(d.total_seconds() * 1e6)
+    if d.days / 365 > 4:
+        return 'years'
+    elif d.days / 30 > 2:
+        return 'months'
+    elif d.days > 5:
+        return 'days'
+    elif d.seconds / 3600 > 3:
+        return 'hours'
+    elif seconds / 60 > 3:
+        return 'minutes'
+    elif seconds / 30 > 3:
+        return 'halfminutes'
+    elif seconds / 10 > 3:
+        return 'tenseconds'
+    elif seconds > 3:
+        return 'seconds'
+    elif microseconds/100000 > 5:
+        return 'deciseconds'
+    elif microseconds/10000 > 5:
+        return 'centiseconds'
+    return 'milliseconds'
         
-def get_sample_ranges(start_time, end_time, sample_count):
-    '''
-    Given a time range, and number of desired samples, return a list of ranges of size equal to `sample_count`.
+def get_sample_ranges(start_time, end_time, _):
+    interval = get_interval(start_time, end_time)
+    print('interval', interval)
+    if interval == 'years':
+        start_time = start_time.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
+    elif interval == 'months':
+        start_time = start_time.replace(day=0, hour=0, minute=0, second=0, microsecond=0)
+        step = timedelta(months=1)
+    elif interval == 'days':
+        start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        step = timedelta(days=1)        
+    elif interval == 'hours':
+        start_time = start_time.replace(minute=0, second=0, microsecond=0)
+        step = timedelta(hours=1)                
+    elif interval == 'minutes':
+        start_time = start_time.replace(second=0, microsecond=0)
+        step = timedelta(minutes=1)
+    elif interval == 'halfminutes':
+        start_time = start_time.replace(second=0, microsecond=0)
+        step = timedelta(minutes=1/2)
+    elif interval == 'tenseconds':
+        start_time = start_time.replace(microsecond=0)
+        step = timedelta(seconds=10)
+    elif interval == 'seconds':
+        start_time = start_time.replace(microsecond=0)
+        step = timedelta(seconds=1)
+    elif interval == 'deciseconds':
+        start_time = start_time.replace(microsecond=math.floor(start_time.microsecond/100000) * 100000)
+        step = timedelta(microseconds=100000)                                
+    elif interval == 'centiseconds':
+        start_time = start_time.replace(microsecond=math.floor(start_time.microsecond/10000) * 10000)
+        step = timedelta(microseconds=10000)                                
+    elif interval == 'milliseconds':
+        start_time = start_time.replace(microsecond=math.floor(start_time.microsecond/1000) * 1000)
+        step = timedelta(microseconds=1000)                                
+    elif interval == 'microseconds':
+        step = timedelta(microseconds=1)
 
-    This is used for creating charts.
+    print(start_time, step)
 
-    Samples linearly.
-    '''
     dt   = end_time - start_time
-    step = dt/sample_count
     t0   = start_time
     t1   = start_time + step
     
     ranges = [(t0, t1)]
-    while t1 < end_time:
+    while t1 <= end_time:
         t0 += step
         t1 += step
         ranges.append((t0, t1))

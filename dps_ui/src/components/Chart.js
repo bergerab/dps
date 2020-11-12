@@ -112,7 +112,7 @@ function fetchData(signals, startTime, endTime, samples, batch_process_id) {
       for (const s of data.datasets) {
 
         for (const d of s.data) {
-          d.x = new Date(Date.parse(d.x));
+          d.x = new Date(Date.parse(d.x + 'Z'));
           // d[1] = d[1] === null ? 0 : d[1]; //sets any null values to 0
         }
         s.backgroundColor = colors[colorIndex];
