@@ -5,6 +5,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+import psycopg2
+
 from config import CONNECTION
 
 Base = declarative_base()
@@ -29,8 +31,11 @@ class SignalData(Base):
 
 class DatabaseClient:
     def __init__(self):
-        self.engine = create_engine(CONNECTION)
-        self.Session = sessionmaker(bind=self.engine)
+        self.engine = create_engine(CONNECTION, echo=False)
+        self.Session = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
+
+        # Keep a direct database driver connection for inserts (high speed)
+        self.psycopg2_conn = psycopg2.connect(CONNECTION)
 
         # Keep caches for datasets and signals to avoid database lookups.
         self.cache()

@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime
+from io import StringIO
 
 from sqlalchemy import and_
 from sqlalchemy.sql import func
@@ -14,12 +15,17 @@ dbc = None
 class TimescaleDBDataStore(dbm.DataStore):
     def insert_signals(self, dataset_name, signal_names, batches, times):
         with dbc.scope() as session:
+            t0 = datetime.now()
+            
             dataset = dbc.get_dataset_by_name(dataset_name)
             # If the dataset, doesn't exist in the database, create it and continue.
             if dataset is None:
                 dataset = Dataset(name=dataset_name)
                 dbc.add(session, dataset)
                 session.commit()
+
+            print('fetching dataset took', datetime.now() - t0)
+            t0 = datetime.now()
 
             signals = []
             for signal_name in signal_names:
@@ -31,16 +37,44 @@ class TimescaleDBDataStore(dbm.DataStore):
                     session.commit()
                 signals.append(signal)
 
+            print('fetching signals took', datetime.now() - t0)
+            t0 = datetime.now()
+
+            signal_datas = ''
             for i, batch in enumerate(batches):
                 for j, sample in enumerate(batch):
-                    time = times[i]
-                    signal = signals[j]
+                    signal_datas += f'{signals[j].signal_id}\t{sample}\t{times[i]}\n'
+                    
+                    # time = times[i]
+                    # signal = signals[j]
                 
-                    # Add the actual signal_data to the database for each (one signal_data for each sample).
-                    signal_data = SignalData(signal_id=signal.signal_id, value=sample, time=time)
-                    dbc.add(session, signal_data)
-            session.commit()
-            session.expunge_all()
+                    # # Add the actual signal_data to the database for each (one signal_data for each sample).
+                    # signal_datas.append(SignalData(signal_id=signal.signal_id, value=sample, time=time))
+                    # # dbc.add(session, signal_data)
+                    # # session.bulk_save_objects()
+
+            print('preparing data took ', datetime.now() - t0)
+            t0 = datetime.now()
+
+            cursor = dbc.psycopg2_conn.cursor()
+            cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'value', 'time'))            
+                    
+            # session.bulk_save_objects(signal_datas)
+            # cur.copy_from(f, 'test', columns=('num', 'data'))
+
+            print('copy_from took ', datetime.now() - t0)
+            t0 = datetime.now()
+
+            dbc.psycopg2_conn.commit()
+
+            print('commit data took ', datetime.now() - t0)
+            t0 = datetime.now()
+
+            cursor.close()
+            
+            # session.expunge_all()
+
+            print('close took ', datetime.now() - t0)
 
     def get_signal_names(self, result, dataset_name, query, limit, offset):
         dataset = dbc.get_dataset_by_name(dataset_name)
@@ -145,3 +179,4 @@ if __name__ == '__main__':
         make_app().run(debug=DEBUG, port=3002, threaded=True)
     finally:
         dbc.engine.dispose()
+        dbc.psycopg2_conn.close()

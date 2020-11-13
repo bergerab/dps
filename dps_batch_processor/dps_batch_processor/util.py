@@ -30,9 +30,10 @@ def get_system_parameters(system):
     '''
     parameters = []
     for parameter in system['parameters']:
-        identifier = parameter['identifier'] or parameter['name']                        
-        if parameter['default']:
-            mappings[identifier] = parameter['default']
+        identifier = parameter['identifier'] or parameter['name']
+        # TODO: Use default parameter values
+        # if parameter['default']:
+        #     mappings[identifier] = parameter['default']
         parameters.append(identifier)
     return parameters
 

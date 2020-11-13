@@ -183,8 +183,9 @@ class BatchProcessSerializer(serializers.Serializer):
         parameters = []
         for parameter in system['parameters']:
             identifier = parameter['identifier'] or parameter['name']
-            if parameter['default']:
-                mappings[identifier] = parameter['default']
+            # TODO: Make defaults work
+            # if parameter['default']:
+            #     data['mappings'][identifier] = parameter['default']
             parameters.append(identifier)
 
         errors = {}
