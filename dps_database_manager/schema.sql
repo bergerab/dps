@@ -13,11 +13,14 @@ CREATE TABLE signals(
 );
 
 CREATE TABLE signal_data(
-    signal_data_id  INT GENERATED ALWAYS AS IDENTITY,
     signal_id  INT NOT NULL,
     value      DOUBLE PRECISION NOT NULL,
-    time       TIMESTAMP NOT NULL,
-    FOREIGN KEY (signal_id) REFERENCES signals(signal_id)
+    time       TIMESTAMPTZ NOT NULL
 );
 
 SELECT create_hypertable('signal_data', 'time');
+
+-- No foreign key constraint on `signal_data`, because without it
+-- insert speed was faster by ~40% (for 100,000 records).
+-- The best solution is to keep the foreign key constraint, and before
+-- a bulk insert, drop the constraint, and add it back after the bulk insert is done.

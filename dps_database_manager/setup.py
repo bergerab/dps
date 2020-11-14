@@ -10,7 +10,8 @@ setup(
     install_requires=[
         'Flask',
         'SQLAlchemy',
-        'psycopg2-binary'
+        'psycopg2-binary',
+        'pgcopy',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],    

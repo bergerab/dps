@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime
 from io import StringIO
+import itertools
 
 from sqlalchemy import and_
 from sqlalchemy.sql import func
@@ -13,6 +14,10 @@ from config import DEBUG
 dbc = None
 
 class TimescaleDBDataStore(dbm.DataStore):
+    UPSERT_QUERY = UpsertQuery('signal_data',
+                               ('signal_id', 'time'),
+                               ('value',))
+    
     def insert_signals(self, dataset_name, signal_names, batches, times):
         with dbc.scope() as session:
             t0 = datetime.now()
@@ -40,41 +45,26 @@ class TimescaleDBDataStore(dbm.DataStore):
             print('fetching signals took', datetime.now() - t0)
             t0 = datetime.now()
 
-            signal_datas = ''
-            for i, batch in enumerate(batches):
-                for j, sample in enumerate(batch):
-                    signal_datas += f'{signals[j].signal_id}\t{sample}\t{times[i]}\n'
-                    
-                    # time = times[i]
-                    # signal = signals[j]
-                
-                    # # Add the actual signal_data to the database for each (one signal_data for each sample).
-                    # signal_datas.append(SignalData(signal_id=signal.signal_id, value=sample, time=time))
-                    # # dbc.add(session, signal_data)
-                    # # session.bulk_save_objects()
+            # I think this is the fastest way to generate the string we need
+            # List comprehensions are fast (faster than loops):
+            signal_datas = ''.join(
+                (''.join((f'{signals[j].signal_id}\t{times[i]}\t{sample}\n' for j, sample in enumerate(batch))))
+                for i, batch in enumerate(batches))
 
             print('preparing data took ', datetime.now() - t0)
+            print('there are ', len(batches) * len(batches[0]))
             t0 = datetime.now()
 
             cursor = dbc.psycopg2_conn.cursor()
-            cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'value', 'time'))            
-                    
-            # session.bulk_save_objects(signal_datas)
-            # cur.copy_from(f, 'test', columns=('num', 'data'))
+            if True:
+                cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'time', 'value'))
+            else:
+                self.UPSERT_QUERY.execute(cursor, StringIO(signal_datas))
 
             print('copy_from took ', datetime.now() - t0)
             t0 = datetime.now()
 
             dbc.psycopg2_conn.commit()
-
-            print('commit data took ', datetime.now() - t0)
-            t0 = datetime.now()
-
-            cursor.close()
-            
-            # session.expunge_all()
-
-            print('close took ', datetime.now() - t0)
 
     def get_signal_names(self, result, dataset_name, query, limit, offset):
         dataset = dbc.get_dataset_by_name(dataset_name)
@@ -168,7 +158,7 @@ def flush_buffer(result, buffer, previous_time, signal_ids):
         if not signal_existed:
             frame.append(0)
     result.add(frame, previous_time)
-        
+
 def make_app():
     global dbc
     dbc = DatabaseClient()

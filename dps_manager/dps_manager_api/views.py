@@ -233,9 +233,17 @@ def signal_names_table(request):
             'dataset': dataset,
         })
 
+    if not queries:
+        return JsonResponse({
+            'total': total,
+            'page': page_number,
+            'data': [],
+        })
+
     resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
         'queries': queries,
-    }).json()['results']
+    })
+    resp = resp.json()['results']
 
     results = []
     for result in resp:
@@ -416,7 +424,6 @@ def get_interval(start_time, end_time):
         
 def get_sample_ranges(start_time, end_time, _):
     interval = get_interval(start_time, end_time)
-    print('interval', interval)
     if interval == 'years':
         start_time = start_time.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
     elif interval == 'months':
@@ -451,8 +458,6 @@ def get_sample_ranges(start_time, end_time, _):
         step = timedelta(microseconds=1000)                                
     elif interval == 'microseconds':
         step = timedelta(microseconds=1)
-
-    print(start_time, step)
 
     dt   = end_time - start_time
     t0   = start_time
