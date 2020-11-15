@@ -42,7 +42,7 @@ class DataStore:
     def execute_inserts(self, inserts):
         for insert in inserts:
             self.insert_signals(insert.dataset, insert.signals, \
-                        insert.samples, insert.times)
+                                insert.samples, insert.times, insert.upsert)
 
     def execute_queries(self, queries):
         '''

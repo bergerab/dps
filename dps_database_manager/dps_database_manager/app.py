@@ -18,7 +18,18 @@ class TimescaleDBDataStore(dbm.DataStore):
                                ('signal_id', 'time'),
                                ('value',))
     
-    def insert_signals(self, dataset_name, signal_names, batches, times):
+    def insert_signals(self, dataset_name, signal_names, batches, times, upsert):
+        '''
+        `upsert` is a bool parameter that specifies if the signal should be upserted instead of inserted.
+
+        This distinction is made, because for flat file imports, upsert is required when re-entering data.
+        This is necessary if an upload of a file fails, or is cancelled. Upsert is not always desireable,
+        because it has some overhead to check if a signal data already exists before inserting it. (this is
+        something done by the database -- not our code). So real-time devices should do inserts, because they
+        should never attempt to enter the same signal data more than once.
+
+        I did some simple testing on my desktop, and found that upserting has an overhead of 20% - 30%.
+        '''
         with dbc.scope() as session:
             t0 = datetime.now()
             
@@ -56,10 +67,10 @@ class TimescaleDBDataStore(dbm.DataStore):
             t0 = datetime.now()
 
             cursor = dbc.psycopg2_conn.cursor()
-            if True:
-                cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'time', 'value'))
-            else:
+            if upsert:
                 self.UPSERT_QUERY.execute(cursor, StringIO(signal_datas))
+            else:
+                cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'time', 'value'))                
 
             print('copy_from took ', datetime.now() - t0)
             t0 = datetime.now()

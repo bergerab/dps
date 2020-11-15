@@ -6,6 +6,7 @@ package dps;
 
 message InsertRequest {
   repeated Insert inserts = 1;
+  bool upsert = 2;
 }
 
 message Insert {

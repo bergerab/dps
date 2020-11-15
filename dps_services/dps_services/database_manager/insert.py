@@ -3,22 +3,24 @@ import json
 import dps_services.util as util
 
 class Insert:
-    def __init__(self, dataset, signals, samples, times):
+    def __init__(self, dataset, signals, samples, times, upsert=False):
         self.dataset = dataset
         self.signals = signals
         self.samples = samples
         self.times = times
+        self.upsert = upsert
 
     def __eq__(self, other):
         if isinstance(self, other.__class__):
             return self.dataset == other.dataset and \
                    self.signals == other.signals and \
                    self.samples == other.samples and \
-                   self.times == other.times
+                   self.times == other.times and \
+                   self.upsert == other.upsert
         return False
 
     def __repr__(self):
-        return f'Insert(dataset={self.dataset}, signals={self.signals}, samples={self.samples}, times={self.times})'
+        return f'Insert(dataset={self.dataset}, signals={self.signals}, samples={self.samples}, times={self.times}, upsert={self.upsert})'
 
     def to_dict(self):
         return {
@@ -26,6 +28,7 @@ class Insert:
             'signals': self.signals,
             'samples': self.samples,            
             'times': self.times,
+            'upsert': self.upsert,
         }
             
 def parse_insert_json(json_string):
@@ -45,7 +48,8 @@ def load_insert_json(insert_json):
     :returns: a list of Insert objects
     '''
     with util.RequestValidator(insert_json) as validator:
-        inserts = []        
+        inserts = []
+        upsert = validator.require('upsert', bool, optional=True)
         sub_insert_jsons = validator.require('inserts', list, default=[])
         for i, sub_insert_json in enumerate(sub_insert_jsons):
             with validator.scope_list('inserts', i):
@@ -53,7 +57,7 @@ def load_insert_json(insert_json):
                 signals = validator.require('signals', list)
                 samples = validator.require('samples', list)
                 times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING)
-            inserts.append(Insert(dataset, signals, samples, times))
+            inserts.append(Insert(dataset, signals, samples, times, upsert=upsert))
         return inserts
 
 
@@ -69,4 +73,3 @@ def load_insert_protobuf(insert_protobuf):
         times = [time.ToDatetime() for time in insert.times]
         inserts.append(Insert(insert.dataset, insert.signals, samples, times))
     return inserts
-    
