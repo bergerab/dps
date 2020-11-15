@@ -1,11 +1,29 @@
 from .decorators import make_builtin_decorator
 
 from .series import Series
+from .aggregation import Aggregation, ListAggregation
 
 import numpy as np
 
 BUILTINS = {}
 builtin = make_builtin_decorator(BUILTINS)
+
+@builtin('avg')
+def average(series):
+    if isinstance(series, Series):
+        if series.is_windowed(): return series.average()
+        else: return series.average_aggregation()
+    else: raise Exception('Unsupported type for average.')
+
+@builtin('list')
+def list_agg(*aggs):
+    for agg in aggs:
+        if not isinstance(agg, Aggregation):
+            raise Exception('"list" aggregation can only be applied to other aggregations.')
+    # ListAggregation doesn't have any `series` to propagate, so we pass an empty list
+    # This is because storing a list of results in a single database column is not supported
+    # in most databases. This means we cannot plot the result of a ListAggregation.
+    return ListAggregation([], aggs)
 
 @builtin()
 def window(series, duration):

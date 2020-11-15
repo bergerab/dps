@@ -45,6 +45,7 @@ class DPL:
             self.compiled_ast = self.ast.compile()
         if 'Nothing' in env:
             raise Exception('Cannot set "Nothing" in environment. "Nothing" is a reserved keyword for an empty series.')
+        env = dict(env) # Copy the dict (so we can set "Nothing")
         env['Nothing'] = None
         return self.compiled_ast.run(env)
 

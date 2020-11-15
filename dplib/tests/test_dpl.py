@@ -64,10 +64,21 @@ class TestDPL(TestCase, SeriesAssertions):
             'b': Series(ys),            
         }).get_value(), min(xs) * 2 + max(ys) / 8.3)
 
-        print(DPL.eval('min(a) * 2 + max(b) / 8.3', {
+        xs = [123, 124, 125, 126, 127, 128]
+        ys = [1,   2,   3,   4,   5,   6]        
+        self.assertEqual(DPL.eval('avg(a if b >= 3 and b < 6 else Nothing)', {
             'a': Series(xs),
             'b': Series(ys),            
-        }))
+        }).get_value(), sum([125, 126, 127])/3)
+
+        xs = [123, 124, 125, 126, 127, 128]
+        xs_avg = sum(xs)/len(xs)
+        self.assertEqual(DPL.eval('list(avg(a), \
+                                        avg(a) + 10, \
+                                        avg(a) + 20)', {
+                                            'a': Series(xs),
+                                        }).get_value(),
+                         [xs_avg, xs_avg + 10, xs_avg + 20])
     
     def test_basic(self):
         '''Basic evaluation of literals'''

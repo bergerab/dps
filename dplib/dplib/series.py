@@ -200,7 +200,7 @@ class Series:
     def is_windowed(self):
         if len(self.series) == 0:
             return False
-        if isinstance(self.series[0], pd.Series):
+        if isinstance(self.series.iloc[0], pd.Series):
             return True
         return False
 
