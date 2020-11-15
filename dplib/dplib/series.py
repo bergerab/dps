@@ -20,11 +20,14 @@ class Series:
         # will still be put into a window (instead of being added to `cout` to be computed when more data comes).
         
         self.cout = pd.Series([], dtype='float64') if cout is None else cout
-        
+
+        # `pd.dropna` drops any null values. This is important because some computations may
+        # enter a null value as an indication to skip a computation (it will be skipped via
+        # dropping the data).
         if data is None or len(data) == 0:
-            series = pd.Series(data, dtype='float64')
+            series = pd.Series(data, dtype='float64').dropna()
         else:
-            series = pd.Series(data, index=times)
+            series = pd.Series(data, index=times).dropna()
         self.series = pd.concat([cin, series]) if cin is not None else series
         self.cout_enabled = cout_enabled
 
@@ -228,5 +231,5 @@ class Series:
     @staticmethod
     def create_with_series(series, cout=None):
         s = Series(cout=cout)
-        s.series = series
+        s.series = series.dropna()
         return s

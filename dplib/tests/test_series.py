@@ -93,11 +93,22 @@ class TestSeries(TestCase, SeriesAssertions):
         ds = Series([1, -2, 10])
         self.assertEqual(sum(ds), 9)
 
+    def test_drop_null(self):
+        ds = Series([None, 1, 2])
+        self.assertEqual([1, 2], list(ds))
+
     def test_when(self):
         times = make_times(4)
         series = Series([True, False, True, False], times=times)
         series = series.when('A', 'B')
         assert_series_equal(series.series, pd.Series(['A', 'B', 'A', 'B'], index=times))
+
+    def test_when_drop_null(self):
+        times = make_times(4)
+        s1 = Series([True, False, True, False], times=times)
+        s2 = Series([1, 2, 3, 4], times=times)        
+        s3 = s1.when(s2, None)
+        assert_series_equal(s3.series, pd.Series([1.0, 3.0], index=[times[0], times[2]]))
 
     def test_windows_with_cout(self):
         # Windows are created with full buckets of data
