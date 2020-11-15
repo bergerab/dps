@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 import psycopg2
+from psycopg2.pool import SimpleConnectionPool        
+
 
 from config import CONNECTION
 
@@ -35,7 +37,7 @@ class DatabaseClient:
         self.Session = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
 
         # Keep a direct database driver connection for inserts (high speed)
-        self.psycopg2_conn = psycopg2.connect(CONNECTION)
+        self.psycopg2_connpool = SimpleConnectionPool(1, 10, dsn=CONNECTION)
 
         # Keep caches for datasets and signals to avoid database lookups.
         self.cache()

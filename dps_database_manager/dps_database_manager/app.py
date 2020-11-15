@@ -13,6 +13,12 @@ from config import DEBUG
 
 dbc = None
 
+VERBOSE = False
+
+def log(*args):
+    if VERBOSE:
+        print(*args)
+
 class TimescaleDBDataStore(dbm.DataStore):
     UPSERT_QUERY = UpsertQuery('signal_data',
                                ('signal_id', 'time'),
@@ -31,17 +37,12 @@ class TimescaleDBDataStore(dbm.DataStore):
         I did some simple testing on my desktop, and found that upserting has an overhead of 20% - 30%.
         '''
         with dbc.scope() as session:
-            t0 = datetime.now()
-            
             dataset = dbc.get_dataset_by_name(dataset_name)
             # If the dataset, doesn't exist in the database, create it and continue.
             if dataset is None:
                 dataset = Dataset(name=dataset_name)
                 dbc.add(session, dataset)
                 session.commit()
-
-            print('fetching dataset took', datetime.now() - t0)
-            t0 = datetime.now()
 
             signals = []
             for signal_name in signal_names:
@@ -53,29 +54,25 @@ class TimescaleDBDataStore(dbm.DataStore):
                     session.commit()
                 signals.append(signal)
 
-            print('fetching signals took', datetime.now() - t0)
-            t0 = datetime.now()
-
             # I think this is the fastest way to generate the string we need
             # List comprehensions are fast (faster than loops):
             signal_datas = ''.join(
                 (''.join((f'{signals[j].signal_id}\t{times[i]}\t{sample}\n' for j, sample in enumerate(batch))))
                 for i, batch in enumerate(batches))
 
-            print('preparing data took ', datetime.now() - t0)
-            print('there are ', len(batches) * len(batches[0]))
-            t0 = datetime.now()
-
-            cursor = dbc.psycopg2_conn.cursor()
-            if upsert:
-                self.UPSERT_QUERY.execute(cursor, StringIO(signal_datas))
-            else:
-                cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'time', 'value'))                
-
-            print('copy_from took ', datetime.now() - t0)
-            t0 = datetime.now()
-
-            dbc.psycopg2_conn.commit()
+            conn = dbc.psycopg2_connpool.getconn()
+            try:
+                cursor = conn.cursor()
+                if upsert:
+                    self.UPSERT_QUERY.execute(cursor, StringIO(signal_datas))
+                else:
+                    # copy_from is the fastest way to insert bulk data into postgres
+                    # it might be even faster to use a binary stream instead of a string stream
+                    # but I didn't bother writing that.
+                    cursor.copy_from(StringIO(signal_datas), 'signal_data', columns=('signal_id', 'time', 'value'))                
+                conn.commit()
+            finally:
+                dbc.psycopg2_connpool.putconn(conn)
 
     def get_signal_names(self, result, dataset_name, query, limit, offset):
         dataset = dbc.get_dataset_by_name(dataset_name)
@@ -180,4 +177,3 @@ if __name__ == '__main__':
         make_app().run(debug=DEBUG, port=3002, threaded=True)
     finally:
         dbc.engine.dispose()
-        dbc.psycopg2_conn.close()

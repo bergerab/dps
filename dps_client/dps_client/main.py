@@ -40,7 +40,7 @@ class Client:
         self.batches.append(batch)
         return batch
 
-    def send_csv(self, filepath, time_column, batch_size=400000, start_time=None, timestep_units='s', verbose=False, columns=None):
+    def send_csv(self, filepath, time_column, batch_size=100000, start_time=None, timestep_units='s', verbose=False, columns=None):
         '''
         Sends the CSV to the client's URL in batches.
 
@@ -55,17 +55,23 @@ class Client:
         '''
         if start_time is None and timestep_units is not None:
             raise Exception('`start_time` is required when specifying `timestep_units`.')
-        
+
+        if verbose:
+            print(f'send_csv: reading CSV...')        
         if start_time is None:
             df = pd.read_csv(filepath, parse_dates=[time_column])
         else:
             df = pd.read_csv(filepath)
+        if verbose:
+            print(f'send_csv: CSV read successfully.')
             
         row_count = len(df)
         sent_count = 0.0
 
         column_names = [key for key in df if key != time_column or (columns is not None and key not in columns)]
 
+        if verbose:
+            print(f'send_csv: starting send...')
         for _, row in df.iterrows():
             if start_time is None:
                 batch = self.make_batch(row[time_column])
@@ -77,9 +83,11 @@ class Client:
                 batch.add(name, row[name])
             if len(self.batches) * len(column_names) >= batch_size:
                 sent_count += len(self.batches)
-                self.send()
+                self.send(upsert=True) # Always upsert when loading CSVs (in case the data has already been loaded before)
                 if verbose:
                     print(f'send_csv: {(sent_count / row_count) * 100}% complete.')
+        if verbose:
+            print(f'send_csv: send completed.')                    
         self.send()
 
     def _flush(self, datetimes_to_string=True):
@@ -121,7 +129,7 @@ class Client:
             'times': times,
         }
 
-    def send(self):
+    def send(self, upsert=False):
         url = self.url + 'insert'
         
         if self.protocol == 'protobuf':
@@ -129,7 +137,7 @@ class Client:
             inserts_request = InsertRequest()
             insert_request = inserts_request.inserts.add()
             insert_request.dataset = self.dataset
-
+            insert_request.upsert = upsert
             insert_request.signals.extend(o['signals'])
 
             for time in o['times']:
@@ -149,6 +157,7 @@ class Client:
         elif self.protocol == 'json':
             o = self._flush()
             response = requests.post(url, json={
+                'upsert': upsert,
                 'inserts': [
                     o
                 ]

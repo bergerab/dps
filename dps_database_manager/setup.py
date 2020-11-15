@@ -11,7 +11,6 @@ setup(
         'Flask',
         'SQLAlchemy',
         'psycopg2-binary',
-        'pgcopy',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],    

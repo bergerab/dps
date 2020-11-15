@@ -17,15 +17,11 @@ def make_app(AppDataStore, debug=False):
     @app.route('/' + util.make_api_url('insert'), methods=['POST'])
     def insert():
         if request.content_type == 'application/protobuf':
-            t0 = datetime.now()
             insert_request = insert_pb2.InsertRequest()
             insert_request.ParseFromString(request.data)
             o = load_insert_protobuf(insert_request)
-            print('Loading protobuf took', datetime.now() - t0)
         else: # Otherwise, assume JSON.
-            t0 = datetime.now()            
             o = load_insert_json(request.get_json())
-            print('Loading JSON took', datetime.now() - t0)            
         AppDataStore.insert(o)
         return make_response({})
 

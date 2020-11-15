@@ -71,5 +71,5 @@ def load_insert_protobuf(insert_protobuf):
     for insert in insert_protobuf.inserts:
         samples = [sampleBatch.value for sampleBatch in insert.samples.batches]
         times = [time.ToDatetime() for time in insert.times]
-        inserts.append(Insert(insert.dataset, insert.signals, samples, times))
+        inserts.append(Insert(insert.dataset, insert.signals, samples, times, upsert=insert.upsert))
     return inserts

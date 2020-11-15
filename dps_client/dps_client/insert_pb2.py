@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cinsert.proto\x12\x03\x64ps\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n\rInsertRequest\x12\x1c\n\x07inserts\x18\x01 \x03(\x0b\x32\x0b.dps.Insert\x12\x0e\n\x06upsert\x18\x02 \x01(\x08\"t\n\x06Insert\x12\x0f\n\x07\x64\x61taset\x18\x01 \x01(\t\x12\x0f\n\x07signals\x18\x02 \x03(\t\x12\x1d\n\x07samples\x18\x03 \x01(\x0b\x32\x0c.dps.Samples\x12)\n\x05times\x18\x04 \x03(\x0b\x32\x1a.google.protobuf.Timestamp\"&\n\x07Samples\x12\x1b\n\x07\x62\x61tches\x18\x01 \x03(\x0b\x32\n.dps.Batch\"\x16\n\x05\x42\x61tch\x12\r\n\x05value\x18\x02 \x03(\x01\x62\x06proto3'
+  serialized_pb=b'\n\x0cinsert.proto\x12\x03\x64ps\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n\rInsertRequest\x12\x1c\n\x07inserts\x18\x01 \x03(\x0b\x32\x0b.dps.Insert\"\x84\x01\n\x06Insert\x12\x0f\n\x07\x64\x61taset\x18\x01 \x01(\t\x12\x0f\n\x07signals\x18\x02 \x03(\t\x12\x1d\n\x07samples\x18\x03 \x01(\x0b\x32\x0c.dps.Samples\x12)\n\x05times\x18\x04 \x03(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06upsert\x18\x05 \x01(\x08\"&\n\x07Samples\x12\x1b\n\x07\x62\x61tches\x18\x01 \x03(\x0b\x32\n.dps.Batch\"\x16\n\x05\x42\x61tch\x12\r\n\x05value\x18\x02 \x03(\x01\x62\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -42,13 +42,6 @@ _INSERTREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='upsert', full_name='dps.InsertRequest.upsert', index=1,
-      number=2, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -62,7 +55,7 @@ _INSERTREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=54,
-  serialized_end=115,
+  serialized_end=99,
 )
 
 
@@ -102,6 +95,13 @@ _INSERT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='upsert', full_name='dps.Insert.upsert', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -114,8 +114,8 @@ _INSERT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=117,
-  serialized_end=233,
+  serialized_start=102,
+  serialized_end=234,
 )
 
 
@@ -146,8 +146,8 @@ _SAMPLES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=235,
-  serialized_end=273,
+  serialized_start=236,
+  serialized_end=274,
 )
 
 
@@ -178,8 +178,8 @@ _BATCH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=275,
-  serialized_end=297,
+  serialized_start=276,
+  serialized_end=298,
 )
 
 _INSERTREQUEST.fields_by_name['inserts'].message_type = _INSERT
