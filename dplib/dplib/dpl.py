@@ -43,6 +43,9 @@ class DPL:
         # Otherwise, use same compiled AST as before.
         if self.compiled_ast is None:
             self.compiled_ast = self.ast.compile()
+        if 'Nothing' in env:
+            raise Exception('Cannot set "Nothing" in environment. "Nothing" is a reserved keyword for an empty series.')
+        env['Nothing'] = None
         return self.compiled_ast.run(env)
 
     def require_ast(self):
