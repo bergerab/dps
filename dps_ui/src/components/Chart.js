@@ -18,7 +18,7 @@ function SignalChart(props) {
   }, []);
 
   const doFetch = debounce((startTime=props.startTime, endTime=props.endTime) => {
-    console.log('fetching');
+    console.log(props, 'fetching');
     fetchData(props.signals, startTime,
               endTime, props.samples,
               props.batch_process_id).then(series => {

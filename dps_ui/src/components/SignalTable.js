@@ -98,6 +98,7 @@ export default class SignalTable extends React.Component {
             render: data => {
               return (<div style={{ width: '400px' }}>
                         <SignalChart
+                          key={data.name}
                           signals={[{
                             'signal': data.name,
                           }]}

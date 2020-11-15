@@ -214,7 +214,6 @@ export default class BatchProcessViewPage extends React.Component {
                                       key={kpiName}
                                       startTime={moment(bp.interval.start + 'Z')}
                                       endTime={moment(bp.interval.end + 'Z')}
-                                      samples={50}
                                     />
                                   </Grid>))
     return (

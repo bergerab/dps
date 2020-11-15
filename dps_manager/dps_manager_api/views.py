@@ -356,8 +356,10 @@ def get_chart_data(request):
     series    = jo['series']
     interval  = jo['interval']
     samples   = jo['samples']
-    intervals = get_sample_ranges(util.parse_datetime(interval['start']),
-                                  util.parse_datetime(interval['end']),
+    interval_start = util.parse_datetime(interval['start'])
+    interval_end = util.parse_datetime(interval['end'])
+    intervals = get_sample_ranges(interval_start,
+                                  interval_end,
                                   samples)
     for s in series:
         signal      = s['signal']
@@ -388,9 +390,11 @@ def get_chart_data(request):
             # Get the time between start and end to use in chart
             # dt = end - start
             # start += dt/2
+            y = result['values'][0]
+            # if y is not None:
             data.append({
                 'x': start,
-                'y': result['values'][0],
+                'y': y,
             })
         results.append({ 'label': s['signal'],
                          'data':  data })
