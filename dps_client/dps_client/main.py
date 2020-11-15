@@ -1,4 +1,6 @@
 '''DPS Client - A client for communicating with the DPS Manager, and sending signal data.'''
+import math
+
 import requests
 import pandas as pd
 
@@ -8,7 +10,6 @@ from google.protobuf.json_format import MessageToJson
 from google.protobuf.timestamp_pb2 import Timestamp
 
 from .insert_pb2 import InsertRequest, Samples, Batch
-
 
 
 DATETIME_FORMAT_STRING = '%Y-%m-%d %H:%M:%S.%f'
@@ -107,7 +108,10 @@ class Client:
             batch = []
             for signal_name in signal_names:
                 if signal_name in signal_name_to_value:
-                    batch.append(signal_name_to_value[signal_name])
+                    x = signal_name_to_value[signal_name]
+                    if math.isnan(x):
+                        raise Exception(f'Error: input data contained NaN for signal "{signal_name}".')
+                    batch.append(x)
                 else:
                     batch.append(0.0)
             batches.append(batch)
