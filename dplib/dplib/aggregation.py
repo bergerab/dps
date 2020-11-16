@@ -174,16 +174,25 @@ class AverageAggregation(Aggregation):
 
     @staticmethod
     def from_sum_and_count(series, sum, count):
-        agg = AverageAggregation(series, sum / count, count)
+        average = None # An average of "None" means there was no data to average over
+        if count != 0:
+            average = sum / count
+        agg = AverageAggregation(series, average, count)
         return agg
 
     def merge(self, other):
-        # TODO: filter out any None values from series
         count = self.count + other.count
+        average = None
+        if self.count == 0:
+            average = other.average
+        elif other.average is None:
+            average = (self.average * self.count) / count
+        else:
+            average = ((self.average * self.count) + (other.average * other.count)) / count
         # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
         # We take the other.series because it should be the newer one
         return AverageAggregation(other.series,
-                                  ((self.average * self.count) + (other.average * other.count)) / count,
+                                  average,
                                   count)
 
     def get_value(self):
@@ -209,13 +218,9 @@ class MinAggregation(Aggregation):
 class ValuesAggregation(Aggregation):
     name = 'values'
     def merge(self, other):
-        # Take the latest non-null, non-empty value
-        # TODO: this is probably broken
         value = self.value
         for key in other.value:
-            value[key] = other.value[key] if other.value is not None else value[key]
-        # The idea is that we are accumulating some list of values, and we want the
-        # latest of each.
+            value[key] = value[key].merge(other.value[key])
         return ValuesAggregation(other.series, value)
 
     def get_value(self):

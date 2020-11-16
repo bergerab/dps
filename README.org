@@ -120,7 +120,7 @@ cd dps_batch_processor/
 
 Install the dependencies using pip:
 #+BEGIN_SRC 
- pip install .
+ pip install . --upgrade
 #+END_SRC
 
 Run the batch processor by running this command:

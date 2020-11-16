@@ -60,6 +60,9 @@ class KPI:
 
         identifiers = self.dpl.ast.get_case_sensitive_identifier_names()
         for identifier in identifiers:
+            # Don't validate reserved keywords
+            if identifier.lower() == 'nothing':
+                continue
             if identifier not in mapping:
                 if input.dataset.has(identifier):
                     env[identifier] = input.dataset.get(identifier)

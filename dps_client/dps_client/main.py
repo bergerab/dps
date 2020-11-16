@@ -60,11 +60,13 @@ class Client:
         if verbose:
             print(f'send_csv: reading CSV...')        
         if start_time is None:
-            df = pd.read_csv(filepath, parse_dates=[time_column])
+            df = pd.read_csv(filepath, parse_dates=[time_column], dtype='float64')
         else:
-            df = pd.read_csv(filepath)
+            df = pd.read_csv(filepath, dtype='float64')
         if verbose:
             print(f'send_csv: CSV read successfully.')
+
+        print(df)
             
         row_count = len(df)
         sent_count = 0.0

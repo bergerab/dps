@@ -68,7 +68,7 @@ class SystemSerializer(serializers.Serializer):
             else:
                 name = parameter['name']
             parameter_names.append(name)
-        
+
         c = Component('Temp', parameters=parameter_names)
         for kpi in data['kpis']:
             identifier = kpi.get('identifier')
@@ -98,6 +98,8 @@ class SystemSerializer(serializers.Serializer):
                     kpi_errors[i]['identifier'] = ['Identifier is not unique.']
                 else:
                     kpi_errors[i]['name'] = ['Identifier is not unique (name was used as identifier).']
+            if identifier == 'Nothing':
+                kpi_errors[i]['identifier'] = ['"Nothing" is a reserved identifier.']                
             identifiers.append(identifier)
             kpi_names.append(kpi['name'])
 
@@ -115,6 +117,8 @@ class SystemSerializer(serializers.Serializer):
                     parameter_errors[i]['identifier'] = ['Identifier is not unique.']
                 else:
                     parameter_errors[i]['name'] = ['Identifier is not unique (name was used as identifier).']
+            if identifier == 'Nothing':
+                parameter_errors[i]['identifier'] = ['"Nothing" is a reserved identifier.']                
             identifiers.append(identifier)                    
             parameter_names.append(parameter['name'])
 
@@ -130,7 +134,11 @@ class SystemSerializer(serializers.Serializer):
 # Batch Process
 class MappingSerializer(serializers.Serializer):
     key = serializers.CharField(max_length=200)
-    value = serializers.CharField(max_length=200)
+    # You can either send a string value or an object
+    # If the value is a string, there will be a value in `value`
+    # Otherwise if the value is an object it will be stored in `object_value`
+    value = serializers.CharField(max_length=200, required=False)
+    object_value = serializers.CharField(required=False)
     
 class IntervalSerializer(serializers.Serializer):
     start = serializers.CharField()

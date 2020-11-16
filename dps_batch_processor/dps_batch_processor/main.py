@@ -231,6 +231,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                                  message=str(e),
                                                  processed_samples=processed_samples,
                                                  total_samples=total_samples)
+                    raise e
                     logger.log(f'Sent error that occured when running KPI computation to server: {e}')
                     return
                 except aiohttp.client_exceptions.ClientConnectorError:

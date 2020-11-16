@@ -74,7 +74,8 @@ class ResultsAPI(ObjectAPI):
             results = data['results']
             for mapping in results:
                 key = mapping['key']
-                value = mapping['value']
+                value = mapping.get('value', None)
+                object_value = mapping.get('object_value', None)                
                 Object.objects.create(
                     name=key,
                     kind='KPIResult',
@@ -82,6 +83,7 @@ class ResultsAPI(ObjectAPI):
                     value=json.dumps({
                         'name': key,
                         'value': value,
+                        'object_value': object_value,
                         'system_id': system_id,
                         'batch_process_id': bp_obj.object_id,
                     }))
@@ -122,6 +124,9 @@ def get_required_mappings(request):
                 parameters.append(parameter['name'])
         else:
             signals.append(name)
+
+    # Filter out any reserved names
+    signals = list(filter(lambda x: x != 'Nothing', signals))
         
     return JsonResponse({
         'signals': signals,
@@ -328,7 +333,7 @@ def get_chart_data(request):
             "start": "...",
             "end":   "..."
         },
-        "samples": 10
+        "offset": 5
     }
 
     The result should be like this:
@@ -355,12 +360,12 @@ def get_chart_data(request):
     
     series    = jo['series']
     interval  = jo['interval']
-    samples   = jo['samples']
+    offset    = jo['offset'] # How many hours away from UTC the time is
     interval_start = util.parse_datetime(interval['start'])
     interval_end = util.parse_datetime(interval['end'])
     intervals = get_sample_ranges(interval_start,
                                   interval_end,
-                                  samples)
+                                  offset)
     for s in series:
         signal      = s['signal']
         dataset     = s['dataset']
@@ -385,7 +390,7 @@ def get_chart_data(request):
     for i, s in enumerate(series):
         data = []
         for j, (start, end) in enumerate(intervals):
-            result = resp[(i * samples) + j]
+            result = resp[(i * len(intervals)) + j]
             
             # Get the time between start and end to use in chart
             # dt = end - start
@@ -404,21 +409,29 @@ def get_interval(start_time, end_time):
     d = end_time - start_time
     seconds = int(d.total_seconds())    
     microseconds = int(d.total_seconds() * 1e6)
+    print('days diff', d.days,
+          'hours diff', d.seconds / 3600,
+          'minutes diff', d.seconds / 60,
+          'total seconds', seconds,
+          'starttime', start_time,
+          'endtime', end_time)
     if d.days / 365 > 4:
         return 'years'
     elif d.days / 30 > 2:
         return 'months'
     elif d.days > 5:
         return 'days'
-    elif d.seconds / 3600 > 3:
+    elif seconds / 3600 > 10:
         return 'hours'
-    elif seconds / 60 > 3:
+    elif seconds / (3600 / 2) > 5:
+        return 'halfhours'
+    elif seconds / 60 > 5:
         return 'minutes'
-    elif seconds / 30 > 3:
+    elif seconds / 30 > 5:
         return 'halfminutes'
-    elif seconds / 10 > 3:
+    elif seconds / 10 > 5:
         return 'tenseconds'
-    elif seconds > 3:
+    elif seconds > 5:
         return 'seconds'
     elif microseconds/100000 > 5:
         return 'deciseconds'
@@ -426,19 +439,26 @@ def get_interval(start_time, end_time):
         return 'centiseconds'
     return 'milliseconds'
         
-def get_sample_ranges(start_time, end_time, _):
+def get_sample_ranges(start_time, end_time, offset):
     interval = get_interval(start_time, end_time)
+    print(interval)
     if interval == 'years':
         start_time = start_time.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
+        start_time -= timedelta(hours=offset)
     elif interval == 'months':
         start_time = start_time.replace(day=0, hour=0, minute=0, second=0, microsecond=0)
         step = timedelta(months=1)
+        start_time -= timedelta(hours=offset)        
     elif interval == 'days':
         start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
-        step = timedelta(days=1)        
+        step = timedelta(days=1)
+        start_time -= timedelta(hours=offset)        
     elif interval == 'hours':
         start_time = start_time.replace(minute=0, second=0, microsecond=0)
-        step = timedelta(hours=1)                
+        step = timedelta(hours=1)
+    elif interval == 'halfhours':
+        start_time = start_time.replace(minute=0, second=0, microsecond=0)
+        step = timedelta(hours=1/2)
     elif interval == 'minutes':
         start_time = start_time.replace(second=0, microsecond=0)
         step = timedelta(minutes=1)

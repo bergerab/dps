@@ -30,7 +30,7 @@ def values_agg(*args):
         key = args[i]
         value = args[i + 1]
         d[key] = value
-    return ValuesAggregation([], d)
+    return ValuesAggregation(Series([]), d)
 
 @builtin()
 def window(series, duration):

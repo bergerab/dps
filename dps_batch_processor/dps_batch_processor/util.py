@@ -1,5 +1,6 @@
 import re
 
+import json
 import dplib as dp
 
 def url_is_valid(url):
@@ -75,9 +76,16 @@ def dict_to_mappings(d):
     '''
     results = []
     for key in d:
-        results.append({
-            'key': key,
-            'value': d[key],
-        })
+        value = d[key]
+        if isinstance(value, dict):
+            results.append({
+                'key': key,
+                'object_value': json.dumps(d[key]),
+            })
+        else:
+            results.append({
+                'key': key,
+                'value': d[key],
+            })
     return results
     
