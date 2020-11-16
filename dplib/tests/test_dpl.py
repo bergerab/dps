@@ -73,12 +73,14 @@ class TestDPL(TestCase, SeriesAssertions):
 
         xs = [123, 124, 125, 126, 127, 128]
         xs_avg = sum(xs)/len(xs)
-        self.assertEqual(DPL.eval('list(avg(a), \
-                                        avg(a) + 10, \
-                                        avg(a) + 20)', {
+        self.assertEqual(DPL.eval('values("First", avg(a), \
+                                        "Second", avg(a) + 10, \
+                                        "Third", avg(a) + 20)', {
                                             'a': Series(xs),
                                         }).get_value(),
-                         [xs_avg, xs_avg + 10, xs_avg + 20])
+                         {'First': xs_avg,
+                          'Second': xs_avg + 10,
+                          'Third': xs_avg + 20})
     
     def test_basic(self):
         '''Basic evaluation of literals'''

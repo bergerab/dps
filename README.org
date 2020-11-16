@@ -1,36 +1,161 @@
 * Data Processing System (DPS)
 
-A system for doing point-wise and windowed calculations on data
-collected from external systems. There are several components to the system.
+** Installation
 
-First there is the DPS UI which is a user interface for creating batch processes.
-The UI is controlled via a backend server called DPS Manager. This stores metadata
-about the system (which batch processes are running, their status, etc...). This backend
-is currently under development.
+The installation process involves setting up four main components:
+    1. DPS Manager
+    2. DPS Database Manager (DBM)
+    3. DPS Batch Processor (at least one)
+    4. DPS UI (React web-interface)
 
-There is the DPS Database Manager which is a micro-service which provides an interface between
-time-series databases and the rest of the system. It provides functions for fetching signal data, 
-and inserting signal data.
+For these instructions, all the steps require you are running on windows,
+and have Python 3 installed. Note that some of the commands may vary slightly
+between machines. For example, I use "python3" to specify the Python 3 executable.
+But on some Windows systems the correct command might be "py" or "python".
 
-The DPS Manager and DPS Database Manager are found in the ~dps_services~ directory.
-
-There is a client API for sending data to a DPS Manager in the ~dps_client~ directory.
-
-There is a Python package for running integration tests on the system in the ~dps_test~ directory.
-
-UWM specific implementations are in the ~uwm~ directory. This includes an implementation of a 
-DPS Database Manager, and a server for integrating LabVIEW with the system.
-
-KPI computations are implemented in the ~kpi-stream~ directory. All of the KPIs are found in ~kpi-stream/src/kpi.py~.
-This folder includes Typhoon models for simulating electrical systems (in the ~typhoon~ directory), and Grafana dashboards
-in the ~grafana~ directory. There is a web-server included in the ~src~ directory for starting Typhoon simulations, KPI 
-stream processing, and running batch processes. This web-server was the first PoC of the DPS UI, and will no longer be used; 
-however, the code remains here just in case.
-
-All directories (Python packages) have unit tests that verify the implementation is correct. They can be run by calling:
+*** Installing TimescaleDB
+Before installing this software, you must first install TimescaleDB. I did this via
+Docker (as instructed by the TimescaleDB website). Here is the command I used:
 
 #+BEGIN_SRC shell
-python3 setup.py test
+docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb:1.7.4-pg12
 #+END_SRC
 
-In a directory that has a ~setup.py~ file.
+You will need to use these credentials (a password of "password"), and the same port (5432).
+
+For more information on how to install TimescaleDB see: https://docs.timescale.com/latest/getting-started/installation/docker/installation-docker .
+
+Now the schema for the database must be configured. You will find a schema file located at "./dps_database_manager/schema.sql".
+Log-in to the TimescaleDB, and run the schema to setup the database. On docker, I ran:
+
+#+BEGIN_SRC shell
+psql postgres postgres -u
+#+END_SRC
+
+In a shell for my container. This opens a database connection using the user postgres, in the database postgres, and prompts 
+for a password (which should be the default password of "password").
+
+Copy the schema statement for statement.
+
+*** Install supporting packages
+DPS relies on your system having several shared packages installed. These are dplib, dps_services, and dps_client.
+You can install them by running:
+
+#+BEGIN_SRC 
+cd dps_services/
+pip3 install . --upgrade
+cd ../dps_client
+pip3 install . --upgrade
+cd ../dplib
+pip3 install . --upgrade
+#+END_SRC
+
+When the commands complete, you should have all three packages installed in your Python 3 environment.
+You can test to see if it worked by starting a Python interpreter, and running:
+
+#+BEGIN_SRC python
+import dps_services
+import dps_client
+import dplib
+#+END_SRC
+
+If the imports succeed, the packages installed successfully.
+
+*** DPS Database Manager Install
+To install DBM, first open a terminal and change directory to the "dps_database_manager" directory:
+#+BEGIN_SRC shell
+cd dps_database_manager/
+#+END_SRC
+
+Then install the dependecies:
+
+#+BEGIN_SRC 
+python3 setup.py install
+#+END_SRC
+
+Then, to run the server, run:
+
+#+BEGIN_SRC shell
+python3 dps_database_manager/app.py
+#+END_SRC
+
+This will launch the server. You will need to keep this server online at all times while running the rest of the components.
+The server will be hosted on http://localhost:3002/
+
+*** DPS Manager
+
+First, change directory (cd) into the "dps_manager" directory.
+
+#+BEGIN_SRC shell
+cd dps_manager/
+#+END_SRC
+
+Then, install the dependencies using `requirements.txt`:
+
+#+BEGIN_SRC shell
+pip3 install -r requirements.txt
+#+END_SRC
+
+Then run Django migrations by running:
+
+#+BEGIN_SRC shell
+python3 manage.py migrate
+#+END_SRC
+
+Now to run the development server, run:
+
+#+BEGIN_SRC shell
+set DBM_URL=http://localhost:3002
+python3 manage.py runserver
+#+END_SRC
+
+(Note that the first command sets the URL for the Database Manager as an enviornment variable.)
+
+The server will be hosted on http://localhost:8000/
+
+*** DPS Batch Processor
+Change directory to the "dps_batch_processor" directory:
+#+BEGIN_SRC shell
+cd dps_batch_processor/
+#+END_SRC
+
+Install the dependencies using pip:
+#+BEGIN_SRC 
+ pip install .
+#+END_SRC
+
+Run the batch processor by running this command:
+#+BEGIN_SRC shell
+dps_batch_processor --dps-manager-url=http://localhost:8000/ 
+                    --database-manager-url=http://localhost:3002 
+                    --verbose=1 --max-batch-size=100000
+#+END_SRC
+
+There is some configuration that can be done in this command to optimize batch process speed,
+such as changing the max-batch-size. If you are looking for higher speeds, it might be benefitial to
+make the batch size larger. However, this is enough for your first setup.
+
+Note that you may run this command on more processes at the same time to run batch processes in parallel.
+
+*** DPS UI
+The user interface is written in JavaScript (React), and can be run via Yarn. First make sure you have Yarn installed
+(see here https://classic.yarnpkg.com/en/docs/cli/install/ ). You will also need NodeJS (https://nodejs.org/en/).
+Once you have installed those, run:
+
+#+BEGIN_SRC shell
+cd dps_ui/
+yarn install
+yarn start
+#+END_SRC
+
+This should install the JavaScript dependeices, and start the user interface. Currently the user interface requires
+the DPS Manager server to be running at http://localhost:8000/ . So it is important to ensure DPS Manager is online, 
+and running on port 8000. Also, make sure the Database Manager is running, along with at least one DPS Batch Processor.
+All of these components must be online all at once.
+
+Now, you can go to http://localhost:3005/ in a web browser to view the system. Use the drawer on the left to navigate.
+
+** Updating
+Whenever some component changes, you should pull the new code from the repository (git pull), repeat the steps from 
+"Install supporting packages", and then restart all of the components (DPS Manager, DPS Database Manager, DPS Batch Processor,
+the DPS UI).

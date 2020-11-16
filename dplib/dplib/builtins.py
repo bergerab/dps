@@ -1,7 +1,7 @@
 from .decorators import make_builtin_decorator
 
 from .series import Series
-from .aggregation import Aggregation, ListAggregation
+from .aggregation import Aggregation, ValuesAggregation
 
 import numpy as np
 
@@ -15,15 +15,22 @@ def average(series):
         else: return series.average_aggregation()
     else: raise Exception('Unsupported type for average.')
 
-@builtin('list')
-def list_agg(*aggs):
-    for agg in aggs:
-        if not isinstance(agg, Aggregation):
-            raise Exception('"list" aggregation can only be applied to other aggregations.')
-    # ListAggregation doesn't have any `series` to propagate, so we pass an empty list
+@builtin('values')
+def values_agg(*args):
+    for i, arg in enumerate(args):
+        if i % 2 == 1 and not isinstance(arg, Aggregation):
+            raise Exception('Invalid type passed to values aggregation. Values aggregation takes a list of strings and aggregations.')
+        elif i % 2 == 0 and not isinstance(arg, str):
+            raise Exception('Invalid type passed to values aggregation. Values aggregation takes a list of strings and aggregations.')            
+    # ValuesAggregation doesn't have any `series` to propagate, so we pass an empty list
     # This is because storing a list of results in a single database column is not supported
-    # in most databases. This means we cannot plot the result of a ListAggregation.
-    return ListAggregation([], aggs)
+    # in most databases. This means we cannot plot the result of a ValuesAggregation.
+    d = {}
+    for i in range(0, len(args), 2):
+        key = args[i]
+        value = args[i + 1]
+        d[key] = value
+    return ValuesAggregation([], d)
 
 @builtin()
 def window(series, duration):

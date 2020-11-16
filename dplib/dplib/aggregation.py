@@ -71,8 +71,8 @@ class Aggregation:
             return MinAggregation(None, d['value'])
         elif name == MaxAggregation.name:
             return MaxAggregation(None, d['value'])
-        elif name == ListAggregation.name:
-            return ListAggregation(None, d['value'])
+        elif name == ValuesAggregation.name:
+            return ValuesAggregation(None, d['value'])
         elif name == AverageAggregation.name:
             return AverageAggregation(None, d['average'], d['count'])
         elif name == AddAggregation.name:
@@ -206,17 +206,20 @@ class MinAggregation(Aggregation):
     def merge(self, other):
         return MinAggregation(other.series, min(self.value, other.value))
 
-class ListAggregation(Aggregation):
-    name = 'list'
+class ValuesAggregation(Aggregation):
+    name = 'values'
     def merge(self, other):
         # Take the latest non-null, non-empty value
         # TODO: this is probably broken
         value = self.value
-        for i, x in enumerate(other.value):
-            value[i] = other.value[i] if other.value is not None else value[i]
+        for key in other.value:
+            value[key] = other.value[key] if other.value is not None else value[key]
         # The idea is that we are accumulating some list of values, and we want the
         # latest of each.
-        return ListAggregation(other.series, value)
+        return ValuesAggregation(other.series, value)
 
     def get_value(self):
-        return list(map(lambda x: x.get_value(), self.value))
+        d = {}
+        for key in self.value:
+            d[key] = self.value[key].get_value()
+        return d
