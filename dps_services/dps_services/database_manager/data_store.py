@@ -106,12 +106,6 @@ class SignalQueryResult:
         if validate:
             if len(values) != len(self.signals):
                 raise Exception('Must provide a value for every signal value.')
-            if self.query.interval and (time < self.query.interval.start or time > self.query.interval.end):
-                start = util.quoted(self.query.interval.start)
-                end = util.quoted(self.query.interval.end)
-                raise Exception(f'Given time {util.quoted(time)} is out-of-bounds of the query interval (between {start} and {end}).')
-            if self.previous_time and time <= self.previous_time:
-                raise Exception(f'Received time value {util.quoted(time)} in non-monotonically increasing order.')
             else:
                 self.previous_time = time
         self.times.append(time)

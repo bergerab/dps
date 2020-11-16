@@ -26,10 +26,9 @@ class Signal(Base):
 
 class SignalData(Base):
     __tablename__ = 'signal_data'
-    signal_data_id = Column(Integer, primary_key=True)
-    signal_id = Column(Integer, ForeignKey('signals.signal_id'))
+    signal_id = Column(Integer, ForeignKey('signals.signal_id'), primary_key=True)
     value = Column(Float())
-    time = Column(DateTime())
+    time = Column(DateTime(), primary_key=True)
 
 class DatabaseClient:
     def __init__(self):

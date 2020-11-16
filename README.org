@@ -29,11 +29,10 @@ Now the schema for the database must be configured. You will find a schema file 
 Log-in to the TimescaleDB, and run the schema to setup the database. On docker, I ran:
 
 #+BEGIN_SRC shell
-psql postgres postgres -u
+psql postgres postgres
 #+END_SRC
 
-In a shell for my container. This opens a database connection using the user postgres, in the database postgres, and prompts 
-for a password (which should be the default password of "password").
+In a shell for my container. This opens a database connection using the user postgres, in the database postgres.
 
 Copy the schema statement for statement.
 

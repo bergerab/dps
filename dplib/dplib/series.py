@@ -103,6 +103,9 @@ class Series:
         return Series(pd.concat([self.series, other.series]))
 
     def window(self, duration):
+        if len(self.series) == 0:
+            return Series([])
+        
         windows = []
         stream = SeriesStream(self.series)
 
