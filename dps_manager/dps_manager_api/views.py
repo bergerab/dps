@@ -384,7 +384,10 @@ def get_chart_data(request):
         
     resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
         'queries': queries,
-    }).json()['results']
+    }).json()
+
+    print(resp)
+    resp = resp['results']
 
     results = []
     for i, s in enumerate(series):

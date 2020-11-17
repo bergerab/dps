@@ -135,6 +135,22 @@ class TestAggregation(TestCase):
             },            
         }))
 
+        self.assertEqual(agg.ValuesAggregation(None, [agg.DivAggregation(None, 2, 3)]).to_dict(), make_dict('values', {
+            'value': [make_dict('div', {
+                'lhs': {
+                    'name': 'constant',
+                    'value': 2,
+                },
+                'rhs': {
+                    'name': 'constant',
+                    'value': 3,
+                },            
+            })]
+        }))
+
+    def test_to_string(self):
+        self.assertEqual(str(agg.ValuesAggregation(None, [agg.DivAggregation(None, 2, 3)])), 'Aggregation(values, [Operator(div, Aggregation(constant, 2), Aggregation(constant, 3))])')
+
     def test_from_dict(self):
         self.assertEqual(agg.Aggregation.from_dict({
             'name': 'constant',

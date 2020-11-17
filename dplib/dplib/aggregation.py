@@ -5,6 +5,8 @@ class Aggregation:
         self.value = value
 
     def __add__(self, other):
+        if not isinstance(other, Aggregation):
+            raise Exception('other', type(other))
         return AddAggregation(None, self, other)
     
     def __radd__(self, other):
@@ -170,10 +172,17 @@ class AverageAggregation(Aggregation):
 
     @staticmethod
     def from_series(series):
-        return AverageAggregation.from_sum_and_count(series, sum(series), len(series))
+        xs = series.series.sum()
+        if isinstance(xs, Aggregation):
+            raise Exception('WHY3 ? ')
+        return AverageAggregation.from_sum_and_count(series, xs, series.size)
 
     @staticmethod
     def from_sum_and_count(series, sum, count):
+        if isinstance(sum, Aggregation):
+            raise Exception('SUMISANAGG ' + str(type(sum)))
+        if isinstance(count, Aggregation):
+            raise Exception('COUNTISANAGG ')
         average = None # An average of "None" means there was no data to average over
         if count != 0:
             average = sum / count
@@ -189,6 +198,8 @@ class AverageAggregation(Aggregation):
             average = (self.average * self.count) / count
         else:
             average = ((self.average * self.count) + (other.average * other.count)) / count
+        if isinstance(average, Aggregation):
+            raise Exception('WHY ? ' + str(average))
         # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
         # We take the other.series because it should be the newer one
         return AverageAggregation(other.series,
@@ -218,10 +229,20 @@ class MinAggregation(Aggregation):
 class ValuesAggregation(Aggregation):
     name = 'values'
     def merge(self, other):
-        value = self.value
+        value = {}
         for key in other.value:
-            value[key] = value[key].merge(other.value[key])
+            value[key] = self.value[key].merge(other.value[key])
         return ValuesAggregation(other.series, value)
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'value': list(map(lambda x: x.to_dict(), self.value)),
+        }
+
+    def __repr__(self):
+        value = ', '.join(map(lambda x: repr(x), self.value))
+        return f'Aggregation({self.name}, [{value}])'
 
     def get_value(self):
         d = {}

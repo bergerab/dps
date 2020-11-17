@@ -3,6 +3,7 @@ import pandas as pd
 from .dataset import *
 from .stream import SeriesStream
 from .aggregation import \
+    Aggregation, \
     MaxAggregation, \
     MinAggregation, \
     AverageAggregation
@@ -145,23 +146,27 @@ class Series:
             if self.series[i]:
                 if isinstance(body, Series):
                     value = body.series[i]
+                # For aggregations, the sizes of the series may be different
+                # so we have to locate the closest time to the sample to use.
+                elif isinstance(body, Aggregation):
+                    value = body.series.series[body.series.series.index.get_loc(self.series.index[i], method='nearest')]
                 else:
                     value = body
             else:
                 if isinstance(orelse, Series):
                     value = orelse.series[i]
+                elif isinstance(orelse, Aggregation):
+                    value = orelse.series.series[orelse.series.series.index.get_loc(self.series.index[i], method='nearest')]                    
                 else:
                     value = orelse
             series.append(value)
         return Series.create_with_series(pd.Series(series, index=self.series.index))
 
     def average_aggregation(self):
-        sum = 0
-        count = 0
-        for x in self:
-            sum += x
-            count += 1
-        return AverageAggregation.from_sum_and_count(self, sum, count)
+        xs = self.series.sum()
+        return AverageAggregation.from_sum_and_count(self,
+                                                     xs,
+                                                     self.series.size)
 
     def aggregate(self, f):
         values = []
@@ -228,6 +233,10 @@ class Series:
             elif other_is_windowed:
                 cout = other.cout
             return Series(f(series.series, other.series), cout=cout)
+        elif isinstance(series, Aggregation):
+            return Series.binop(series.series, other, f)
+        elif isinstance(other, Aggregation):
+            return Series.binop(series, other.series, f)
         else:
             return Series(f(series.series, other), cout=series.cout)
 
