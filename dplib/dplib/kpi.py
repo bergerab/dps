@@ -18,10 +18,7 @@ class MappedKPI:
         self.dpl = dpl
 
     def run(self, previous_result):
-        print('ENV', self.env)
-        print('prev', previous_result)        
         x = self.dpl.run(self.env)
-        print('X', x)
         return self._to_result(x, previous_result)
 
     def _to_result(self, x, previous_result):

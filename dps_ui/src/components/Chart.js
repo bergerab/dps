@@ -60,6 +60,14 @@ function SignalChart(props) {
     },
   };
 
+  if (props.title !== undefined) {
+    options.title = {
+      display: true,
+      text: props.title,
+      fontSize: 20
+    }
+  }
+
   if (props.minimal) {
     options.legend = {
       display: false,
@@ -77,7 +85,7 @@ function SignalChart(props) {
 }
 
 const colors = [
-  '#CFB7E8',
+  '#3f51b5',
   '#EBB07A',
   '#6AB890',
 ];

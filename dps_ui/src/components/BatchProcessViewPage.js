@@ -10,6 +10,7 @@ import TextField from '@material-ui/core/TextField';
 import Box from './Box';
 import Row from './Row';
 import SignalChart from './Chart';
+import BarChart from './BarChart';
 import Link from './Link';
 import InputLabel from './InputLabel';
 import PrettyTable from './PrettyTable';
@@ -184,17 +185,26 @@ export default class BatchProcessViewPage extends React.Component {
 
     let kpiHeaders = ['KPI', 'Description', 'Value'];
     let kpiResults = {};
-    result.results.map(x => { kpiResults[x.key] = x.value });
+    result.results.map(x => { kpiResults[x.key] = x; });
+    console.log(kpiResults);
     let kpiRows = system.kpis.filter(kpi => {
       return bp.kpis.includes(kpi.name);
     }).map(kpi => {
       return [kpi.name,
-              (<div className="system-description" dangerouslySetInnerHTML={{ __html: kpi.description }}></div>),
-              formatNumber(kpiResults[kpi.name])];
+              kpi.description,
+              kpiResults[kpi.name]];
+                });
+
+                let formattedKpiRows = kpiRows.map(row => {
+      return [
+        row[0],
+        (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[1] }}></div>),
+        (<div style={{whiteSpace: 'pre'}} >{resultToString(row[2])}</div>)
+      ];
     });
 
     let parameterIdentifiersToNames = {};
-    system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
+                                       system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
       let parameterMappings = bp.mappings
           .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
           .map(x => [parameterIdentifiersToNames[x.key], formatNumber(x.value)]);
@@ -204,18 +214,32 @@ export default class BatchProcessViewPage extends React.Component {
 
     let charts;
     charts =
-      kpiRows.map(x => x[0]).map(kpiName =>
-                                 (<Grid item xs={6} key={kpiName}>
-                                    <SignalChart
-                                      signals={[{
-                                        'signal': kpiName,
-                                      }]}
-                                      batch_process_id={result.batch_process_id}
-                                      key={kpiName}
-                                      startTime={moment(bp.interval.start + 'Z')}
-                                      endTime={moment(bp.interval.end + 'Z')}
-                                    />
-                                  </Grid>))
+      kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
+        if (resultHasObject(kpiResults)) {
+          const o = JSON.parse(kpiResults.object_value);
+          return (<Grid item xs={6} key={kpiName}>
+                    <BarChart
+                      label="THD (Percent)"
+                      data={Object.values(o)}
+                      labels={Object.keys(o)}
+                      title={kpiName}
+                    />
+                  </Grid>);
+        } else {
+          return (<Grid item xs={6} key={kpiName}>
+                    <SignalChart
+                      signals={[{
+                        'signal': kpiName,
+                      }]}
+                      batch_process_id={result.batch_process_id}
+                      key={kpiName}
+                      title={kpiName}                      
+                      startTime={moment(bp.interval.start + 'Z')}
+                      endTime={moment(bp.interval.end + 'Z')}
+                    />
+                  </Grid>);
+        }
+      })
     return (
       <div>
         <Box header={this.state.result.batch_process.name + " Results"}
@@ -226,7 +250,7 @@ export default class BatchProcessViewPage extends React.Component {
               <InputLabel>KPIs</InputLabel>
               <PrettyTable
                 header={kpiHeaders}
-                rows={kpiRows}
+                rows={formattedKpiRows}
               />
             </Grid>
 
@@ -267,7 +291,7 @@ export default class BatchProcessViewPage extends React.Component {
 
             <Grid item xs={12}>
               <CSVLink
-                data={[kpiHeaders].concat(kpiRows.map(x => x.map(x => typeof(x) === 'object' ? removeTags(x.props.dangerouslySetInnerHTML.__html) : x )))}
+                data={[kpiHeaders].concat(kpiRows)}
                 target="_blank"
                 style={{ textDecoration: 'none' }}
                 filename={this.state.result.batch_process.name + " Results.csv"}
@@ -313,4 +337,23 @@ function formatNumber(s) {
   const n = +s
   if (Number.isNaN(n)) return s;
   return n.toLocaleString();
+}
+
+function formatObjectValue(s) {
+  const o = JSON.parse(s);
+  const lines = [];
+  for (const key of Object.keys(o)) {
+    lines.push(key + ': ' + (o[key] === null ? 'No Data' : formatNumber(o[key])));
+  }
+  return lines.join('\n');
+}
+
+function resultToString(x) {
+  if (x === undefined) return '';  
+  return resultHasObject(x) ? formatObjectValue(x.object_value) : formatNumber(x.value);
+}
+
+function resultHasObject(x) {
+  if (x === undefined) return false;
+  return x.value === undefined;
 }
