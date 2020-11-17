@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-    name='UWM Database Manager',
+    name='DPS Database Manager',
     version='1.0',
     long_description=__doc__,
-    packages=['database_manager'],
+    packages=['dps_database_manager'],
     include_package_data=True,
     zip_safe=False,
     install_requires=[

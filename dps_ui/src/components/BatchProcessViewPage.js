@@ -186,7 +186,6 @@ export default class BatchProcessViewPage extends React.Component {
     let kpiHeaders = ['KPI', 'Description', 'Value'];
     let kpiResults = {};
     result.results.map(x => { kpiResults[x.key] = x; });
-    console.log(kpiResults);
     let kpiRows = system.kpis.filter(kpi => {
       return bp.kpis.includes(kpi.name);
     }).map(kpi => {

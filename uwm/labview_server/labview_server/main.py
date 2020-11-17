@@ -43,13 +43,9 @@ def ingest():
         x = x*2
         batch.add(signal_sample_pairs[x], float(signal_sample_pairs[x+1]))
 
-    print('Added ' + str(data))
-
     # only send after a certain amount of data is buffered
     if len(client.batches) >= SEND_THRESHOLD:
-        print('SENDING')
         response = client.send()
-        print(response)
         if response.status_code is not 500:
             print(response.text)
 
