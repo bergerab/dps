@@ -367,15 +367,11 @@ def get_chart_data(request):
                                   interval_end,
                                   offset)
 
-    yes = False
     for s in series:
         signal      = s['signal']
         dataset     = s['dataset']
         aggregation = s['aggregation']
         
-        if signal == 'THD Voltage (Phase A)':
-            yes = True
-
         for start, end in intervals:
             queries.append({
                 'signals':     [signal],
@@ -390,10 +386,6 @@ def get_chart_data(request):
     resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
         'queries': queries,
     }).json()
-
-    if yes:
-        print("YTES")
-        print(resp)
 
     resp = resp['results']
 

@@ -194,7 +194,8 @@ export default class BatchProcessViewPage extends React.Component {
               kpiResults[kpi.name]];
                 });
 
-                let formattedKpiRows = kpiRows.map(row => {
+    // Filter out any KPIs that have no values. 
+    let formattedKpiRows = kpiRows.filter(x => x[2] !== undefined ).map(row => {
       return [
         row[0],
         (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[1] }}></div>),
