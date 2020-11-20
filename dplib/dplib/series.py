@@ -142,25 +142,37 @@ class Series:
         if self is all False or all True
         '''
         series = []
+        indices = []
         for i in range(len(self.series)):
             if self.series[i]:
                 if isinstance(body, Series):
                     value = body.series[i]
+                    indices.append(self.series.index[i])
                 # For aggregations, the sizes of the series may be different
                 # so we have to locate the closest time to the sample to use.
                 elif isinstance(body, Aggregation):
-                    value = body.series.series[body.series.series.index.get_loc(self.series.index[i], method='nearest')]
+                    if len(body.series.series) == 0:
+                        continue
+                    index_value = self.series.index[i]
+                    index = body.series.series.index.get_loc(index_value, method='nearest')
+                    value = body.series.series[index]
+                    indices.append(self.series.index[i])                        
                 else:
                     value = body
             else:
                 if isinstance(orelse, Series):
                     value = orelse.series[i]
+                    indices.append(self.series.index[i])
                 elif isinstance(orelse, Aggregation):
-                    value = orelse.series.series[orelse.series.series.index.get_loc(self.series.index[i], method='nearest')]                    
+                    if len(orelse.series.series) == 0:
+                        continue
+                    value = orelse.series.series[orelse.series.series.index.get_loc(self.series.index[i], method='nearest')]
+                    indices.append(self.series.index[i])                                            
                 else:
                     value = orelse
+                    indices.append(self.series.index[i])                        
             series.append(value)
-        return Series.create_with_series(pd.Series(series, index=self.series.index))
+        return Series.create_with_series(pd.Series(series, index=indices))
 
     def average_aggregation(self):
         xs = self.series.sum()

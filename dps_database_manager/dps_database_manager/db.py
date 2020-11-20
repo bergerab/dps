@@ -46,10 +46,10 @@ class DatabaseClient:
             self.signals = session.query(Signal).all()
             self.datasets = session.query(Dataset).all()            
 
-    def get_cached_signal(self, signal_name):
+    def get_cached_signal(self, signal_name, dataset_id):
         def lookup():
             for signal in self.signals:
-                if signal.name == signal_name:
+                if signal.name == signal_name and signal.dataset_id == dataset_id:
                     return signal
         signal = lookup()
         if signal:

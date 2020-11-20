@@ -7,34 +7,34 @@ class Aggregation:
     def __add__(self, other):
         if not isinstance(other, Aggregation):
             raise Exception('other', type(other))
-        return AddAggregation(None, self, other)
+        return AddAggregation(choose_series(self, other), self, other)
     
     def __radd__(self, other):
-        return AddAggregation(None, self, other)
+        return AddAggregation(choose_series(self, other), self, other)
     
     def __sub__(self, other):
-        return SubAggregation(None, self, other)
+        return SubAggregation(choose_series(self, other), self, other)
     
     def __rsub__(self, other):
-        return SubAggregation(None, other, self)
+        return SubAggregation(choose_series(self, other), other, self)
     
     def __mul__(self, other):
-        return MulAggregation(None, self, other)
+        return MulAggregation(choose_series(self, other), self, other)
     
     def __rmul__(self, other):
-        return MulAggregation(None, self, other)
+        return MulAggregation(choose_series(self, other), self, other)
     
     def __truediv__(self, other):
-        return DivAggregation(None, self, other)
+        return DivAggregation(choose_series(self, other), self, other)
     
     def __rtruediv__(self, other):
-        return DivAggregation(None, other, self)        
+        return DivAggregation(choose_series(self, other), other, self)        
     
     def __floordiv__(self, other):
-        return FloorDivAggregation(None, self, other)        
+        return FloorDivAggregation(choose_series(self, other), self, other)        
     
     def __rfloordiv__(self, other):
-        return FloorDivAggregation(None, other, self)
+        return FloorDivAggregation(choose_series(self, other), other, self)
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
@@ -121,7 +121,10 @@ class OperatorAggregation(Aggregation):
         return f'Operator({self.name}, {self.lhs}, {self.rhs})'
 
     def get_value(self):
-        return self.op(self.lhs.get_value(), self.rhs.get_value())
+        x = self.lhs.get_value()
+        y = self.rhs.get_value()
+        value = self.op(x, y)
+        return value
 
     def to_dict(self):
         return {
@@ -143,6 +146,9 @@ class SubAggregation(OperatorAggregation):
 class MulAggregation(OperatorAggregation):
     name = 'mul'
     def op(self, x, y):
+        # Important for weighted average where an operand could be null
+        if x is None or y is None:
+            return 0
         return x * y
 
 class DivAggregation(OperatorAggregation):
@@ -249,3 +255,6 @@ class ValuesAggregation(Aggregation):
         for key in self.value:
             d[key] = self.value[key].get_value()
         return d
+
+def choose_series(x, y):
+    return x.series if x.series is not None else y.series

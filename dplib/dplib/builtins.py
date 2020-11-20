@@ -101,7 +101,7 @@ def thd(series, base_harmonic=None):
     # Even more than this are needed to do an FFT as well, but
     # that will return 0 as well, just not error like have under 2 datapoints would.
     if len(series) < 2:
-        return 0
+        return None
     
     fft_vals = np.abs(np.fft.fft(series))
 
@@ -123,6 +123,11 @@ def thd(series, base_harmonic=None):
                 fund_freq = value
                 base_harmonic = frequency
 
+    # TODO: add warning if this happens
+    # Returning None skips the result (returns nothing)
+    if fund_freq == 0:
+        return None
+
     sum = 0 
     harmonic = 2*base_harmonic
     offset = int(base_harmonic/2)
@@ -131,7 +136,8 @@ def thd(series, base_harmonic=None):
         peak = np.max(fft_vals[harmonic - offset : harmonic + offset])
         sum += peak * peak
         harmonic += base_harmonic
-    return 100 * (np.sqrt(sum) / fund_freq)
+    square_sum = np.sqrt(sum)
+    return 100 * (square_sum / fund_freq)
 
 @builtin('thd2', aggregate=True)
 def thd2(series, base_harmonic, fs):

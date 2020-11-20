@@ -2,6 +2,7 @@ import sys
 from datetime import datetime
 from io import StringIO
 import itertools
+import math
 
 from sqlalchemy import and_
 from sqlalchemy.sql import func
@@ -57,7 +58,7 @@ class TimescaleDBDataStore(dbm.DataStore):
             # I think this is the fastest way to generate the string we need
             # List comprehensions are fast (faster than loops):
             signal_datas = ''.join(
-                (''.join((f'{signals[j].signal_id}\t{times[i]}\t{sample}\n' for j, sample in enumerate(batch))))
+                (''.join((f'{signals[j].signal_id}\t{times[i]}\t{sample}\n' for j, sample in enumerate(batch) if sample is not None and not math.isnan(sample))))
                 for i, batch in enumerate(batches))
 
             conn = dbc.psycopg2_connpool.getconn()
@@ -87,7 +88,7 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
-        signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))
+        signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
 
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
@@ -119,8 +120,8 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
-        signal_ids = list(map(lambda x: dbc.get_cached_signal(x).signal_id, signal_names))        
-        
+        signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
+
         # Get the correct SQLAlchemy functions for each of the "aggregation" directives
         # Complete list is: max, min, average, and count.
         f = None

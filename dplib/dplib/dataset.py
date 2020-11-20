@@ -3,12 +3,16 @@ from itertools import chain
 import pandas as pd
 
 import dplib.series
+import dplib as dp
 
 class Dataset:
     def __init__(self, dataset=None):
         self.dataset = {} if dataset is None else dataset
         
     def set(self, name, series):
+        # Disallow null values
+        if series is None:
+            return self
         self.dataset[name] = series
         return self
 
@@ -42,9 +46,23 @@ class Dataset:
     def count(self):
         return sum([len(series) for series in self.dataset.values()])
 
+    # Replaces any null columns with empty series
+    def fillnull(self):
+        d = {}
+        for key, value in self.dataset.items():
+            if value is None:
+                d[key] = dp.Series(pd.Series([]))
+            else:
+                d[key] = value
+        self.dataset = d
+        return self
+
     def to_dataframe(self):
         if len(self.dataset.items()) == 0:
             return pd.DataFrame()
+
+        self.fillnull()
+
         data = {
             key: value.series for key, value in self.dataset.items()
         }

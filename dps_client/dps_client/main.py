@@ -41,7 +41,7 @@ class Client:
         self.batches.append(batch)
         return batch
 
-    def send_csv(self, filepath, time_column, batch_size=100000, start_time=None, timestep_units='s', verbose=False, columns=None):
+    def send_csv(self, filepath, time_column, batch_size=100000, start_time=None, timestep_units='s', verbose=False, columns=None, include_time_column=False):
         '''
         Sends the CSV to the client's URL in batches.
 
@@ -53,6 +53,8 @@ class Client:
 
         `columns` allows for only sending certain columns to the database (set it to a list of strings where the strings match
         column names).
+
+        `include_time_column` of `True` means to send the time step as a signal value as well as the being the timestamp.
         '''
         if start_time is None and timestep_units is not None:
             raise Exception('`start_time` is required when specifying `timestep_units`.')
@@ -66,12 +68,14 @@ class Client:
         if verbose:
             print(f'send_csv: CSV read successfully.')
 
-        print(df)
-            
         row_count = len(df)
         sent_count = 0.0
 
-        column_names = [key for key in df if key != time_column or (columns is not None and key not in columns)]
+        column_names = [
+            key for key in df
+            if (key != time_column or include_time_column) and
+            (columns is not None and key not in columns)
+        ]
 
         if verbose:
             print(f'send_csv: starting send...')

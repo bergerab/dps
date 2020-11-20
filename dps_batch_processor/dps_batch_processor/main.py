@@ -239,16 +239,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                      logger, api, session, batch_process_id, result, result_id, processed_samples, total_samples)
                     return
     
-            # Send the intermediate results to the database if we have accumulated more
-            # or equal to the max batch size.
-            inter_results = inter_results.merge(values)
-            if inter_results.count() >= max_batch_size:
-                await flush_inter_results(api, logger,
-                                          dbc, session,
-                                          batch_process_id, inter_results,
-                                          result, result_id,
-                                          processed_samples, total_samples)
-                inter_results = dp.Dataset()
+        # After every batch is run, send the intermediate results
+        inter_results = inter_results.merge(values)
+        await flush_inter_results(api, logger,
+                                  dbc, session,
+                                  batch_process_id, inter_results,
+                                  result, result_id,
+                                  processed_samples, total_samples)
+        inter_results = dp.Dataset()
 
     # Write any remaining intermediate results
     await flush_inter_results(api, logger,

@@ -366,10 +366,15 @@ def get_chart_data(request):
     intervals = get_sample_ranges(interval_start,
                                   interval_end,
                                   offset)
+
+    yes = False
     for s in series:
         signal      = s['signal']
         dataset     = s['dataset']
         aggregation = s['aggregation']
+        
+        if signal == 'THD Voltage (Phase A)':
+            yes = True
 
         for start, end in intervals:
             queries.append({
@@ -386,7 +391,10 @@ def get_chart_data(request):
         'queries': queries,
     }).json()
 
-    print(resp)
+    if yes:
+        print("YTES")
+        print(resp)
+
     resp = resp['results']
 
     results = []
@@ -412,12 +420,6 @@ def get_interval(start_time, end_time):
     d = end_time - start_time
     seconds = int(d.total_seconds())    
     microseconds = int(d.total_seconds() * 1e6)
-    print('days diff', d.days,
-          'hours diff', d.seconds / 3600,
-          'minutes diff', d.seconds / 60,
-          'total seconds', seconds,
-          'starttime', start_time,
-          'endtime', end_time)
     if d.days / 365 > 4:
         return 'years'
     elif d.days / 30 > 2:
@@ -444,7 +446,6 @@ def get_interval(start_time, end_time):
         
 def get_sample_ranges(start_time, end_time, offset):
     interval = get_interval(start_time, end_time)
-    print(interval)
     if interval == 'years':
         start_time = start_time.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
         start_time -= timedelta(hours=offset)

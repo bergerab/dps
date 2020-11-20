@@ -114,7 +114,7 @@ class DatabaseManagerAPIClient(APIClient):
         # Don't bother sending if there is no data to send.
         if not samples:
             return
-
+        
         data = {
             "inserts": [
                 {

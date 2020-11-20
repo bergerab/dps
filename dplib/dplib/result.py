@@ -46,9 +46,15 @@ class Result:
         }
 
     def get_intermidiate_values(self):
-        return Dataset({
+        # Get the series used for the aggregations
+        d = {
             key: value.get_series() for key, value in self.aggregations.items()
-        })
+        }
+        # Get the helper values that were used as well
+        df = self.get_dataframe()        
+        for column in df:
+            d[column] = Series(df[column], times=df.index)
+        return Dataset(d)
 
     def get_dataframe(self):
         if not self.dataset or len(self.dataset.dataset.items()) == 0:
