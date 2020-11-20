@@ -36,6 +36,18 @@ def values_agg(*args):
 def window(series, duration):
     return series.window(duration)
 
+@builtin()
+def abs(series):
+    series.series = series.series.abs()
+    return series
+
+@builtin('sum')
+def _sum(series):
+    if isinstance(series, Series):
+        if series.is_windowed(): return series.sum()
+        else: return series.sum_aggregation()
+    else: raise Exception('Unsupported type for sum.')
+
 @builtin('avg')
 def average(series):
     if isinstance(series, Series):

@@ -204,10 +204,10 @@ export default class BatchProcessViewPage extends React.Component {
     });
 
     let parameterIdentifiersToNames = {};
-                                       system.parameters.map(p => { parameterIdentifiersToNames[p.identifier === undefined || p.identifier === null ? p.name : p.identifier] = p.name });
-      let parameterMappings = bp.mappings
-          .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
-          .map(x => [parameterIdentifiersToNames[x.key], formatNumber(x.value)]);
+    system.parameters.map(p => { parameterIdentifiersToNames[(p.identifier === undefined || p.identifier === null || p.identifier === '') ? p.name : p.identifier] = p.name });
+    let parameterMappings = bp.mappings
+        .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
+        .map(x => [parameterIdentifiersToNames[x.key], formatNumber(x.value)]);
     let signalMappings = bp.mappings
         .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
         .map(x => [x.key, x.value]);

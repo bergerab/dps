@@ -6,7 +6,8 @@ from .aggregation import \
     Aggregation, \
     MaxAggregation, \
     MinAggregation, \
-    AverageAggregation
+    AverageAggregation, \
+    SumAggregation
 
 class Series:
     '''
@@ -204,6 +205,12 @@ class Series:
 
     def min(self):
         return self.aggregate(lambda x: x.min())
+
+    def sum_aggregation(self):
+        return SumAggregation(self, sum(self))
+
+    def sum(self):
+        return self.aggregate(lambda x: x.sum())
 
     def max_aggregation(self):
         local_max = None

@@ -71,13 +71,17 @@ class Client:
         row_count = len(df)
         sent_count = 0.0
 
+        
         column_names = [
             key for key in df
-            if (key != time_column or include_time_column) and
-            (columns is not None and key not in columns)
+            if (key == time_column and include_time_column) or
+            (columns is None and key != time_column) or
+            (columns is not None and key in columns)
         ]
 
         if verbose:
+            names = ', '.join(column_names)
+            print(f'send_csv: using column names {names}.')
             print(f'send_csv: starting send...')
         for _, row in df.iterrows():
             if start_time is None:
