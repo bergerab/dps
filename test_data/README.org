@@ -1,0 +1,66 @@
+* Test Data
+
+This directory contains test data used for testing all KPIs that are described in the ~../docs~ folder.
+
+Each sub-directory one or more CSV files with test data, and a script that will upload the test files into DPS.
+
+** Usage
+
+Running these scripts requires that Python 3 is installed, the ~dps_client~ package is installed (see ~../dps_client~ for directions),
+and that all other python dependencies are installed via:
+
+#+BEGIN_SRC shell
+pip3 install -r requirements.txt
+#+END_SRC
+
+Once all dependencies are met, change your directory into one of the test file directories that you want to upload to
+the DPS system. Then run ~python main.py --dbm-url <DATABASE_MANAGER_URL> --dataset <DATASET_NAME>~
+
+The ~DATABASE_MANAGER_URL~ should be a URL to a currently online and accessible DPS Database Manager server.
+
+The ~DATASET_NAME~ should be any unique identifier that you want to tag this test data with. The purpose of this identifier
+is to make individual data uploads isolated. This makes it so that if an upload fails mid-upload, you can cleanly delete all
+data from the upload (based off the dataset identifier) or simply change the dataset name. If there was no dataset name, and 
+all signals were stored in one large pool, failed uploads could not be differentied from successful ones, and all KPI computations
+in the time range of the invalid data would yield invalid results.
+
+An example dataset name for battery data could be: ~BATTERY_12_01_2020~. This would be tagging the data with when it was uploaded.
+This makes sense if you plan on uploading data on regular intervals (daily). These dataset names are displayed in the user interface,
+so they should not be too cryptic. Also, any datasets that starts with ~batch_process_~ is reserved.
+
+** Details about each test file directory
+
+*** Battery
+
+Battery data consists of two files: charge and discharge. The data itself does not have absolute timestamps on the data; however, it has a
+"timestep". This is the elapsed time in seconds since the beginning of the data collection. It is assumed that the "BatteryDischarge" data
+was taken at a different absolute time than the "BatteryCharge" data. This makes sense because the data is supposed to be regarding one individual
+battery (you cannot do a discharge test and a charge test at the same time -- the battery is either charging or discharging not both).
+
+The ~main.py~ Python script that uploads the data sends the discharge data at an absolute time that starts at the current time (the time you run the script) minus
+1 hour. After the discharge data is sent, the script sends the charging data with an absolute time that starts at the current time minus 0.5 hour. This creates a 30
+minute buffer between the data. Because the files are only ~3131 seconds long of data, this is OK. If the test were longer, you would have to increase this range.
+
+*** Diesel Generator and Transformer
+
+Diesel generator and transformer data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
+The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+
+*** Fuel Cell
+
+Fuel cell data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
+The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+
+
+
+*** PV and Wind
+
+PV and wind data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
+The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+
+*** Water Quality
+
+Water quality is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
+The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+
+*** 

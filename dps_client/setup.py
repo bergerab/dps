@@ -11,6 +11,9 @@ setup(
     author='Adam Berger',
     author_email='bergerab@icloud.com',
     test_suite='nose.collector',
+    entry_points = {
+        'console_scripts': ['dps_client=dps_client:cli'],
+    },    
     tests_require=['nose'],    
-    install_requires=['requests', 'pandas', 'protobuf'],
+    install_requires=['requests', 'pandas', 'protobuf', 'click'],
 )
