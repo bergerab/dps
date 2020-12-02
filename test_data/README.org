@@ -6,15 +6,10 @@ Each sub-directory one or more CSV files with test data, and a script that will 
 
 ** Usage
 
-Running these scripts requires that Python 3 is installed, the ~dps_client~ package is installed (see ~../dps_client~ for directions),
-and that all other python dependencies are installed via:
-
-#+BEGIN_SRC shell
-pip3 install -r requirements.txt
-#+END_SRC
+Running these scripts requires that Python 3 is installed, and the ~dps_client~ package is installed (see ~../dps_client~ for directions).
 
 Once all dependencies are met, change your directory into one of the test file directories that you want to upload to
-the DPS system. Then run ~python main.py --dbm-url <DATABASE_MANAGER_URL> --dataset <DATASET_NAME>~
+the DPS system. Then run ~upload <DATABASE_MANAGER_URL> <DATASET_NAME>~
 
 The ~DATABASE_MANAGER_URL~ should be a URL to a currently online and accessible DPS Database Manager server.
 
@@ -29,13 +24,18 @@ This makes sense if you plan on uploading data on regular intervals (daily). The
 so they should not be too cryptic. Also, any datasets that starts with ~batch_process_~ is reserved.
 
 ** Details about each test file directory
+All the files have a relative time column called "Time" which is the difference in time since the data collection began. The scripts
+for uploading the data to DPS use this time column to create an absolute timestamp for each datapoint (because TimescaleDB requires that 
+we use absolute timestamps). To do this conversion, the scripts use a starting time of the current time, subtract it by some offset time,
+and then each timestamp is created by adding the "Time" column. The typical "offset time" is one hour. So the absolute timestamps will start one
+hour before the test is run, and the timestamps will continue for the duration of the file (all the file's "Time" columns are in seconds).
 
 *** Battery
 
-Battery data consists of two files: charge and discharge. The data itself does not have absolute timestamps on the data; however, it has a
-"timestep". This is the elapsed time in seconds since the beginning of the data collection. It is assumed that the "BatteryDischarge" data
-was taken at a different absolute time than the "BatteryCharge" data. This makes sense because the data is supposed to be regarding one individual
-battery (you cannot do a discharge test and a charge test at the same time -- the battery is either charging or discharging not both).
+Battery data consists of two files: charge and discharge. The "Time" column is called "Timestep" is the elapsed time in seconds since the beginning 
+of the data collection. It is assumed that the "BatteryDischarge" data was taken at a different absolute time than the "BatteryCharge" data. This 
+makes sense because the data is supposed to be regarding one individual battery (you cannot do a discharge test and a charge test at the same 
+time -- the battery is either charging or discharging not both).
 
 The ~main.py~ Python script that uploads the data sends the discharge data at an absolute time that starts at the current time (the time you run the script) minus
 1 hour. After the discharge data is sent, the script sends the charging data with an absolute time that starts at the current time minus 0.5 hour. This creates a 30
@@ -43,24 +43,22 @@ minute buffer between the data. Because the files are only ~3131 seconds long of
 
 *** Diesel Generator and Transformer
 
-Diesel generator and transformer data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
-The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+Diesel generator and transformer data is in a single file. Running the ~main.py~ Python script will upload all the data.
 
 *** Fuel Cell
 
-Fuel cell data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
-The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+Fuel cell data is in a single file. Running the ~main.py~ Python script will upload all the data.
 
 
 
 *** PV and Wind
 
-PV and wind data is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
-The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+PV and wind data is in a single file. Running the ~main.py~ Python script will upload all the data.
 
 *** Water Quality
 
-Water quality is in a single file. The file has no absolute timestamps, so absolute timestamps are derived using the delta time of the data (the Time column).
-The absolute times that are generated start from one hour before the test is ran onward. Running the ~main.py~ Python script will upload all the data.
+Water quality is in a single file. Running the ~main.py~ Python script will upload all the data.
 
-*** 
+*** Water Quantity
+
+Water quantity is in two files. One file is for an inverter (this is "WaterQuantityElectricalInverter.csv") and the other is for water data (this is "WaterQuantity.csv").
