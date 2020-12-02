@@ -98,6 +98,7 @@ export default class SignalTable extends React.Component {
             render: data => {
               return (<div style={{ width: '400px' }}>
                         <SignalChart
+                          dataset={this.props.dataset}
                           key={data.name}
                           signals={[{
                             'signal': data.name,
@@ -114,7 +115,7 @@ export default class SignalTable extends React.Component {
                 api.post('signal_names_table', { 'page_size':       query.pageSize,
                                                  'page_number':     query.page,
                                                  'search':          query.search,
-                                                 'dataset':         '',
+                                                 'dataset':         this.props.dataset,
                                                  'order_direction': query.orderDirection,
                                                })
                   .then(result => {

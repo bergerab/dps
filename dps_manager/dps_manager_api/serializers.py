@@ -177,6 +177,7 @@ class IntervalSerializer(serializers.Serializer):
 
 class BatchProcessSerializer(serializers.Serializer):
     name = serializers.CharField()
+    dataset = serializers.CharField(default='')
     system_id = serializers.IntegerField()
     system = SystemSerializer()
     mappings = MappingSerializer(many=True, required=False)

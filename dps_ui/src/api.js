@@ -72,6 +72,15 @@ export function del(entityUrl, id) {
   });
 }
 
+export function delete_batch_process(id) {
+  return fetch(API_PREFIX + 'delete_batch_process' + '/' + id, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  });
+}
+
 export function get_required_mappings(system, kpi_names) {
   return fetch(API_PREFIX + 'get_required_mappings', {
     method: 'POST',
@@ -88,4 +97,7 @@ export function get_required_mappings(system, kpi_names) {
 export default {
   get, list,
   post, put,
+  delete_batch_process,
+  del,
+  get_required_mappings,
 };

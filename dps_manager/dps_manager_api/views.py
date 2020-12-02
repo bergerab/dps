@@ -67,26 +67,30 @@ class ResultsAPI(ObjectAPI):
     ref_name = 'batch_process_id'
 
     def after_update(self, data, obj):
-        if data['status'] == 2: # If complete
-            bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
-            bp = json.loads(bp_obj.value)
-            system_id = bp['system_id']
-            results = data['results']
-            for mapping in results:
-                key = mapping['key']
-                value = mapping.get('value', None)
-                object_value = mapping.get('object_value', None)                
-                Object.objects.create(
-                    name=key,
-                    kind='KPIResult',
-                    ref=system_id,
-                    value=json.dumps({
-                        'name': key,
-                        'value': value,
-                        'object_value': object_value,
-                        'system_id': system_id,
-                        'batch_process_id': bp_obj.object_id,
-                    }))
+        pass
+        # I used to have this code uncommented. It was a way to look at KPIs for each system
+        # instead of looking at KPIs for each batch process:
+        #
+        # if data['status'] == 2: # If complete
+        #     bp_obj = Object.objects.filter(object_id=data['batch_process_id']).first()
+        #     bp = json.loads(bp_obj.value)
+        #     system_id = bp['system_id']
+        #     results = data['results']
+        #     for mapping in results:
+        #         key = mapping['key']
+        #         value = mapping.get('value', None)
+        #         object_value = mapping.get('object_value', None)                
+        #         Object.objects.create(
+        #             name=key,
+        #             kind='KPIResult',
+        #             ref=system_id,
+        #             value=json.dumps({
+        #                 'name': key,
+        #                 'value': value,
+        #                 'object_value': object_value,
+        #                 'system_id': system_id,
+        #                 'batch_process_id': bp_obj.object_id,
+        #             }))
 
 @csrf_exempt
 def get_required_mappings(request):
@@ -227,7 +231,12 @@ def signal_names_table(request):
         'query':   search,
         'offset':  offset,
         'limit':   limit,
-    }).json()['results'][0]
+    }).json()
+
+    if 'results' not in resp:
+        return JsonResponse(resp, status=500)
+    
+    resp = resp['results'][0]
 
     total = resp['total']
     queries = []
@@ -247,8 +256,12 @@ def signal_names_table(request):
 
     resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
         'queries': queries,
-    })
-    resp = resp.json()['results']
+    }).json()
+
+    if 'results' not in resp:
+        return JsonResponse(resp, status=500)
+
+    resp = resp['results']
 
     results = []
     for result in resp:
@@ -323,6 +336,47 @@ def get_dataset_names(request):
         'offset':  jo['offset'],
         'limit':   jo['limit'],
     }).json()['results'][0]
+    return JsonResponse(resp)
+
+@csrf_exempt
+def delete_batch_process(request, id):
+    # Delete the actual batch process KPIs stored in TimescaleDB
+    resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
+        'dataset':   'batch_process_' + str(id),
+    })
+    if resp.status_code >= 400:
+        return JsonResponse(resp, status=500)
+    resp = resp.json()
+
+    # Delete any jobs that haven't been popped yet
+    Object.objects.filter(kind=JobAPI.kind,
+                          ref=id).delete()
+
+    # Delete all batch process results
+    Object.objects.filter(kind=ResultsAPI.kind,
+                          ref=id).delete()
+
+    
+
+    # Delete the actual batch process object
+    Object.objects.filter(kind=BatchProcessAPI.kind,
+                          object_id=id).delete()
+    
+    return JsonResponse(resp)
+
+@csrf_exempt
+def delete_dataset(request):
+    jo = json.loads(request.body)
+    resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
+        'dataset':   jo['dataset'],
+    })
+
+    if resp.status_code >= 400:
+        return JsonResponse(resp, status=500)
+    
+    resp = resp.json()    
+    resp = resp['results'][0]
+
     return JsonResponse(resp)
 
 @csrf_exempt

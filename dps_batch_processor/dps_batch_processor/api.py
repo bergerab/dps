@@ -17,10 +17,14 @@ class APIClient:
 
     async def post(self, session, postfix, data):
         resp = await session.post(self.url + postfix, json=data)
+        if resp.status == 404:
+            return 404
         return json.loads(await resp.text())
 
     async def put(self, session, postfix, id, data):
         resp = await session.put(self.url + postfix + '/' + str(id), json=data)
+        if resp.status == 404:
+            return 404
         return json.loads(await resp.text())
 
 STATUS_ERROR    = 0

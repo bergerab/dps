@@ -9,6 +9,7 @@ import Row from './Row';
 import Link from './Link';
 import LinearProgressWithLabel from './LinearProgressWithLabel';
 import api from '../api';
+import ConfirmationDialog from './ConfirmationDialog';
 
 import moment from 'moment';
 
@@ -146,13 +147,25 @@ export default class BatchResultTable extends React.Component {
             sorting: false,
             render: data => {
               return (
-                <Link to={"/batch-process/" + data.batch_process_id}>
-                  <Button variant="outlined"
-                          color="primary"
-                          style={{ marginRight: '10px' }}>
-                    View
-                  </Button>
-                </Link>
+                <span style={{ display: 'inline-flex' }}>
+                  <Link to={"/batch-process/" + data.batch_process_id}>
+                    <Button variant="outlined"
+                            color="primary"
+                            style={{ marginRight: '10px' }}>
+                      View
+                    </Button>
+                  </Link>
+
+                  <ConfirmationDialog
+	            header={`Delete "${data.batch_process.name}"?`}
+                    deleteObj={() => {
+                      api.delete_batch_process(data.batch_process_id);
+                    }}
+                  >
+	            Are you sure you want to delete this batch process? This action is irreversible.
+                  </ConfirmationDialog>
+
+                </span>
               )
             }
           }

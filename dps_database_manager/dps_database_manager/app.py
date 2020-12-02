@@ -76,15 +76,18 @@ class TimescaleDBDataStore(dbm.DataStore):
                 dbc.psycopg2_connpool.putconn(conn)
 
     def get_signal_names(self, result, dataset_name, query, limit, offset):
-        dataset = dbc.get_dataset_by_name(dataset_name)
-        if not dataset:
-            return
+        if dataset_name is not None:
+            dataset = dbc.get_cached_dataset(dataset_name, error_on_not_found=False)
+            if not dataset:
+                return
         with dbc.scope() as session:
-            q = session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
-                                               .filter(Signal.name.ilike(f'%{query}%')) \
-                                               .order_by(Signal.name)            
+            q = session.query(Signal)
+            if dataset_name is not None:
+                q = q.filter_by(dataset_id=dataset.dataset_id)
+            q = q.filter(Signal.name.ilike(f'%{query}%')) \
+                 .order_by(Signal.name)            
             for signal in q.all()[offset:offset+limit]:
-                if signal.dataset_id == dataset.dataset_id:
+                if dataset_name == None or signal.dataset_id == dataset.dataset_id:
                     result.add(signal.name)
             result.set_total(q.count())
 
@@ -96,7 +99,10 @@ class TimescaleDBDataStore(dbm.DataStore):
             result.set_total(q.count())
 
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
-        dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+        if dataset_name is None:
+            dataset_id = None
+        else:
+            dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
 
         # Get all signal_data within the time interval ordered by time (ascending).
@@ -128,7 +134,10 @@ class TimescaleDBDataStore(dbm.DataStore):
             flush_buffer(result, buffer, previous_time, signal_ids)
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
-        dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+        if dataset_name is None:
+            dataset_id = None
+        else:
+            dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
 
         # Get the correct SQLAlchemy functions for each of the "aggregation" directives
@@ -151,10 +160,15 @@ class TimescaleDBDataStore(dbm.DataStore):
                 result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id, signal_ids).scalar())
 
     def time_filter(self, query, interval, dataset_id, signal_ids):
-        if interval:
-            return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
+        if dataset_id == None:
+            ds_cond = True
         else:
-            return query.filter(and_(Dataset.dataset_id == dataset_id, SignalData.signal_id.in_(signal_ids)))            
+            ds_cond = Dataset.dataset_id == dataset_id
+            
+        if interval:
+            return query.filter(and_(ds_cond, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
+        else:
+            return query.filter(and_(ds_cond, SignalData.signal_id.in_(signal_ids)))            
 
     # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):

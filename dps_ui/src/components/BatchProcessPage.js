@@ -93,6 +93,7 @@ export default class BatchProcessPage extends React.Component {
     const endDate = util.dateToString(util.dateToUTCDate(this.state.endDate));
     return {
       name: this.state.name,
+      dataset: this.state.dataset.value,
       mappings: mappings,
       system: this.state.system,
       system_id: this.state.system.system_id,

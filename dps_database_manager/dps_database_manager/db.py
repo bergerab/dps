@@ -49,7 +49,7 @@ class DatabaseClient:
     def get_cached_signal(self, signal_name, dataset_id):
         def lookup():
             for signal in self.signals:
-                if signal.name == signal_name and signal.dataset_id == dataset_id:
+                if signal.name == signal_name and (dataset_id is None or signal.dataset_id == dataset_id):
                     return signal
         signal = lookup()
         if signal:
@@ -62,10 +62,12 @@ class DatabaseClient:
         # If the signal is still not found, error.
         raise Exception(f'Signal "{signal_name}" does not exist.')
 
-    def get_cached_dataset(self, dataset_name):
+    def get_cached_dataset(self, dataset_name, filter_func=None, error_on_not_found=True):
+        if filter_func is None:
+            filter_func = lambda dataset, name: dataset.name == dataset_name
         def lookup():
             for dataset in self.datasets:
-                if dataset.name == dataset_name:
+                if filter_func(dataset, dataset_name):
                     return dataset
         dataset = lookup()
         if dataset:
@@ -76,7 +78,8 @@ class DatabaseClient:
         if dataset:
             return dataset
         # If the signal is still not found, error.
-        raise Exception(f'Dataset "{dataset_name}" does not exist.')
+        if error_on_not_found:
+            raise Exception(f'Dataset "{dataset_name}" does not exist.')
 
     def get_dataset_by_name(self, dataset_name):
         for dataset in self.datasets:

@@ -10,6 +10,7 @@ import TextField from '@material-ui/core/TextField';
 import Box from './Box';
 import Row from './Row';
 import SignalChart from './Chart';
+import SignalTable from './SignalTable';
 import BarChart from './BarChart';
 import Link from './Link';
 import InputLabel from './InputLabel';
@@ -228,6 +229,7 @@ export default class BatchProcessViewPage extends React.Component {
         } else {
           return (<Grid item xs={6} key={kpiName}>
                     <SignalChart
+                      dataset={bp.dataset}
                       signals={[{
                         'signal': kpiName,
                       }]}
@@ -308,18 +310,25 @@ export default class BatchProcessViewPage extends React.Component {
         </Box>
 
             <Box
-              header="Output">
+              header="Output Signals">
               <Grid container>
                 {charts}
               </Grid>
             </Box>
+
+        <Box
+          header="Input Signals">
+          <SignalTable
+            dataset={bp.dataset}
+          />
+        </Box>
             
-            <Box
-              header="Stats">
-              <Grid item xs={12}>
-                {processStats}
-              </Grid>
-            </Box>
+        <Box
+          header="Stats">
+          <Grid item xs={12}>
+            {processStats}
+          </Grid>
+        </Box>
           </div>
         );
   }
