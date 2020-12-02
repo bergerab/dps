@@ -77,6 +77,8 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def get_signal_names(self, result, dataset_name, query, limit, offset):
         dataset = dbc.get_dataset_by_name(dataset_name)
+        if not dataset:
+            return
         with dbc.scope() as session:
             q = session.query(Signal).filter_by(dataset_id=dataset.dataset_id) \
                                                .filter(Signal.name.ilike(f'%{query}%')) \
@@ -84,6 +86,13 @@ class TimescaleDBDataStore(dbm.DataStore):
             for signal in q.all()[offset:offset+limit]:
                 if signal.dataset_id == dataset.dataset_id:
                     result.add(signal.name)
+            result.set_total(q.count())
+
+    def get_dataset_names(self, result, query, limit, offset):
+        with dbc.scope() as session:
+            q = session.query(Dataset).filter(Dataset.name.ilike(f'%{query}%')).order_by(Dataset.name)            
+            for dataset in q.all()[offset:offset+limit]:
+                result.add(dataset.name)
             result.set_total(q.count())
 
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):

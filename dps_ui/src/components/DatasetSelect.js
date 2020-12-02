@@ -35,8 +35,7 @@ class SignalSelect extends Component {
           cacheOptions
           defaultOptions
           loadOptions={query => {
-            return api.post('get_signal_names', {
-              dataset: this.props.dataset,
+            return api.post('get_dataset_names', {
               query: query,
               limit: this.props.limit,
               offset: 0,

@@ -12,10 +12,10 @@ dps_client --input=WaterQuantity.csv                 ^
 ECHO Water quantity data sent.
 
 ECHO Sending water quantity inverter data...
-dps_client --input=WaterQualityElectricalInverter.csv ^
-           --dbm-url=%1                               ^
-	   --dataset=%2                               ^
-	   --time-column=Time                         ^
+dps_client --input=WaterQuantityElectricalInverter.csv ^
+           --dbm-url=%1                                ^
+	   --dataset=%2                                ^
+	   --time-column=Time                          ^
 	   --time-offset=3600
 ECHO Water quantity inverter data sent.
 
@@ -30,6 +30,6 @@ GOTO ErrorEnd
 
 :ErrorEnd
 
-ECHO Example command: ".\upload.bat http://localhost:9002 SampleDatasetName"
+ECHO Example command: ".\upload.bat http://localhost:3002 WaterQuantityTestData"
 
 :End

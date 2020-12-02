@@ -18,6 +18,7 @@ urlpatterns = router.get_urls() + [
     path('api/v1/batch_process_results', views.batch_process_results),
     path('api/v1/get_batch_process_result/<int:id>', views.get_batch_process_result),
     path('api/v1/get_signal_names', views.get_signal_names),
+    path('api/v1/get_dataset_names', views.get_dataset_names),    
     path('api/v1/signal_names_table', views.signal_names_table),
     path('api/v1/get_chart_data', views.get_chart_data),    
 ]

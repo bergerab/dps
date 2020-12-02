@@ -20,6 +20,7 @@ import PrettyTable from './PrettyTable';
 import InputLabel from './InputLabel';
 import Errors from './Errors';
 import SignalSelect from './SignalSelect';
+import DatasetSelect from './DatasetSelect';
 
 import util from '../util';
 import api from '../api';
@@ -44,6 +45,8 @@ export default class BatchProcessPage extends React.Component {
       },
 
       loading: true,
+
+      dataset: { value: '' },
 
       errors: null,
       mappingErrors: null,      
@@ -103,6 +106,7 @@ export default class BatchProcessPage extends React.Component {
 
   localSave() {
     const o = {
+      dataset: this.state.dataset,            
       kpis: Array.from(this.state.kpis),
       parameterInputs: this.state.parameterInputs,
       signalInputs: this.state.signalInputs,
@@ -317,7 +321,7 @@ export default class BatchProcessPage extends React.Component {
                 style={{maxWidth: '1500px'}}>
             {description}
 
-            <Grid item xs={6}>
+            <Grid item xs={12} s={6}>
               <InputLabel>Identifier</InputLabel>              
               <TextField
                 label="Name"
@@ -327,7 +331,25 @@ export default class BatchProcessPage extends React.Component {
                 error={this.state.nameErrors !== null}
                 helperText={this.state.nameErrors}/>
             </Grid>
-            
+
+            <Grid item xs={12} s={6}>
+              <InputLabel>Dataset</InputLabel>
+              <DatasetSelect
+                limit={20}
+                value={this.state.dataset}
+                onChange={e => {
+                  const inputs = {};
+                  for (const key in this.state.signalInputs) {
+                    inputs[key] = '';
+                  }
+                  this.setState({
+                    dataset: e,
+                    signalInputs: inputs,
+                  });
+                }}
+              />
+            </Grid>
+
             <Grid item xs={12}>
               <InputLabel>KPIs</InputLabel>
               {kpiTable}
@@ -336,6 +358,7 @@ export default class BatchProcessPage extends React.Component {
             <Grid item xs={6}>
               <InputLabel>Signals</InputLabel>
               <PrettyTable
+                key={this.state.dataset.value}
                 header={['KPI Input', 'Signal Name']}
                 rows={this.state.signals.map((signal, i) => {
                   const hasError = this.state.mappingErrors !== null &&
@@ -345,29 +368,17 @@ export default class BatchProcessPage extends React.Component {
                   return [
                     signal,
                     (<SignalSelect
-                       dataset=""
+                       dataset={this.state.dataset.value}
                        value={signalValue}
                        onChange={e => {
                          this.state.signalInputs[signal] = e;
                          // Force an update
                          this.setState({ signals: this.state.signals });
                        }}
-                        error={hasError}
+                       error={hasError}
                        helperText={hasError ? this.state.mappingErrors[i].value : ''}
-                       limit={10}
+                       limit={20}
                      />)
-                    /* (<Select */
-                    /*    fullWidth={true} */
-                    /*    name="name" */
-                          /*    value={signal in this.state.signalInputs ? this.state.signalInputs[signal] : ''} */
-                    /*    onChange={e => { */
-                          /*      this.state.signalInputs[signal] = e.target.value; */
-                          /*      // Force an update */
-                          /*      this.setState({ signals: this.state.signals }); */
-                          /*    }} */
-                          /*  > */
-                          /*    {this.state.signalNames.map(x => (<MenuItem key={x}>{x}</MenuItem>))} */
-                          /*  </Select>) */
                         ];
                 })}
               />

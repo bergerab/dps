@@ -309,6 +309,19 @@ def get_signal_names(request):
         'query':   jo['query'],
         'offset':  jo['offset'],
         'limit':   jo['limit'],
+    }).json()
+    if 'results' not in resp:
+        return JsonResponse(resp, status=500)
+    resp = resp['results'][0]
+    return JsonResponse(resp)
+
+@csrf_exempt
+def get_dataset_names(request):
+    jo = json.loads(request.body)
+    resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
+        'query':   jo['query'],
+        'offset':  jo['offset'],
+        'limit':   jo['limit'],
     }).json()['results'][0]
     return JsonResponse(resp)
 

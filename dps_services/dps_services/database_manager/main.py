@@ -25,12 +25,11 @@ def make_app(AppDataStore, debug=False):
         AppDataStore.insert(o)
         return make_response({})
 
-    if debug:
-        @app.route('/' + util.make_api_url('delete_dataset'), methods=['POST'])
-        @util.json_api
-        def delete_dataset(jo):
-            AppDataStore.delete(jo)
-            return True
+    @app.route('/' + util.make_api_url('delete_dataset'), methods=['POST'])
+    @util.json_api
+    def delete_dataset(jo):
+        AppDataStore.delete(jo)
+        return True
 
     @app.route('/' + util.make_api_url('query'), methods=['POST'])
     @util.json_api
@@ -42,16 +41,23 @@ def make_app(AppDataStore, debug=False):
     def get_signal_names(jo):
         return AppDataStore.execute_get_signal_names(jo)
 
+    @app.route('/' + util.make_api_url('get_dataset_names'), methods=['POST'])
+    @util.json_api
+    def get_dataset_names(jo):
+        return AppDataStore.execute_get_dataset_names(jo)
+
     @app.route('/', methods=['GET'])
     def info():
         capabilities = []
         # Only support delete_dataset if in debug mode (because it is only for integration testing)
-        if debug and AppDataStore.delete_dataset is not DataStore.delete_dataset:
+        if AppDataStore.delete_dataset is not DataStore.delete_dataset:
             capabilities.append('delete_dataset')
         if AppDataStore.fetch_signals is not DataStore.fetch_signals:
             capabilities.append('fetch_signals')
         if AppDataStore.get_signal_names is not DataStore.get_signal_names:
             capabilities.append('get_signal_names')
+        if AppDataStore.get_dataset_names is not DataStore.get_dataset_names:
+            capabilities.append('get_dataset_names')
         if AppDataStore.aggregate_signals is not DataStore.aggregate_signals:
             capabilities.append('aggregate_signals')
         if AppDataStore.insert_signals is not DataStore.insert_signals:

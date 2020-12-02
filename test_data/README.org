@@ -50,7 +50,6 @@ Diesel generator and transformer data is in a single file. Running the ~main.py~
 Fuel cell data is in a single file. Running the ~main.py~ Python script will upload all the data.
 
 
-
 *** PV and Wind
 
 PV and wind data is in a single file. Running the ~main.py~ Python script will upload all the data.

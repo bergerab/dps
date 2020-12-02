@@ -32,8 +32,15 @@ class DataStore:
     @classmethod
     def execute_get_signal_names(DataStoreClass, request):
         ds = DataStoreClass()
-        results = GetSignalNamesResult()
+        results = GetNamesResult()
         ds.get_signal_names(results, request['dataset'], request['query'], request['limit'], request['offset'])
+        return DataStore.to_results_response([results])
+
+    @classmethod
+    def execute_get_dataset_names(DataStoreClass, request):
+        ds = DataStoreClass()
+        results = GetNamesResult()
+        ds.get_dataset_names(results, request['query'], request['limit'], request['offset'])
         return DataStore.to_results_response([results])
 
     def execute_delete(self, delete):
@@ -73,11 +80,17 @@ class DataStore:
         '''
         raise Exception('DataStore.fetch_signals not implemented.')
 
-    def get_signal_names(self, result, dataset_name):
+    def get_signal_names(self, result, dataset_name, query, limit, offset):
         '''
-        Writes the results of the query to the `GetSignalNamesResult` object (using `results.add(name)`)
+        Writes the results of the query to the `GetNamesResult` object (using `results.add(name)`)
         '''
         raise Exception('DataStore.get_signal_names not implemented.')
+
+    def get_dataset_names(self, result, query, limit, offset):
+        '''
+        Writes the results of the query to the `GetDatasetNamesResult` object (using `results.add(name)`)
+        '''
+        raise Exception('DataStore.get_dataset_names not implemented.')
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         '''
@@ -88,9 +101,6 @@ class DataStore:
     def delete_dataset(self, dataset_name):
         '''
         Deletes a dataset, and all data that is associated with that dataset.
-
-        NOTE: Only implement this method if you wish to support the integration tests.
-              This method can be left unimplemented in production systems. It is only for testing purposes.
         '''
         raise Exception('DataStore.delete_dataset not implemented.')
 
@@ -134,7 +144,7 @@ class AggregateQueryResult:
             'query': self.query.to_dict()
         }
 
-class GetSignalNamesResult:
+class GetNamesResult:
     def __init__(self):
         self.results = []
         self.total = 0
