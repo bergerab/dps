@@ -454,6 +454,9 @@ def get_chart_data(request):
         'queries': queries,
     }).json()
 
+    if 'results' not in resp:
+        return JsonResponse(resp, status=500)
+
     resp = resp['results']
 
     results = []

@@ -102,7 +102,10 @@ class TimescaleDBDataStore(dbm.DataStore):
         if dataset_name is None:
             dataset_id = None
         else:
-            dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+            ds = dbc.get_cached_dataset(dataset_name, error_on_not_found=False)
+            if not ds:
+                return
+            dataset_id = ds.dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
 
         # Get all signal_data within the time interval ordered by time (ascending).
@@ -137,7 +140,10 @@ class TimescaleDBDataStore(dbm.DataStore):
         if dataset_name is None:
             dataset_id = None
         else:
-            dataset_id = dbc.get_cached_dataset(dataset_name).dataset_id
+            ds = dbc.get_cached_dataset(dataset_name, error_on_not_found=False)
+            if not ds:
+                return
+            dataset_id = ds.dataset_id
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset_id).signal_id, signal_names))
 
         # Get the correct SQLAlchemy functions for each of the "aggregation" directives

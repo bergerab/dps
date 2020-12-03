@@ -81,12 +81,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     mappings   = get_mappings(batch_process) # Gets the signal names in the mapping
     parameters = get_system_parameters(system)
     mapped_signals = [value for id, value in mappings.items() if id not in parameters]
+    logger.log('Evaluating parameters...')    
     evaluate_parameters(mappings, parameters)
 
     # Create a `dplib.Component` that can compute any KPI for the entire system.
     # Then using `component`, create a batch process that only computes the
     # KPIs in the job (assigned to `bp`).
     component = make_component(system)
+    logger.log('Initializing batch process...')
     bp        = component.make_pruned_bp(kpis, mappings)
 
     # Get the identifiers of each signal who's data is required to run the batch process

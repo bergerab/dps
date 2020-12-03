@@ -249,6 +249,16 @@ export default class BatchProcessViewPage extends React.Component {
           <Grid container spacing={2}
                 style={{maxWidth: '1500px'}}>
             <Grid item xs={12}>
+              <TextField
+                label="Dataset"
+                InputProps={{
+                  readOnly: true,
+                }}              
+                value={bp.dataset}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
               <InputLabel>KPIs</InputLabel>
               <PrettyTable
                 header={kpiHeaders}
