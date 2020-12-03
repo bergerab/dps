@@ -57,7 +57,6 @@ export default class BatchResultTable extends React.Component {
   constructor(props) {
     super(props);
     this.tableRef = React.createRef();
-
   }
 
   componentDidMount() {
@@ -159,7 +158,9 @@ export default class BatchResultTable extends React.Component {
                   <ConfirmationDialog
 	            header={`Delete "${data.batch_process.name}"?`}
                     deleteObj={() => {
-                      api.delete_batch_process(data.batch_process_id);
+                      api.delete_batch_process(data.batch_process_id).then(() => {
+                        this.tableRef.current.onQueryChange();
+                      });
                     }}
                   >
 	            Are you sure you want to delete this batch process? This action is irreversible.

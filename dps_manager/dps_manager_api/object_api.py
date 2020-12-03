@@ -115,6 +115,7 @@ class ObjectAPI:
         data = serializer.validated_data
 
         obj.value = json.dumps(data)
+        obj.name = data.get('name')
         obj.save()
 
         self.after_update(data, obj)
