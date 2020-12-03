@@ -417,7 +417,7 @@ def get_chart_data(request):
         ]
     }
 
-    Where t0 - t2 indicate times, and v0 - v2 are values. This response matches the API for "react-charts"
+    Where t0 - t2 indicate times, and v0 - v2 are values. This response matches the API for Chart.js
     which is why I decided to do it this way.
     '''
     jo = json.loads(request.body)
@@ -428,8 +428,43 @@ def get_chart_data(request):
     series    = jo['series']
     interval  = jo['interval']
     offset    = jo['offset'] # How many hours away from UTC the time is
+    infer     = jo.get('infer', False) # Whether or not to infer the time range (has priority over interval)
     interval_start = util.parse_datetime(interval['start'])
     interval_end = util.parse_datetime(interval['end'])
+    
+    if infer:
+        # Inferred time range
+        # Used if the user doesn't know what time range to look for data.
+        # We look for the range in all of the signals, and include all of the data
+        # in the range.
+        inferred_start_time = None
+        inferred_end_time = None
+
+    if infer:
+        for s in series:
+            signal      = s['signal']
+            dataset     = s['dataset']
+
+            # Infer what the correct time range should be
+            resp = requests.post(settings.DBM_URL + '/api/v1/get_range', json={
+                'dataset': dataset,
+                'signal': signal,
+            }).json()['results'][0]
+            first = resp['first']
+            last = resp['last']
+            if first:
+                if not inferred_start_time:
+                    inferred_start_time = util.parse_datetime(first)
+                else:
+                    inferred_start_time = min(inferred_start_time, util.parse_datetime(first))                
+            if last:
+                if not inferred_end_time:
+                    inferred_end_time = util.parse_datetime(last)
+                else:
+                    inferred_end_time = max(inferred_end_time, util.parse_datetime(last))
+        interval_start = inferred_start_time
+        interval_end = inferred_end_time
+
     intervals = get_sample_ranges(interval_start,
                                   interval_end,
                                   offset)
@@ -449,7 +484,7 @@ def get_chart_data(request):
                     'end':   util.format_datetime(end),
                 }
             })
-        
+
     resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
         'queries': queries,
     }).json()
@@ -476,7 +511,13 @@ def get_chart_data(request):
             })
         results.append({ 'label': s['signal'],
                          'data':  data })
-    return JsonResponse({ 'datasets': results })
+    return JsonResponse({
+        'datasets': results,
+        'interval': {
+            'start': util.format_datetime(interval_start),
+            'end':   util.format_datetime(interval_end),
+        }
+    })
 
 def get_interval(start_time, end_time):
     d = end_time - start_time

@@ -5,6 +5,13 @@ import 'chartjs-plugin-zoom';
 
 import LoadingOverlay from 'react-loading-overlay';
 
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Paper from '@material-ui/core/Paper';
+import Tooltip from '@material-ui/core/Tooltip';
+import IconButton from '@material-ui/core/IconButton';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import ZoomOutIcon from '@material-ui/icons/ZoomOut';
+
 import moment from 'moment';
 
 import api from '../api';
@@ -12,86 +19,155 @@ import util from '../util';
 
 import debounce from 'lodash/debounce';
 
-function SignalChart(props) {
+class SignalChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.chartRef = React.createRef();
+    this.state = {
+      data: [],
+      loading: true,
+    };
+  }
 
-  const [data, setData] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);  
-  React.useEffect(() => {
-    doFetch();
-  }, []);
+  componentDidMount() {
+    // Infer time range for first chart load
+    // any subsequent loads should not be inferred (the user will pan/zoom)
+    this.doFetch(undefined, undefined, true);
+  }
 
-  const doFetch = debounce((startTime=props.startTime, endTime=props.endTime) => {
-    setLoading(true);
-    fetchData(props.signals, startTime,
-              endTime, props.samples,
-              props.batch_process_id,
-              props.dataset).then(series => {
-                setData(series);
-                setLoading(false);
+  doFetch = debounce((startTime=this.props.startTime, endTime=this.props.endTime, infer=false) => {
+    this.setState({ loading: true });
+    fetchData(this.getChartInstance(),
+              this.props.signals, startTime,
+              endTime, this.props.samples,
+              this.props.batch_process_id,
+              this.props.dataset, infer).then(series => {
+                this.setState({ data: series });
+                this.setState({ loading: false });                                
               });
   }, 500);
 
-  const options = {
-    animation: {
-      duration: 0, // disable animations
-    },
-    scales: {
-      xAxes: [{
-        type: 'time'
-      }]
-    },
-    pan: {
-      enabled: false,
-      mode: 'x',
-      onPan: function({chart}) {
-        const timeScales = chart.scales['x-axis-0'];
-        const startTime = new Date(timeScales.min);
-        const endTime = new Date(timeScales.max);            
-        doFetch(startTime, endTime);
-      }
-    },
-    zoom: {
-      drag: true,
-      enabled: true,         
-      mode: 'x',
-      threshold: 10,
-      onZoom: function({chart}) {
-        const timeScales = chart.scales['x-axis-0'];
-        const startTime = new Date(timeScales.min);
-        const endTime = new Date(timeScales.max);            
-        doFetch(startTime, endTime);            
-      }
-    },
+  getChartInstance = () => {
+    if (this.chartRef.current === undefined || this.chartRef.current === null)
+      return null;
+    if (this.chartRef.current.chartInstance === undefined || this.chartRef.current.chartInstance === null)
+      return null;
+    return this.chartRef.current.chartInstance;
+  }
+
+  refresh = chart => {
+    const timeScales = chart.scales['x-axis-0'];
+    const startTime = new Date(timeScales.min);
+    const endTime = new Date(timeScales.max);
+    this.setState({ loading: true });                                      
+    this.doFetch(startTime, endTime);
   };
 
-  if (props.title !== undefined) {
-    options.title = {
-      display: true,
-      text: props.title,
-      fontSize: 20
-    }
-  }
-
-  if (props.minimal) {
-    options.legend = {
-      display: false,
+  render() {
+    const options = {
+      animation: {
+        duration: 0, // disable animations
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          ticks: {
+            /* The x axis ticks are problematic -- ChartJS uses too many and it pushes the chart upwards unless you configure them properly. */
+            maxTicksLimit: 2, /* Only ever have 2 ticks */
+            maxRotation: 0, /* Don't rotate the ticks. */
+            minRotation: 0,            
+          }
+        }]
+      },
+      pan: {
+        enabled: false,
+        mode: 'x',
+        onPan: ({chart}) => {
+          this.refresh(chart);
+        }
+      },
+      zoom: {
+        drag: true,
+        enabled: true,         
+        mode: 'x',
+        threshold: 10,
+        onZoom: ({chart}) => {
+          this.refresh(chart);
+        }
+      },
     };
-  }
-  
-  return (
-    // A react-chart hyper-responsively and continuously fills the available
-    // space of its parent element automatically
-    <LoadingOverlay
-      active={loading}
-      spinner
-      text="Loading chart..."
-    >
-      <Line
-        data={data}
-        options={options}
-      />
-    </LoadingOverlay>
-  );
+
+    // Chart.JS titel. Currently commented out with "false &&" because i've added our own title
+    if (false && this.props.title !== undefined) {
+      options.title = {
+        display: true,
+        text: this.props.title,
+        fontSize: 20
+      }
+    }
+
+    if (this.props.showLegend === undefined || this.props.showLegend === false) {
+      options.legend = {
+        display: false,
+      };
+    }
+
+    if (this.props.minimal) {
+      options.legend = {
+        display: false,
+      };
+    }
+    
+    return (
+      // A react-chart hyper-responsively and continuously fills the available
+      // space of its parent element automatically
+      <Paper style={{  padding: '1em 1em 0 1em' }}>
+        <h2 style={{ padding: '0 0 0.5em 0', margin: 0, textAlign: 'center' }}>{this.props.title}</h2>
+        <LoadingOverlay
+          active={this.state.loading}
+          text="Loading chart..."
+          spinner={<div><CircularProgress /></div>}
+          styles={{
+            overlay: (base) => ({
+              ...base,
+              background: 'rgba(255, 255, 255, 0.5)'
+            }),
+            content: (base) => ({
+              ...base,
+              color: '#AAAAAA',
+              fontSize: '0.9em',
+            }),
+          }}
+        >
+
+          <Line
+            data={this.state.data}
+            options={options}
+            ref={this.chartRef}
+          />
+        </LoadingOverlay>        
+        <div>
+          <Tooltip title="Zoom Out" aria-label="zoom out">
+            <IconButton aria-label="zoom out"
+                        onClick={() => {
+                          this.doFetch(undefined, undefined, true); // Infer the time range to zoom out
+                        }}>
+              <ZoomOutIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Refresh" aria-label="refresh">
+            <IconButton aria-label="refresh"
+                        onClick={() => {
+                          this.refresh(this.getChartInstance());
+                        }}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </div>
+      </Paper>
+
+    );
+    }
 }
 
 const colors = [
@@ -100,13 +176,14 @@ const colors = [
   '#6AB890',
 ];
 
-function fetchData(signals, startTime, endTime, samples, batch_process_id, dataset) {
+function fetchData(chart, signals, startTime, endTime, samples, batch_process_id, dataset, infer) {
   return new Promise(resolve => {
     var gmtOffset = -(new Date().getTimezoneOffset()/60);    
     startTime = moment.utc(startTime || moment().subtract('months', 1)); // should be UTC
     endTime = moment.utc(endTime || moment());
     samples = samples || 10;
     api.post('get_chart_data', {
+      infer: infer,
       series: signals.map(x => {
         let ds = dataset;
         if (batch_process_id !== undefined) { /* If a batch_process_id is provided, set the magic dataset name. */
@@ -131,15 +208,18 @@ function fetchData(signals, startTime, endTime, samples, batch_process_id, datas
       // The server returns strings, but chartjs needs javascript date objects.
       let colorIndex = 0;      
       for (const s of data.datasets) {
-
         for (const d of s.data) {
           d.x = new Date(Date.parse(d.x + 'Z'));
-          // d[1] = d[1] === null ? 0 : d[1]; //sets any null values to 0
         }
         s.backgroundColor = colors[colorIndex];
         colorIndex = (colorIndex + 1) % colorIndex;
       }
 
+      // If the server inferred the time range, set the chart's time range to the one returned by the server
+      if (infer && chart !== null) {
+        chart.resetZoom();
+      }
+      
       resolve(data);
     });
   });

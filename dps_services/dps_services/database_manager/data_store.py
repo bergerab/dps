@@ -43,6 +43,13 @@ class DataStore:
         ds.get_dataset_names(results, request['query'], request['limit'], request['offset'])
         return DataStore.to_results_response([results])
 
+    @classmethod
+    def execute_get_range(DataStoreClass, request):
+        ds = DataStoreClass()
+        results = GetRangeResult()
+        ds.get_range(results, request['dataset'], request['signal'])
+        return DataStore.to_results_response([results])
+
     def execute_delete(self, delete):
         self.delete_dataset(delete.dataset)
 
@@ -91,6 +98,12 @@ class DataStore:
         Writes the results of the query to the `GetDatasetNamesResult` object (using `results.add(name)`)
         '''
         raise Exception('DataStore.get_dataset_names not implemented.')
+
+    def get_range(self, result, dataset_name, signal_name):
+        '''
+        Writes the results of the query to the `GetRangeResult` object (using `results.set_first(time)` and `results.set_last(time)`)
+        '''
+        raise Exception('DataStore.get_range not implemented.')
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         '''
@@ -159,4 +172,27 @@ class GetNamesResult:
         return {
             'values': self.results,
             'total': self.total,
+        }
+
+class GetRangeResult:
+    def __init__(self):
+        self.first = None
+        self.last = None        
+
+    def set_first(self, first):
+        self.first = first
+
+    def set_last(self, last):
+        self.last = last
+
+    def to_dict(self):
+        first = self.first
+        if first:
+            first = util.format_datetime(first)
+        last = self.last
+        if last:
+            last = util.format_datetime(last)
+        return {
+            'first': first,
+            'last': last,
         }

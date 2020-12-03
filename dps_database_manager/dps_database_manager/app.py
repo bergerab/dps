@@ -98,6 +98,37 @@ class TimescaleDBDataStore(dbm.DataStore):
                 result.add(dataset.name)
             result.set_total(q.count())
 
+    def get_range(self, result, dataset_name, signal_name):
+        '''
+        Gets the times of the first and last datapoints for the signal.
+        '''
+        print('getting signal_id')        
+        if dataset_name is None:
+            dataset_id = None
+        else:
+            ds = dbc.get_cached_dataset(dataset_name, error_on_not_found=False)
+            if not ds:
+                return
+            dataset_id = ds.dataset_id
+        signal = dbc.get_cached_signal(signal_name, dataset_id)
+        if not signal:
+            return
+        signal_id = signal.signal_id
+
+        # Get all signal_data within the time interval ordered by time (ascending).
+        # We have to take this data and batch all values that share a timestamp together (in increasing time order).
+        with dbc.scope() as session:
+            firstQ = self.time_filter(session.query(SignalData), None, [signal_id]).order_by(SignalData.time.asc())
+            first = firstQ.first()
+            if not first: # If there are no records, quit early.
+                return
+            
+            lastQ = self.time_filter(session.query(SignalData), None, [signal_id]).order_by(SignalData.time.desc())
+            last = lastQ.first()
+            
+            result.set_first(first.time)
+            result.set_last(last.time)
+
     def fetch_signals(self, result, dataset_name, signal_names, interval, limit):
         if dataset_name is None:
             dataset_id = None
@@ -111,7 +142,7 @@ class TimescaleDBDataStore(dbm.DataStore):
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
         with dbc.scope() as session:
-            q = self.time_filter(session.query(SignalData), interval, dataset_id, signal_ids).order_by(SignalData.time.asc())
+            q = self.time_filter(session.query(SignalData), interval, signal_ids).order_by(SignalData.time.asc())
             if limit:
                 q = q.limit(limit)
             signal_datas = q.all()
@@ -163,18 +194,13 @@ class TimescaleDBDataStore(dbm.DataStore):
         with dbc.scope() as session:
             for signal_id, signal_name in zip(signal_ids, signal_names):
                 signal_datas = session.query(f(SignalData.value)).filter(SignalData.signal_id == signal_id)
-                result.set(signal_name, self.time_filter(signal_datas, interval, dataset_id, signal_ids).scalar())
+                result.set(signal_name, self.time_filter(signal_datas, interval, signal_ids).scalar())
 
-    def time_filter(self, query, interval, dataset_id, signal_ids):
-        if dataset_id == None:
-            ds_cond = True
-        else:
-            ds_cond = Dataset.dataset_id == dataset_id
-            
+    def time_filter(self, query, interval, signal_ids):
         if interval:
-            return query.filter(and_(ds_cond, SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
+            return query.filter(and_(SignalData.time >= interval.start, SignalData.time <= interval.end, SignalData.signal_id.in_(signal_ids)))
         else:
-            return query.filter(and_(ds_cond, SignalData.signal_id.in_(signal_ids)))            
+            return query.filter(and_(SignalData.signal_id.in_(signal_ids)))            
 
     # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):

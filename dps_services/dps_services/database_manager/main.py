@@ -46,6 +46,11 @@ def make_app(AppDataStore, debug=False):
     def get_dataset_names(jo):
         return AppDataStore.execute_get_dataset_names(jo)
 
+    @app.route('/' + util.make_api_url('get_range'), methods=['POST'])
+    @util.json_api
+    def get_range(jo):
+        return AppDataStore.execute_get_range(jo)
+
     @app.route('/', methods=['GET'])
     def info():
         capabilities = []
@@ -58,6 +63,8 @@ def make_app(AppDataStore, debug=False):
             capabilities.append('get_signal_names')
         if AppDataStore.get_dataset_names is not DataStore.get_dataset_names:
             capabilities.append('get_dataset_names')
+        if AppDataStore.get_range is not DataStore.get_range:
+            capabilities.append('get_range')
         if AppDataStore.aggregate_signals is not DataStore.aggregate_signals:
             capabilities.append('aggregate_signals')
         if AppDataStore.insert_signals is not DataStore.insert_signals:

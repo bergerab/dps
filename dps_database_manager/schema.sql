@@ -19,6 +19,7 @@ CREATE TABLE signal_data(
 );
 
 SELECT create_hypertable('signal_data', 'time');
+CREATE INDEX idx_signal_id ON signal_data(signal_id);
 
 -- No foreign key constraint on `signal_data`, because without it
 -- insert speed was faster by ~40% (for 100,000 records).
