@@ -3,6 +3,8 @@ import React from 'react'
 import { Line } from 'react-chartjs-2';
 import 'chartjs-plugin-zoom';
 
+import LoadingOverlay from 'react-loading-overlay';
+
 import moment from 'moment';
 
 import api from '../api';
@@ -13,16 +15,19 @@ import debounce from 'lodash/debounce';
 function SignalChart(props) {
 
   const [data, setData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);  
   React.useEffect(() => {
     doFetch();
   }, []);
 
   const doFetch = debounce((startTime=props.startTime, endTime=props.endTime) => {
+    setLoading(true);
     fetchData(props.signals, startTime,
               endTime, props.samples,
               props.batch_process_id,
               props.dataset).then(series => {
                 setData(series);
+                setLoading(false);
               });
   }, 500);
 
@@ -46,41 +51,47 @@ function SignalChart(props) {
       }
     },
     zoom: {
-                               drag: true,
-                               enabled: true,         
-                               mode: 'x',
-                               threshold: 10,
-                               onZoom: function({chart}) {
-                                 const timeScales = chart.scales['x-axis-0'];
-                                 const startTime = new Date(timeScales.min);
-                                 const endTime = new Date(timeScales.max);            
-                                 doFetch(startTime, endTime);            
-                               }
-                             },
-                           };
+      drag: true,
+      enabled: true,         
+      mode: 'x',
+      threshold: 10,
+      onZoom: function({chart}) {
+        const timeScales = chart.scales['x-axis-0'];
+        const startTime = new Date(timeScales.min);
+        const endTime = new Date(timeScales.max);            
+        doFetch(startTime, endTime);            
+      }
+    },
+  };
 
-                           if (props.title !== undefined) {
-                             options.title = {
-                               display: true,
-                               text: props.title,
-                               fontSize: 20
-                             }
-                           }
+  if (props.title !== undefined) {
+    options.title = {
+      display: true,
+      text: props.title,
+      fontSize: 20
+    }
+  }
 
-                           if (props.minimal) {
-                             options.legend = {
-                               display: false,
-                             };
-                           }
-                           
-                           return (
-                             // A react-chart hyper-responsively and continuously fills the available
-                             // space of its parent element automatically
-                             <Line
-                               data={data}
-                               options={options}
-                             />
-                           );
+  if (props.minimal) {
+    options.legend = {
+      display: false,
+    };
+  }
+  
+  return (
+    // A react-chart hyper-responsively and continuously fills the available
+    // space of its parent element automatically
+    <LoadingOverlay
+      active={loading}
+      spinner
+      text="Loading chart..."
+    >
+      <Line
+        data={data}
+        options={options}
+      />
+    </LoadingOverlay>
+  );
 }
 
 const colors = [
