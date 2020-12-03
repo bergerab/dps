@@ -428,6 +428,7 @@ def get_chart_data(request):
     series    = jo['series']
     interval  = jo['interval']
     offset    = jo['offset'] # How many hours away from UTC the time is
+    pad       = jo.get('pad', True) # Whether or not to add an additional time unit to the beginning and end of the time range
     infer     = jo.get('infer', False) # Whether or not to infer the time range (has priority over interval)
     interval_start = util.parse_datetime(interval['start'])
     interval_end = util.parse_datetime(interval['end'])
@@ -467,7 +468,8 @@ def get_chart_data(request):
 
     intervals = get_sample_ranges(interval_start,
                                   interval_end,
-                                  offset)
+                                  offset,
+                                  pad)
 
     for s in series:
         signal      = s['signal']
@@ -547,7 +549,7 @@ def get_interval(start_time, end_time):
         return 'centiseconds'
     return 'milliseconds'
         
-def get_sample_ranges(start_time, end_time, offset):
+def get_sample_ranges(start_time, end_time, offset, pad=False):
     interval = get_interval(start_time, end_time)
     if interval == 'years':
         start_time = start_time.replace(month=0, day=0, hour=0, minute=0, second=0, microsecond=0)
@@ -593,11 +595,20 @@ def get_sample_ranges(start_time, end_time, offset):
     dt   = end_time - start_time
     t0   = start_time
     t1   = start_time + step
-    
-    ranges = [(t0, t1)]
+
+    if pad:
+        # Add an extra interval to the beginning, so that the chart doesn't start abruptly
+        ranges = [(t0 - step, t0), (t0, t1)]
+    else:
+        ranges = [(t0, t1)]
+        
     while t1 <= end_time:
         t0 += step
         t1 += step
         ranges.append((t0, t1))
+
+    if pad:
+        # Add an extra interval to the end, so that the chart doesn't end abruptly
+        ranges.append((t1, t1 + step))
     return ranges
     

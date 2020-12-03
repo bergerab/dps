@@ -35,15 +35,18 @@ class SignalChart extends React.Component {
     this.doFetch(undefined, undefined, true);
   }
 
-  doFetch = debounce((startTime=this.props.startTime, endTime=this.props.endTime, infer=false) => {
+  doFetch = debounce((startTime=this.props.startTime, endTime=this.props.endTime, infer=false, pad=false) => {
     this.setState({ loading: true });
     fetchData(this.getChartInstance(),
               this.props.signals, startTime,
               endTime, this.props.samples,
               this.props.batch_process_id,
-              this.props.dataset, infer).then(series => {
-                this.setState({ data: series });
-                this.setState({ loading: false });                                
+              this.props.dataset,
+              infer,
+              pad
+             ).then(series => {
+               this.setState({ data: series });
+               this.setState({ loading: false });                                
               });
   }, 500);
 
@@ -55,12 +58,12 @@ class SignalChart extends React.Component {
     return this.chartRef.current.chartInstance;
   }
 
-  refresh = chart => {
+  refresh = (chart, pad) => {
     const timeScales = chart.scales['x-axis-0'];
     const startTime = new Date(timeScales.min);
     const endTime = new Date(timeScales.max);
     this.setState({ loading: true });                                      
-    this.doFetch(startTime, endTime);
+    this.doFetch(startTime, endTime, undefined, pad);
   };
 
   render() {
@@ -83,7 +86,7 @@ class SignalChart extends React.Component {
         enabled: false,
         mode: 'x',
         onPan: ({chart}) => {
-          this.refresh(chart);
+          this.refresh(chart, true);
         }
       },
       zoom: {
@@ -92,7 +95,7 @@ class SignalChart extends React.Component {
         mode: 'x',
         threshold: 10,
         onZoom: ({chart}) => {
-          this.refresh(chart);
+          this.refresh(chart, true);
         }
       },
     };
@@ -158,7 +161,7 @@ class SignalChart extends React.Component {
           <Tooltip title="Refresh" aria-label="refresh">
             <IconButton aria-label="refresh"
                         onClick={() => {
-                          this.refresh(this.getChartInstance());
+                          this.refresh(this.getChartInstance(), false);
                         }}>
               <RefreshIcon />
             </IconButton>
@@ -176,7 +179,7 @@ const colors = [
   '#6AB890',
 ];
 
-function fetchData(chart, signals, startTime, endTime, samples, batch_process_id, dataset, infer) {
+function fetchData(chart, signals, startTime, endTime, samples, batch_process_id, dataset, infer, pad) {
   return new Promise(resolve => {
     var gmtOffset = -(new Date().getTimezoneOffset()/60);    
     startTime = moment.utc(startTime || moment().subtract('months', 1)); // should be UTC
@@ -184,6 +187,7 @@ function fetchData(chart, signals, startTime, endTime, samples, batch_process_id
     samples = samples || 10;
     api.post('get_chart_data', {
       infer: infer,
+      pad: pad,      
       series: signals.map(x => {
         let ds = dataset;
         if (batch_process_id !== undefined) { /* If a batch_process_id is provided, set the magic dataset name. */
