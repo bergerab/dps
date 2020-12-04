@@ -218,7 +218,7 @@ export default class BatchProcessViewPage extends React.Component {
       kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
         if (resultHasObject(kpiResults)) {
           const o = JSON.parse(kpiResults.object_value);
-          return (<Grid item xs={6} key={kpiName}>
+          return (<Grid item sm={12} md={6} xl={3} key={kpiName}>
                     <BarChart
                       label="THD (Percent)"
                       data={Object.values(o)}
@@ -227,7 +227,7 @@ export default class BatchProcessViewPage extends React.Component {
                     />
                   </Grid>);
         } else {
-          return (<Grid item xs={6} key={kpiName}>
+          return (<Grid item sm={12} md={6} xl={3} key={kpiName}>
                     <SignalChart
                       dataset={bp.dataset}
                       signals={[{
@@ -321,7 +321,7 @@ export default class BatchProcessViewPage extends React.Component {
 
             <Box
               header="Output Signals">
-              <Grid container>
+              <Grid container spacing={2}>
                 {charts}
               </Grid>
             </Box>

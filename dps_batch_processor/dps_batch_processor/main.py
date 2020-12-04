@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from collections import defaultdict
+import traceback
 
 import asyncio
 import aiohttp
@@ -239,10 +240,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                                  result.get_aggregations() if result is not None else {},
                                                  STATUS_ERROR,
                                                  result_id=result_id,
-                                                 message=str(e),
+                                                 message=str(traceback.format_exc()),
                                                  processed_samples=processed_samples,
                                                  total_samples=total_samples)
-                    raise e
                     logger.log(f'Sent error that occured when running KPI computation to server: {e}')
                     return
                 except exceptions:                            

@@ -220,7 +220,7 @@ function fetchData(chart, signals, startTime, endTime, samples, batch_process_id
       }
 
       // If the server inferred the time range, set the chart's time range to the one returned by the server
-      if (infer && chart !== null) {
+      if (infer && chart !== null && chart.$zoom !== undefined) { // $zoom -- I was getting a strange error from the chartjs zoom plugin unless I checked this (happened on navigating pages while chart was loading)
         chart.resetZoom();
       }
       

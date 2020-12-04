@@ -506,11 +506,11 @@ def get_chart_data(request):
             # dt = end - start
             # start += dt/2
             y = result['values'][0]
-            # if y is not None:
-            data.append({
-                'x': start,
-                'y': y,
-            })
+            if y is not None: # skip nulls
+                data.append({
+                    'x': start,
+                    'y': y,
+                })
         results.append({ 'label': s['signal'],
                          'data':  data })
     return JsonResponse({

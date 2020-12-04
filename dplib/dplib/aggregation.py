@@ -73,6 +73,8 @@ class Aggregation:
             return MinAggregation(None, d['value'])
         elif name == MaxAggregation.name:
             return MaxAggregation(None, d['value'])
+        elif name == AbsAggregation.name:
+            return AbsAggregation(None, d['value'])
         elif name == SumAggregation.name:
             return SumAggregation(None, d['value'])
         elif name == ValuesAggregation.name:
@@ -228,6 +230,15 @@ class SumAggregation(Aggregation):
     name = 'sum'
     def merge(self, other):
         return SumAggregation(other.series, self.value + other.value)
+
+class AbsAggregation(Aggregation):
+    name = 'abs'
+    def merge(self, other):
+        # Always take latest
+        return AbsAggregation(other.series, other.value)
+
+    def get_value(self):
+        return abs(self.value.get_value())
 
 class MaxAggregation(Aggregation):
     name = 'max'

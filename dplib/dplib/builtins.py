@@ -1,7 +1,7 @@
 from .decorators import make_builtin_decorator
 
 from .series import Series
-from .aggregation import Aggregation, ValuesAggregation
+from .aggregation import Aggregation, ValuesAggregation, AbsAggregation
 
 import numpy as np
 
@@ -37,9 +37,12 @@ def window(series, duration):
     return series.window(duration)
 
 @builtin()
-def abs(series):
-    series.series = series.series.abs()
-    return series
+def abs(obj):
+    if isinstance(obj, Series):
+        obj.series = np.abs(obj.series)
+    else: # Assume its an aggregation
+        return AbsAggregation(obj.series, obj)
+    return obj
 
 @builtin('sum')
 def _sum(series):
