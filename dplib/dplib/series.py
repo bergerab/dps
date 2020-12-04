@@ -160,6 +160,7 @@ class Series:
                     indices.append(self.series.index[i])                        
                 else:
                     value = body
+                    indices.append(self.series.index[i])                                            
             else:
                 if isinstance(orelse, Series):
                     value = orelse.series[i]

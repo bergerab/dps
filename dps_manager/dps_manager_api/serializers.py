@@ -1,5 +1,6 @@
 import json
 import numbers
+from datetime import timedelta
 
 from rest_framework import serializers, viewsets
 
@@ -209,11 +210,12 @@ class BatchProcessSerializer(serializers.Serializer):
             if key not in parameters:
                 continue
             try:
-                if not isinstance(DPL().compile(value).run(), numbers.Number):
-                    raise Exception('Parameter must be a number.')
+                r = DPL().compile(value).run()                
+                if not isinstance(r, numbers.Number) and not isinstance(r, timedelta):
+                    raise Exception('Parameter must either represent a number or a time window (such as "1s" -- with quotes included).')
             except Exception as e:
                 errors[i] = {
-                            'value': ['Invalid parameter value.'],
+                            'value': ['Invalid parameter value: ' + str(e)],
                 }
         if errors:
             raise serializers.ValidationError({

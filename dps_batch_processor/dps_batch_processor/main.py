@@ -230,6 +230,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             logger.log('Processing DataFrame:\n', df)
             
             try:
+                print('mappings', mappings)
                 result       = component.run(df, kpis, mappings, previous_result=result)
                 values       = result.get_intermidiate_values()
                 aggregations = result.get_aggregations()

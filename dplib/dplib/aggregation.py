@@ -6,7 +6,7 @@ class Aggregation:
 
     def __add__(self, other):
         if not isinstance(other, Aggregation):
-            raise Exception('other', type(other))
+            other = Aggregation.lift(other)
         return AddAggregation(None, self, other)
 
     # If you do any operations on an aggregation, you lose the ability to
@@ -192,16 +192,10 @@ class AverageAggregation(Aggregation):
     @staticmethod
     def from_series(series):
         xs = series.series.sum()
-        if isinstance(xs, Aggregation):
-            raise Exception('WHY3 ? ')
-        return AverageAggregation.from_sum_and_count(series, xs, series.size)
+        return AverageAggregation.from_sum_and_count(series, xs, series.series.size)
 
     @staticmethod
     def from_sum_and_count(series, sum, count):
-        if isinstance(sum, Aggregation):
-            raise Exception('SUMISANAGG ' + str(type(sum)))
-        if isinstance(count, Aggregation):
-            raise Exception('COUNTISANAGG ')
         average = None # An average of "None" means there was no data to average over
         if count != 0:
             average = sum / count
@@ -217,8 +211,6 @@ class AverageAggregation(Aggregation):
             average = (self.average * self.count) / count
         else:
             average = ((self.average * self.count) + (other.average * other.count)) / count
-        if isinstance(average, Aggregation):
-            raise Exception('WHY ? ' + str(average))
         # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
         # We take the other.series because it should be the newer one
         return AverageAggregation(other.series,
