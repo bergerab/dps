@@ -7,34 +7,43 @@ class Aggregation:
     def __add__(self, other):
         if not isinstance(other, Aggregation):
             raise Exception('other', type(other))
-        return AddAggregation(choose_series(self, other), self, other)
-    
+        return AddAggregation(None, self, other)
+
+    # If you do any operations on an aggregation, you lose the ability to
+    # chart it. Because at that point, the chart will be different than
+    # what the aggregation says.
+    #
+    # For example if we allowed plotting and doing operations on aggregations, the
+    # KPI of "avg(Va) * 1234" would plot the Va signal (untouched), but the aggregation
+    # would be the average of Va times 1234. This would cause great confusion for users.
+    # They would see the plot, and they wouldn't know how the plot corresponds with the
+    # aggregation.
     def __radd__(self, other):
-        return AddAggregation(choose_series(self, other), self, other)
+        return AddAggregation(None, self, other)
     
     def __sub__(self, other):
-        return SubAggregation(choose_series(self, other), self, other)
+        return SubAggregation(None, self, other)
     
     def __rsub__(self, other):
-        return SubAggregation(choose_series(self, other), other, self)
+        return SubAggregation(None, other, self)
     
     def __mul__(self, other):
-        return MulAggregation(choose_series(self, other), self, other)
+        return MulAggregation(None, self, other)
     
     def __rmul__(self, other):
-        return MulAggregation(choose_series(self, other), self, other)
+        return MulAggregation(None, self, other)
     
     def __truediv__(self, other):
-        return DivAggregation(choose_series(self, other), self, other)
+        return DivAggregation(None, self, other)
     
     def __rtruediv__(self, other):
-        return DivAggregation(choose_series(self, other), other, self)        
+        return DivAggregation(None, other, self)        
     
     def __floordiv__(self, other):
-        return FloorDivAggregation(choose_series(self, other), self, other)        
+        return FloorDivAggregation(None, self, other)        
     
     def __rfloordiv__(self, other):
-        return FloorDivAggregation(choose_series(self, other), other, self)
+        return FloorDivAggregation(None, other, self)
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
@@ -273,6 +282,3 @@ class ValuesAggregation(Aggregation):
         for key in self.value:
             d[key] = self.value[key].get_value()
         return d
-
-def choose_series(x, y):
-    return x.series if x.series is not None else y.series

@@ -216,30 +216,34 @@ export default class BatchProcessViewPage extends React.Component {
     let charts;
     charts =
       kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
+        if (resultDontChart(kpiResults)) {
+          return (<span/>);
+        }
+        
         if (resultHasObject(kpiResults)) {
           const o = JSON.parse(kpiResults.object_value);
           return (<Grid item sm={12} md={6} xl={3} key={kpiName}>
-                    <BarChart
-                      label="THD (Percent)"
-                      data={Object.values(o)}
-                      labels={Object.keys(o)}
-                      title={kpiName}
-                    />
-                  </Grid>);
+                        <BarChart
+                          label="THD (Percent)"
+                          data={Object.values(o)}
+                          labels={Object.keys(o)}
+                          title={kpiName}
+                        />
+                      </Grid>);
         } else {
           return (<Grid item sm={12} md={6} xl={3} key={kpiName}>
-                    <SignalChart
-                      dataset={bp.dataset}
-                      signals={[{
-                        'signal': kpiName,
-                      }]}
-                      batch_process_id={result.batch_process_id}
-                      key={kpiName}
-                      title={kpiName}                      
-                      startTime={moment(bp.interval.start + 'Z')}
-                      endTime={moment(bp.interval.end + 'Z')}
-                    />
-                  </Grid>);
+   <SignalChart
+     dataset={bp.dataset}
+     signals={[{
+       'signal': kpiName,
+     }]}
+     batch_process_id={result.batch_process_id}
+     key={kpiName}
+     title={kpiName}                      
+     startTime={moment(bp.interval.start + 'Z')}
+     endTime={moment(bp.interval.end + 'Z')}
+   />
+ </Grid>);
         }
       })
     return (
@@ -303,9 +307,11 @@ export default class BatchProcessViewPage extends React.Component {
 
             <Grid item xs={12}>
               <CSVLink
-                data={[kpiHeaders].concat(kpiRows)}
+                data={[kpiHeaders].concat(kpiRows.map(x => [x[0], x[1],
+                                                            x[2] === undefined ? '' :
+                                                            (x[2].value === undefined ? x[2].object_value : x[2].value)]))}
                 target="_blank"
-                style={{ textDecoration: 'none' }}
+      style={{ textDecoration: 'none' }}
                 filename={this.state.result.batch_process.name + " Results.csv"}
               >
                 <Button style={{ margin: '1em 0 0 0' }}
@@ -375,4 +381,9 @@ function resultToString(x) {
 function resultHasObject(x) {
   if (x === undefined) return false;
   return x.value === undefined;
+}
+
+function resultDontChart(x) {
+  if (x === undefined) return false;
+  return x.no_chart === true;
 }

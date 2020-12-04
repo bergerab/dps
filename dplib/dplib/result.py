@@ -48,7 +48,7 @@ class Result:
     def get_intermidiate_values(self):
         # Get the series used for the aggregations
         d = {
-            key: value.get_series() for key, value in self.aggregations.items()
+            key: value.get_series() for key, value in self.aggregations.items() if value.get_series() is not None
         }
         # Get the helper values that were used as well
         df = self.get_dataframe()        

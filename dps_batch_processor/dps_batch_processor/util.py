@@ -69,7 +69,7 @@ def evaluate_parameters(mappings, parameters):
             value = mappings[key]
             mappings[key] = dp.DPL().compile(value).run(mappings)
 
-def dict_to_mappings(d):
+def dict_to_mappings(d, ds):
     '''
     Converts a Python dictionary to a mapping object (list of dictionaries) 
     that is expected by the DPS Manager's API.
@@ -77,15 +77,17 @@ def dict_to_mappings(d):
     results = []
     for key in d:
         value = d[key]
+        result = {
+            'key': key,
+        }
+        
+        if key not in ds.dataset: # If this aggregation doesn't provide any charting data, indicate that in the result.
+            result['no_chart'] = True
+            
         if isinstance(value, dict):
-            results.append({
-                'key': key,
-                'object_value': json.dumps(d[key]),
-            })
+            result['object_value'] = json.dumps(d[key])
         else:
-            results.append({
-                'key': key,
-                'value': d[key],
-            })
+            result['value'] = d[key]
+        results.append(result)
     return results
     
