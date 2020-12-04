@@ -63,6 +63,7 @@ class Component:
 
         self._validate_kpi_names(kpi_names)
         bp = self.make_pruned_bp(kpi_names, mapping)
+
         result = bp.run(Dataset.lift(dataset),
                         parameters=self.parameters,
                         previous_result=previous_result)

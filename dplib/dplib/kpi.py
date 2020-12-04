@@ -1,4 +1,5 @@
 import numbers
+from datetime import timedelta
 
 import pandas as pd
 
@@ -80,8 +81,10 @@ class KPI:
                     errors.append(f'Input has no signal named "{value}" (when attempting to map from "{key}" to "{value}").')
                 else:
                     env[key] = input.dataset.get(value)
-            elif isinstance(value, numbers.Number):
+            elif isinstance(value, numbers.Number) or isinstance(value, timedelta):
                 env[key] = value
+            else:
+                errors.append(f'Parameter "{key}" had an invalid type of {type(value)}.')
 
         if errors:
             raise Exception('\n'.join(errors))

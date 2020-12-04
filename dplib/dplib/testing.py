@@ -11,7 +11,7 @@ class SeriesAssertions:
         return self.assertSeriesEquals(series1, series2)
         
     def assertSeriesEqual(self, series1, series2):
-        assert_series_equal(series1.series, series2.series)
+        assert_series_equal(series1.series, series2.series, check_dtype=False)
         if len(series1.cout) != 0 and len(series2.cout) != 0:
             assert_series_equal(series1.cout, series2.cout, check_dtype=False)
 

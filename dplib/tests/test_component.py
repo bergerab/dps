@@ -247,6 +247,11 @@ class TestComponent(TestCase, ResultAssertions):
             .add('KPI One', 'A + B')
         self.assertResultEqual(D1_BASIC_RESULT, SUT.run(D1, 'KPI One'))
 
+    def test_passing_window(self):
+        SUT = Component('System Under Test', parameters=['WindowSize']) \
+            .add('KPI One', 'avg(window(A + B, WindowSize))')
+        self.assertResultEqual(D1_BASIC_RESULT, SUT.run(D1, 'KPI One', { 'WindowSize': timedelta(seconds=1) }))
+
     def test_multiple_basic(self):
         SUT = Component('System Under Test') \
             .add('KPI One', 'A + B') \
