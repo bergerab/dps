@@ -232,6 +232,17 @@ class JobSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
     batch_process = BatchProcessSerializer()
 
+class ScheduleSerializer(serializers.Serializer):
+    schedule_id = serializers.IntegerField()
+    dataset = serializers.CharField(default='')
+    
+    type = serializers.IntegerField()
+    # Types:
+    # 0 = daily 
+    # 1 = monthly (on the 1st of the month)
+    start = serializers.CharField()
+    end = serializers.CharField()        
+
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
     results = MappingSerializer(many=True)

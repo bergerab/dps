@@ -9,6 +9,7 @@ router.add(views.SystemAPI)
 router.add(views.BatchProcessAPI)
 router.add(views.JobAPI)
 router.add(views.ResultsAPI)
+router.add(views.ScheduleAPI)
 
 urlpatterns = router.get_urls() + [
     path('', views.info),
@@ -22,6 +23,8 @@ urlpatterns = router.get_urls() + [
     path('api/v1/delete_batch_process/<int:id>', views.delete_batch_process),
     path('api/v1/delete_dataset', views.delete_dataset),            
     path('api/v1/signal_names_table', views.signal_names_table),
-    path('api/v1/dataset_table', views.dataset_table),    
+    path('api/v1/dataset_table', views.dataset_table),
+    path('api/v1/schedule_table', views.schedule_table),
+    path('api/v1/add_dataset', views.add_dataset),
     path('api/v1/get_chart_data', views.get_chart_data),    
 ]

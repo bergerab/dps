@@ -26,14 +26,56 @@ export default class DatasetPage extends React.Component {
 
     this.state = {
       loading: false,
+
+      name: '',
+      nameError: null,
     };
   }
 
   render() {
-    const name = this.props.match.params.name;
-    if (name) {
+    const add = this.props.location.pathname.startsWith('/admin/dataset/add');
+    if (add) {
       return (
-        <Box header={"Ding"}
+        <Box header={"Add Dataset"} >
+          <Grid container>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth={true}
+                name="name"
+                value={this.state.name}
+                required={true}
+                onChange={e => this.setState({ name: e.target.value })}
+                label="Name"
+                helperText={this.state.nameError}
+                error={this.state.nameError !== null}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="contained"
+                      color="primary"
+                      style={{ marginTop: '10px' }}
+                      onClick={() => {
+                        if (this.state.name === '') {
+                          this.setState({ nameError: 'You must choose a non-empty name for the dataset.' });
+                          console.log('awef');
+                          return;
+                        }
+                        api.add_dataset(this.state.name);
+                        window.history.back();                        
+                      }}>
+                Add
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+    
+    let name = this.props.match.params.name;
+    if (name) {
+      name = decodeURIComponent(name);
+      return (
+        <Box header={"Datasets - " + name}
              loading={this.state.loading}>
           <SignalTable
             dataset={name} />
@@ -43,6 +85,15 @@ export default class DatasetPage extends React.Component {
         <Box header={"Datasets"}
              loading={this.state.loading}>
           <DatasetTable />
+          <Grid container style={{ marginTop: '15px' }}>
+            <Grid item xs={12}>
+              <Link to={'/admin/dataset/add'} style={{ color: 'white' }}>              
+                <Button variant="contained" color="primary">
+                  Add Dataset
+                </Button>
+              </Link>
+            </Grid>
+          </Grid>
         </Box>);
     }
   }

@@ -54,9 +54,9 @@ def load_insert_json(insert_json):
         for i, sub_insert_json in enumerate(sub_insert_jsons):
             with validator.scope_list('inserts', i):
                 dataset = validator.require('dataset', str, optional=True)
-                signals = validator.require('signals', list)
-                samples = validator.require('samples', list)
-                times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING)
+                signals = validator.require('signals', list, optional=True)
+                samples = validator.require('samples', list, optional=True)
+                times = validator.require('times', list, datetime_format_string=util.DATETIME_FORMAT_STRING, optional=True)
             inserts.append(Insert(dataset, signals, samples, times, upsert=upsert))
         return inserts
 

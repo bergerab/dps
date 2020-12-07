@@ -250,16 +250,28 @@ class MiniDrawer extends React.Component {
               <Route path="/home">
                 <Home />
               </Route>
-              <Route path="/batch-process/:id" component={BatchProcessViewPage}>
+              <Route path="/batch-process/:id"
+                     component={BatchProcessViewPage}>
               </Route>
-              <Route path="/admin/dataset/:name?" component={DatasetPage}>
+              <Route path="/admin/dataset"
+                     component={DatasetPage}>
               </Route>
-              <Route path="/admin/schedule/:id?" component={SchedulePage}>
+              <Route path="/admin/view-dataset/:name"
+                     component={DatasetPage}>
+              </Route>
+              <Route path="/admin/dataset/add"
+                     component={() => <DatasetPage add={true} />}>
               </Route>
               <Route
-                path="/admin/system/:action?/:id?"
+                path="/admin/schedule/:action?/:id?"
                 render={props =>
-		        (<EntityPage
+		        (<SchedulePage
+                           {...props} />)}
+	      />
+            <Route
+              path="/admin/system/:action?/:id?"
+              render={props =>
+		      (<EntityPage
                            key={'System'}
 		           {...props}
 		           fields={[['Name', 'name'],
@@ -269,7 +281,7 @@ class MiniDrawer extends React.Component {
                                                                    key={kpi.name}
                                                                    label={kpi.name}
                                                                    style={{ margin: '5px' }}/>)}
-                                              </span>)
+                                                    </span>)
                                     }],
 			            ['Parameters', system => {
                                       return (<span>{system.parameters.filter(param => !param.hidden)
@@ -282,10 +294,10 @@ class MiniDrawer extends React.Component {
 		           entityUrl="system"
 		           entityName="System"
 		           editComponent={SystemEdit}
-      />)}
-	      />
-              /* Add batch process pages. */
-              {this.state.systems.map(system => (
+                             />)}
+	    />
+            /* Add batch process pages. */
+            {this.state.systems.map(system => (
                 <Route
                   key={system.system_id}
                   path={"/system/" + system.system_id + "/batch-process"}

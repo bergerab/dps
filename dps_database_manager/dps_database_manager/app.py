@@ -93,7 +93,7 @@ class TimescaleDBDataStore(dbm.DataStore):
 
     def get_dataset_names(self, result, query, limit, offset):
         with dbc.scope() as session:
-            q = session.query(Dataset).filter(and_(Dataset.name.ilike(f'%{query}%'), not_(Dataset.name.ilike('batch_process%')))).order_by(Dataset.name)            
+            q = session.query(Dataset).filter(and_(Dataset.name.ilike(f'%{query}%'), not_(Dataset.name.ilike('batch_process%')))).order_by(Dataset.name)
             for dataset in q.all()[offset:offset+limit]:
                 result.add(dataset.name)
             result.set_total(q.count())

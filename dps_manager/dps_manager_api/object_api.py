@@ -17,6 +17,7 @@ class ObjectAPI:
     plural_api_name = None
     ref_name = None
     read_only = False
+    name_attr = 'name'
 
     def __init__(self):
         class_name = self.__class__.__name__
@@ -115,7 +116,7 @@ class ObjectAPI:
         data = serializer.validated_data
 
         obj.value = json.dumps(data)
-        obj.name = data.get('name')
+        obj.name = data.get(self.name_attr)
         obj.save()
 
         self.after_update(data, obj)

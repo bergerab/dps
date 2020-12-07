@@ -58,33 +58,14 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-export default class DatasetTable extends React.Component {
+export default class ScheduleTable extends React.Component {
   constructor(props) {
     super(props);
     this.tableRef = React.createRef();
-    this.state = {
-      deleting: false,
-    };
   }
   
   render () {
     return (
-      <LoadingOverlay
-        active={this.state.deleting}
-        text="Deleting Dataset..."
-          spinner={<div><CircularProgress /></div>}
-        styles={{
-          overlay: (base) => ({
-            ...base,
-            background: 'rgba(255, 255, 255, 0.5)'
-          }),
-          content: (base) => ({
-            ...base,
-            color: '#AAAAAA',
-            fontSize: '0.9em',
-          }),
-        }}
-      >
         <MaterialTable
           icons={tableIcons}
           title=""
@@ -117,7 +98,7 @@ export default class DatasetTable extends React.Component {
                 return (
                   <div style={{ width: '100%', textAlign: 'right' }}>
                     <span style={{ display: 'inline-flex' }}>
-                      <Link to={"/admin/view-dataset/" + encodeURIComponent(data.name)}>
+                      <Link to={"/admin/schedule/" + encodeURI(data.schedule_id)}>
                         <Button variant="outlined"
                                 color="primary"
                                 style={{ marginRight: '10px' }}>
@@ -126,14 +107,10 @@ export default class DatasetTable extends React.Component {
                       </Link>
 
                       <ConfirmationDialog
-	                header={`Delete "${data.name}"?`}
+	                header={`Delete "${data.dataset}"?`}
                         deleteObj={() => {
-                          this.setState({ deleting: true });
-                          api.delete_dataset(data.name).then(() => {
+                          api.del('schedule', data.schedule_id).then(() => {
                             this.tableRef.current.onQueryChange();
-                            this.setState({ deleting: false });                            
-                          }).catch(() => {
-                            this.setState({ deleting: false }); 
                           });
                         }}
                       >
@@ -150,11 +127,11 @@ export default class DatasetTable extends React.Component {
           ]}
           data={query =>
                 new Promise((resolve, reject) => {
-                  api.post('dataset_table', { 'page_size':       query.pageSize,
-                                              'page_number':     query.page,
-                                              'search':          query.search,
-                                              'order_direction': query.orderDirection,
-                                            })
+                  api.post('schedule_table', { 'page_size':       query.pageSize,
+                                               'page_number':     query.page,
+                                               'search':          query.search,
+                                               'order_direction': query.orderDirection,
+                                             })
                     .then(result => {
                       resolve({
                         data: result.data,
@@ -165,7 +142,6 @@ export default class DatasetTable extends React.Component {
                 })
                }
         />
-      </LoadingOverlay>
     );
   }
 }

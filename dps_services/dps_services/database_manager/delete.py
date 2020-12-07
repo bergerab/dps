@@ -36,5 +36,5 @@ def load_delete_json(delete_json):
     :returns: a Delete object
     '''
     with util.RequestValidator(delete_json) as validator:
-        dataset = validator.require('dataset', str)
+        dataset = validator.require('dataset', str, default='', optional=True)
         return Delete(dataset)

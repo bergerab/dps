@@ -91,6 +91,16 @@ export function delete_dataset(name) {
   });
 }
 
+export function add_dataset(name) {
+  return fetch(API_PREFIX + 'add_dataset', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: name }),    
+  });
+}
+
 export function get_required_mappings(system, kpi_names) {
   return fetch(API_PREFIX + 'get_required_mappings', {
     method: 'POST',
@@ -111,4 +121,5 @@ export default {
   del,
   get_required_mappings,
   delete_dataset,
+  add_dataset,
 };

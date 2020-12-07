@@ -24,6 +24,7 @@ from .serializers import \
     ResultsSerializer, \
     GetKPIsSerializer, \
     RegisterDatabaseManagerSerializer, \
+    ScheduleSerializer, \
     BatchProcessRequestSerializer
 
 from dplib import Component, KPI
@@ -91,6 +92,14 @@ class ResultsAPI(ObjectAPI):
         #                 'system_id': system_id,
         #                 'batch_process_id': bp_obj.object_id,
         #             }))
+
+class ScheduleAPI(ObjectAPI):
+    serializer = ScheduleSerializer
+    kind = 'Schedule'
+    id_name = 'schedule_id'
+    api_name = 'schedule'
+    plural_api_name = 'schedules'
+    name_attr = 'dataset' # Use the dataset name as the name for the object
 
 @csrf_exempt
 def get_required_mappings(request):
@@ -219,7 +228,7 @@ def signal_names_table(request):
     
     page_size       = jo['page_size']
     page_number     = jo['page_number']
-    dataset         = jo['dataset']    
+    dataset         = jo['dataset']
     search          = jo['search']
     order_direction = jo.get('order_direction', '') 
     
@@ -276,6 +285,78 @@ def signal_names_table(request):
         'data': results,
     })
 
+
+@csrf_exempt
+def dataset_table(request):
+    jo = json.loads(request.body)
+    
+    page_size       = jo['page_size']
+    page_number     = jo['page_number']
+    search          = jo['search']
+    order_direction = jo.get('order_direction', '') 
+    
+    offset = page_size * page_number
+    limit  = page_size
+
+    resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
+        'query':   search,
+        'offset':  offset,
+        'limit':   limit,
+    }).json()
+
+    if 'results' not in resp:
+        return JsonResponse(resp, status=500)
+
+    return JsonResponse({
+        'total': resp['results'][0]['total'],
+        'page': page_number,
+        'data': list(map(lambda x: { 'name': x }, resp['results'][0]['values'])),
+    })
+
+@csrf_exempt
+def schedule_table(request):
+    jo = json.loads(request.body)
+    
+    page_size       = jo['page_size']
+    page_number     = jo['page_number']
+    search          = jo['search']
+    order_direction = jo.get('order_direction', '') 
+    
+    offset = page_size * page_number
+    limit  = page_size
+
+    order = 'name' if order_direction == 'asc' else '-name'
+    count = Object.objects.filter(kind=ScheduleAPI.kind, name__contains=search).count()
+    objs  = Object.objects.filter(kind=ScheduleAPI.kind, name__contains=search) \
+                          .order_by(order).all()[offset:offset+limit]
+
+    return JsonResponse({
+        'total': count,
+        'data': list(map(lambda o: json.loads(o.value), objs)),
+        'page': page_number,
+    })
+
+@csrf_exempt
+def add_dataset(request):
+    jo = json.loads(request.body)
+    
+    name = jo['name']
+
+    resp = requests.post(settings.DBM_URL + '/api/v1/insert', json={
+        'inserts': [{
+            'dataset': name,
+            'signals': [],
+            'samples': [],
+            'times': [],
+        }],
+    })
+
+    if resp.status_code >= 400:
+        return HttpResponse(resp, status=500)
+    
+    return JsonResponse({
+        'message': 'OK',
+    })
 
 @csrf_exempt
 def dataset_table(request):
@@ -400,14 +481,9 @@ def delete_dataset(request):
     })
 
     if resp.status_code >= 400:
-        return JsonResponse(resp, status=500)
+        return HttpResponse(resp, status=500)
     
     resp = resp.json()
-
-    if 'results' not in resp:
-        return JsonResponse(resp, status=500)
-    
-    resp = resp['results'][0]
 
     return JsonResponse(resp)
 
