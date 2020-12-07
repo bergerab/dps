@@ -11,7 +11,7 @@ export default function Home(props) {
     <Grid container>
       <Grid item xs={12}>
         <Box header="System Setup">            
-          <ActionsStepper />              
+          <ActionsStepper />
         </Box>
       </Grid>
     </Grid>

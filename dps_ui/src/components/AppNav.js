@@ -19,6 +19,8 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import WorkIcon from '@material-ui/icons/Work';
+import ScheduleIcon from '@material-ui/icons/Schedule';
+import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -40,6 +42,8 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 
 import SystemEdit from './SystemEdit';
 import BatchProcessPage from './BatchProcessPage';
+import DatasetPage from './DatasetPage';
+import SchedulePage from './SchedulePage';
 import Home from './Home';
 
 import EntityPage from './EntityPage';
@@ -207,9 +211,21 @@ class MiniDrawer extends React.Component {
             <Divider />
             <List>
               <Link to="/admin/system" style={linkStyle}>
-                <ListItem button key="Systems">
+                <ListItem button>
                   <ListItemIcon><MemoryIcon/></ListItemIcon>
                   <ListItemText primary="Systems" />
+                </ListItem>
+              </Link>
+              <Link to="/admin/dataset" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
+                  <ListItemText primary="Datasets" />
+                </ListItem>
+              </Link>
+              <Link to="/admin/schedule" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><ScheduleIcon/></ListItemIcon>
+                  <ListItemText primary="Schedules" />
                 </ListItem>
               </Link>
             </List>
@@ -235,6 +251,10 @@ class MiniDrawer extends React.Component {
                 <Home />
               </Route>
               <Route path="/batch-process/:id" component={BatchProcessViewPage}>
+              </Route>
+              <Route path="/admin/dataset/:name?" component={DatasetPage}>
+              </Route>
+              <Route path="/admin/schedule/:id?" component={SchedulePage}>
               </Route>
               <Route
                 path="/admin/system/:action?/:id?"

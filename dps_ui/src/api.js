@@ -81,6 +81,16 @@ export function delete_batch_process(id) {
   });
 }
 
+export function delete_dataset(name) {
+  return fetch(API_PREFIX + 'delete_dataset', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ dataset: name }),    
+  });
+}
+
 export function get_required_mappings(system, kpi_names) {
   return fetch(API_PREFIX + 'get_required_mappings', {
     method: 'POST',
@@ -100,4 +110,5 @@ export default {
   delete_batch_process,
   del,
   get_required_mappings,
+  delete_dataset,
 };
