@@ -34,6 +34,7 @@ import Remove from '@material-ui/icons/Remove';
 import SaveAlt from '@material-ui/icons/SaveAlt';
 import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
+import EditIcon from '@material-ui/icons/Edit';
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -95,21 +96,24 @@ export default class EntityTable extends React.Component {
           { title: '',
             field: '',
             render: data => {
+              console.log(data, this.props.entityNameField);
               return (
                 <div style={{ width: '100%', textAlign: 'right' }}>
                   <span style={{ display: 'inline-flex' }}>
-                    <Link to={"/admin/" + this.props.entityName + "/edit/" + encodeURI(data[this.props.idName])}>
-                      <Button variant="outlined"
-                              color="primary"
-                              style={{ marginRight: '10px' }}>
-                        View
-                      </Button>
-                    </Link>
+                    {this.props.editDisabled ? null : 
+                     (<Link to={"/admin/" + this.props.entityName + "/edit/" + encodeURI(data[this.props.idName])}>
+                        <Button variant="outlined"
+                                color="primary"
+                                style={{ marginRight: '10px' }}>
+                          <EditIcon/>
+                        </Button>
+                      </Link>)}
 
                     <ConfirmationDialog
-	              header={`Delete "${this.props.entityDisplayName}"?`}
+	        /* header={`Delete "${data[this.props.entityNameField || 'name']}"?`} */
+	              header={<span>Delete "<span style={{ wordBreak: 'break-all' }}>{data[this.props.entityNameField || 'name']}"</span>?</span>}                      
                       deleteObj={() => {
-                        api.del(this.props.entityName, data.schedule_id).then(() => {
+                        api.del(this.props.entityName, data[this.props.idName]).then(() => {
                           this.tableRef.current.onQueryChange();
                         });
                       }}
@@ -120,7 +124,7 @@ export default class EntityTable extends React.Component {
                   </span>
                 </div>                
               );
-              return data.dataset;
+                return data.dataset;
             },
             sorting: false
           },

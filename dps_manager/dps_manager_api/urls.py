@@ -10,6 +10,7 @@ router.add(views.BatchProcessAPI)
 router.add(views.JobAPI)
 router.add(views.ResultsAPI)
 router.add(views.ScheduleAPI)
+router.add(views.AuthTokenAPI)
 
 urlpatterns = router.get_urls() + [
     path('', views.info),

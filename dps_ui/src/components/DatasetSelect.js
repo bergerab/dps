@@ -15,7 +15,7 @@ const customStyles = {
   }),
 }
 
-class SignalSelect extends Component {
+class DatasetSelect extends Component {
   render() {
     const styles = Object.assign({}, customStyles);
     if (this.props.error) {
@@ -47,4 +47,4 @@ class SignalSelect extends Component {
   }
 }
 
-export default withStyles({}, { withTheme: true })(SignalSelect);
+export default withStyles({}, { withTheme: true })(DatasetSelect);

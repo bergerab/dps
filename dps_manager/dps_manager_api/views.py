@@ -25,6 +25,7 @@ from .serializers import \
     GetKPIsSerializer, \
     RegisterDatabaseManagerSerializer, \
     ScheduleSerializer, \
+    AuthTokenSerializer, \
     BatchProcessRequestSerializer
 
 from dplib import Component, KPI
@@ -100,6 +101,14 @@ class ScheduleAPI(ObjectAPI):
     api_name = 'schedule'
     plural_api_name = 'schedules'
     name_attr = 'dataset' # Use the dataset name as the name for the object
+
+class AuthTokenAPI(ObjectAPI):
+    serializer = AuthTokenSerializer
+    kind = 'AuthToken'
+    id_name = 'auth_token_id'
+    api_name = 'auth_token'
+    plural_api_name = 'auth_tokens'
+    name_attr = 'token'
 
 @csrf_exempt
 def get_required_mappings(request):

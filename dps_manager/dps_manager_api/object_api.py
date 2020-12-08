@@ -69,9 +69,14 @@ class ObjectAPI:
         limit  = page_size
 
         order = order_by if order_direction == 'asc' else ('-' + order_by)
-        count = Object.objects.filter(kind=self.kind, name__contains=search).count()
-        objs  = Object.objects.filter(kind=self.kind, name__contains=search) \
-                              .order_by(order).all()[offset:offset+limit]
+        if self.name_attr is None: # If the entity has no name
+            count = Object.objects.filter(kind=self.kind).count()
+            objs  = Object.objects.filter(kind=self.kind) \
+                                  .order_by(order).all()[offset:offset+limit]
+        else:
+            count = Object.objects.filter(kind=self.kind, name__contains=search).count()
+            objs  = Object.objects.filter(kind=self.kind, name__contains=search) \
+                                  .order_by(order).all()[offset:offset+limit]
 
         jos = []
         for obj in objs:
@@ -96,7 +101,7 @@ class ObjectAPI:
         data = serializer.validated_data
 
         kwargs = {}
-        if self.name_attr in data:
+        if self.name_attr is not None and self.name_attr in data:
             kwargs['name'] = data[self.name_attr]
         kwargs['kind'] = self.kind
         if self.ref_name:
@@ -146,7 +151,8 @@ class ObjectAPI:
         data = serializer.validated_data
 
         obj.value = json.dumps(data)
-        obj.name = data.get(self.name_attr)
+        if self.name_attr is not None:
+            obj.name = data.get(self.name_attr)
         obj.save()
 
         self.after_update(data, obj)

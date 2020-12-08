@@ -241,7 +241,23 @@ class ScheduleSerializer(serializers.Serializer):
     # 1 = monthly (on the 1st of the month)
     day = serializers.IntegerField() # Only used for monthly type (indicates which day of the month)
     start = serializers.CharField()
-    end = serializers.CharField()        
+    end = serializers.CharField()
+
+    def validate(self, data):
+        # TODO: Make sure batch_process_id refers to a valid object
+        day = data['day']
+        type = data['type']        
+        if type == 1 and (day > 32 or day < 1):
+            raise serializers.ValidationError({
+                'day': 'The day of the month must be between 1 and 31.',
+            })
+        start = data['start']
+        end   = data['end']
+        
+        return data
+
+class AuthTokenSerializer(serializers.Serializer):
+    token = serializers.CharField()
 
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()

@@ -27,27 +27,26 @@ import Loader from './Loader';
 
 import api from '../api';
 
+const makeDefaultState = () => ({
+  loading: false,
+
+  object: {
+    /* The time picker uses whole dates. So we will cut off the date part and just use the time. 
+      The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */ 
+    start: '2020-12-08 08:00:00.000',
+    end:   '2020-12-08 08:05:00.000',
+    day: 1,
+    type: 0,        
+  },
+
+  errors: {
+  }
+});
+
 export default class SchedulePage extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      loading: false,
-
-      object: {
-        start: '8:00 PM',
-        end: new Date(),
-        day: 1,
-        type: 0,        
-      },
-
-      errors: {
-        start: null,
-        end: null,
-        day: null,
-        dataset: null,
-      }
-    };
+    this.state = makeDefaultState();
   }
 
   async componentDidMount() {
@@ -87,7 +86,7 @@ export default class SchedulePage extends React.Component {
                           onChange={e => this.setObject({ day: e.target.value })}
                           label="Day of the Month"
                           helperText={this.state.errors.day}
-                          error={this.state.errors.day !== null}
+                          error={this.state.errors.day !== undefined}
                         />
                       </Grid>);
 
@@ -106,6 +105,9 @@ export default class SchedulePage extends React.Component {
                 <InputLabel>Dataset *</InputLabel>                                
                 <DatasetSelect
                   limit={20}
+                  value={{ value: this.state.object.dataset, label: this.state.object.dataset }}
+                  helperText={this.state.errors.dataset}
+                  error={this.state.errors.dataset !== undefined}
                   onChange={x => {
                     this.setObject({ dataset: x.value });
                   }}
@@ -130,32 +132,42 @@ export default class SchedulePage extends React.Component {
                 <TimePicker value={this.state.object.start}
                             onChange={date => this.setObject({ start: date })}
                             label="Start Time"
-                            error={this.state.errors.start !== null}
+                            error={this.state.errors.start !== undefined}
                             helperText={this.state.errors.start}                                           
                             style={{marginRight: '20px'}}
                             required />
-                <TimePicker value={this.state.object.end}
-                            onChange={date =>
-                                      this.setObject({ end: date })
-                                     }
-                            error={this.state.errors.end !== null}
-                            helperText={this.state.errors.end}
-                            label="End Time"
-                            required />
+                <TimePicker
+                  value={this.state.object.end}
+                  onChange={date =>
+                            this.setObject({ end: date })
+                           }
+                  error={this.state.errors.end !== undefined}
+                  helperText={this.state.errors.end}
+                  label="End Time"
+                  required />
               </Grid>
 
               <Grid item>
                 <Button variant="contained"
                         color="primary"
                         onClick={() => {
+                          const handleError = x => {
+                            x.then(jo => {
+                              this.setState({ errors: jo });
+                            });
+                          }
+                          
                           if (add) {
                             api.post('schedule', this.state.object).then(r => {
-                              window.history.back();                        
-                            });
+                              console.log(r);
+                              window.history.back();
+                              this.setState(makeDefaultState())                              
+                            }).catch(handleError);
                           } else {
                             api.put('schedule', id, this.state.object).then(r => {
-                              window.history.back();                        
-                            });
+                              window.history.back();
+                              this.setState(makeDefaultState())                                                            
+                            }).catch(handleError);
                           }
                         }}>
                   Save
@@ -172,6 +184,7 @@ export default class SchedulePage extends React.Component {
                   idName="schedule_id"
                   entityName="schedule"
                   entityDisplayName="Schedule"
+                  entityNameField={'dataset'}
                   columns={[
                     ['Dataset', x => x.dataset],
                   ]}/>

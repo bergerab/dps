@@ -19,6 +19,7 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import WorkIcon from '@material-ui/icons/Work';
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -44,6 +45,7 @@ import SystemEdit from './SystemEdit';
 import BatchProcessPage from './BatchProcessPage';
 import DatasetPage from './DatasetPage';
 import SchedulePage from './SchedulePage';
+import AuthTokenPage from './AuthTokenPage';
 import Home from './Home';
 
 import EntityPage from './EntityPage';
@@ -228,6 +230,12 @@ class MiniDrawer extends React.Component {
                   <ListItemText primary="Schedules" />
                 </ListItem>
               </Link>
+              {/* <Link to="/admin/auth_token" style={linkStyle}> */}
+              {/*   <ListItem button> */}
+              {/*     <ListItemIcon><VpnKeyIcon/></ListItemIcon> */}
+              {/*     <ListItemText primary="Auth Tokens" /> */}
+              {/*   </ListItem> */}
+              {/* </Link> */}
             </List>
             <Divider />
             <List>
@@ -268,36 +276,39 @@ class MiniDrawer extends React.Component {
 		        (<SchedulePage
                            {...props} />)}
 	      />
-            <Route
-              path="/admin/system/:action?/:id?"
-              render={props =>
-		      (<EntityPage
-                           key={'System'}
-		           {...props}
-		         fields={[['Name', x => x.name],
-			          ['KPIs', system => {
-                                      return (<span>{system.kpis.filter(kpi => !kpi.hidden)
-                                                     .map(kpi => <Chip
-                                                                   key={kpi.name}
-                                                                   label={kpi.name}
-                                                                   style={{ margin: '5px' }}/>)}
-                                                    </span>)
-                                    }],
-			            ['Parameters', system => {
-                                      return (<span>{system.parameters.filter(param => !param.hidden)
-                                                     .map(parameter => <Chip
+              <Route path="/admin/auth_token"
+                     component={props => <AuthTokenPage {...props}/>}>
+              </Route>
+              <Route
+                path="/admin/system/:action?/:id?"
+                render={props =>
+		        (<EntityPage
+                              key={'System'}
+		              {...props}
+		              fields={[['Name', x => x.name],
+			               ['KPIs', system => {
+                                         return (<span>{system.kpis.filter(kpi => !kpi.hidden)
+                                                        .map(kpi => <Chip
+                                                        key={kpi.name}
+                                                        label={kpi.name}
+                                                        style={{ margin: '5px' }}/>)}
+                        </span>)
+                                       }],
+			               ['Parameters', system => {
+                                         return (<span>{system.parameters.filter(param => !param.hidden)
+                                                        .map(parameter => <Chip
                                                                          key={parameter.name}
                                                                          label={parameter.name}
                                                                          style={{ margin: '5px' }}/>)}
-                                              </span>)                                       
-                                    }]]}
-		           entityUrl="system"
-		           entityName="System"
-		           editComponent={SystemEdit}
-                             />)}
-	    />
-            /* Add batch process pages. */
-            {this.state.systems.map(system => (
+                                                                         </span>)                                       
+                                       }]]}
+		              entityUrl="system"
+		              entityName="System"
+		              editComponent={SystemEdit}
+                   />)}
+	      />
+              /* Add batch process pages. */
+              {this.state.systems.map(system => (
                 <Route
                   key={system.system_id}
                   path={"/system/" + system.system_id + "/batch-process"}
