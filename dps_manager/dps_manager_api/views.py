@@ -314,29 +314,6 @@ def dataset_table(request):
     })
 
 @csrf_exempt
-def schedule_table(request):
-    jo = json.loads(request.body)
-    
-    page_size       = jo['page_size']
-    page_number     = jo['page_number']
-    search          = jo['search']
-    order_direction = jo.get('order_direction', '') 
-    
-    offset = page_size * page_number
-    limit  = page_size
-
-    order = 'name' if order_direction == 'asc' else '-name'
-    count = Object.objects.filter(kind=ScheduleAPI.kind, name__contains=search).count()
-    objs  = Object.objects.filter(kind=ScheduleAPI.kind, name__contains=search) \
-                          .order_by(order).all()[offset:offset+limit]
-
-    return JsonResponse({
-        'total': count,
-        'data': list(map(lambda o: json.loads(o.value), objs)),
-        'page': page_number,
-    })
-
-@csrf_exempt
 def add_dataset(request):
     jo = json.loads(request.body)
     

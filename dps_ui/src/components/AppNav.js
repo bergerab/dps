@@ -274,8 +274,8 @@ class MiniDrawer extends React.Component {
 		      (<EntityPage
                            key={'System'}
 		           {...props}
-		           fields={[['Name', 'name'],
-			            ['KPIs', system => {
+		         fields={[['Name', x => x.name],
+			          ['KPIs', system => {
                                       return (<span>{system.kpis.filter(kpi => !kpi.hidden)
                                                      .map(kpi => <Chip
                                                                    key={kpi.name}

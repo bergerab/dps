@@ -1,117 +1,148 @@
 import React from 'react';
-import Paper from '@material-ui/core/Paper';
 
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import Button from '@material-ui/core/Button';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import MaterialTable from 'material-table';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
-import Skeleton from '@material-ui/lab/Skeleton';
+import LoadingOverlay from 'react-loading-overlay';
 
-import EditAndDelete from './EditAndDelete';
+import Box from './Box';
+import Row from './Row';
+import Link from './Link';
+import api from '../api';
 
-import { list } from '../api';
+import ConfirmationDialog from './ConfirmationDialog';
 
-/*
- * A table with an edit and delete button.
- */
-export default class extends React.Component {
+import moment from 'moment';
+
+import { forwardRef } from 'react';
+
+import AddBox from '@material-ui/icons/AddBox';
+import ArrowDownward from '@material-ui/icons/ArrowDownward';
+import Refresh from '@material-ui/icons/Refresh';
+import Check from '@material-ui/icons/Check';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import DeleteOutline from '@material-ui/icons/DeleteOutline';
+import Edit from '@material-ui/icons/Edit';
+import FilterList from '@material-ui/icons/FilterList';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import SaveAlt from '@material-ui/icons/SaveAlt';
+import Search from '@material-ui/icons/Search';
+import ViewColumn from '@material-ui/icons/ViewColumn';
+
+const tableIcons = {
+  Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
+  Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
+  Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Refresh: forwardRef((props, ref) => <Refresh {...props} ref={ref} />),  
+  Delete: forwardRef((props, ref) => <DeleteOutline {...props} ref={ref} />),
+  DetailPanel: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  Edit: forwardRef((props, ref) => <Edit {...props} ref={ref} />),
+  Export: forwardRef((props, ref) => <SaveAlt {...props} ref={ref} />),
+  Filter: forwardRef((props, ref) => <FilterList {...props} ref={ref} />),
+  FirstPage: forwardRef((props, ref) => <FirstPage {...props} ref={ref} />),
+  LastPage: forwardRef((props, ref) => <LastPage {...props} ref={ref} />),
+  NextPage: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  PreviousPage: forwardRef((props, ref) => <ChevronLeft {...props} ref={ref} />),
+  ResetSearch: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Search: forwardRef((props, ref) => <Search {...props} ref={ref} />),
+  SortArrow: forwardRef((props, ref) => <ArrowDownward {...props} ref={ref} />),
+  ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
+  ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
+};
+
+export default class EntityTable extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      entities: [],
-      loading: true,
-    };
+    this.tableRef = React.createRef();
   }
 
-  componentDidMount() {
-    list(this.props.entityUrl).then(entities => {
-      this.setState({
-        entities,
-        loading: false
+  render () {
+    const columns = [];
+    for (const x of this.props.columns) {
+      columns.push({
+        title: x[0],
+        render: x[1],
       });
-      if (typeof this.props.onLoad === 'function') {
-        this.props.onLoad();
-      }
-    });
-  }
-
-render () {
-  let rowId = 0;
-  const props = this.props;
-  const entities = this.state.entities.map(row => {
-    let cellId = 0;        
-    const cells = props.header.map(h => {
-      const value = typeof h[1] === 'function' ? h[1](row) : row[h[1]];
-      
-      return(<TableCell
-                 key={'cell' + cellId++}
-                >
-                  {value}
-                </TableCell>)
-    });
-
-    return (
-      <TableRow key={rowId++}>
-	{cells}
-        {this.props.readOnly ? null :
-         <TableCell
-        align="right"
-          key={rowId}
-        >
-	  <EditAndDelete {...props}
-                         key={rowId}
-			 entity={row}
-			 entityName={props.entityName}
-			 entityUrl={props.entityUrl}
-	  />
-	</TableCell>
-      }
-      </TableRow>);
-  });
-
-  const empty = (<TableRow>
-                   <TableCell>
-                     <i style={{whiteSpace: 'pre'}}>No data to display.</i>
-                   </TableCell>
-                 </TableRow>);
-
-  let body = this.state.entities.length > 0 ? entities : empty;
-
-    if (this.state.loading) {
-      body = [1,2,3,4,5].map((v, i) => (
-        <TableRow key={v}>
-          {this.props.header.map((v, i) => (
-            <TableCell key={i}>
-              <Skeleton/>
-            </TableCell>
-          ))}
-        </TableRow>
-      ));
     }
     
     return (
-      <TableContainer component={Paper}>
-        <Table aria-label="simple table">
-	  <TableHead>
-	    <TableRow>
-	      {props.header.map(data => (
-	        <TableCell
-                  key={data[0]}
-                >
-                  {data[0]}
-                </TableCell>
-	      ))}
-	      <TableCell></TableCell>
-	    </TableRow>
-	  </TableHead>
-	  <TableBody>
-            {body}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <MaterialTable
+        icons={tableIcons}
+        title=""
+        tableRef={this.tableRef}
+        options={{
+          search: true,
+          sorting: true,
+          exportButton: false,
+          pageSize: 5,
+        }}          
+        actions={[
+          {
+            icon: Refresh,
+            tooltip: 'Refresh Data',
+            isFreeAction: true,
+            onClick: () => this.tableRef.current && this.tableRef.current.onQueryChange(),
+          }
+        ]}          
+        columns={[
+          ...columns,
+          { title: '',
+            field: '',
+            render: data => {
+              return (
+                <div style={{ width: '100%', textAlign: 'right' }}>
+                  <span style={{ display: 'inline-flex' }}>
+                    <Link to={"/admin/" + this.props.entityName + "/edit/" + encodeURI(data[this.props.idName])}>
+                      <Button variant="outlined"
+                              color="primary"
+                              style={{ marginRight: '10px' }}>
+                        View
+                      </Button>
+                    </Link>
+
+                    <ConfirmationDialog
+	              header={`Delete "${this.props.entityDisplayName}"?`}
+                      deleteObj={() => {
+                        api.del(this.props.entityName, data.schedule_id).then(() => {
+                          this.tableRef.current.onQueryChange();
+                        });
+                      }}
+                    >
+	              Are you sure you want to delete this {this.props.entityDisplayName}? This action is irreversible.
+                    </ConfirmationDialog>
+
+                  </span>
+                </div>                
+              );
+              return data.dataset;
+            },
+            sorting: false
+          },
+        ]}
+        data={query =>
+              new Promise((resolve, reject) => {
+                api.post(this.props.entityName + '/table', { 'page_size':       query.pageSize,
+                                                             'page_number':     query.page,
+                                                             'search':          query.search,
+                                                             'order_direction': query.orderDirection,
+                                                             'order_by':        (this.props.orderBy || 'name')
+                                                           })
+                  .then(result => {
+                    resolve({
+                      data: result.data,
+                      page: result.page,
+                      totalCount: result.total,
+                    })
+                  })
+              })
+             }
+      />
     );
   }
 }

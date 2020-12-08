@@ -12,7 +12,7 @@ export default class EntityPage extends React.Component {
     super(props);
 
     this.state = {
-      loading: true,
+      loading: false,
     };
   }
   
@@ -36,12 +36,9 @@ export default class EntityPage extends React.Component {
              loading={this.state.loading}>
           <EntityTable
             readOnly={props.readOnly}
-            entityUrl={props.entityUrl}
-            entityName={props.entityName}
-            header={props.fields}
-            onLoad={() => {
-              this.setState({ loading: false });
-            }}
+            entityName={props.entityUrl}
+            columns={props.fields}
+            idName={props.entityUrl + "_id"}
           />            
           <Row key>
             {this.props.readOnly === true ? null : 

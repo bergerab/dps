@@ -57,7 +57,6 @@ export default class DatasetPage extends React.Component {
                       onClick={() => {
                         if (this.state.name === '') {
                           this.setState({ nameError: 'You must choose a non-empty name for the dataset.' });
-                          console.log('awef');
                           return;
                         }
                         api.add_dataset(this.state.name);

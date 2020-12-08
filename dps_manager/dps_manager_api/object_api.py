@@ -55,6 +55,36 @@ class ObjectAPI:
                 self.plural_api_name.lower(): datas,
             }
 
+    def table(self, request):
+        # An API that supports react-table for querying over data
+        jo = json.loads(request.body)
+        
+        page_size       = jo['page_size']
+        page_number     = jo['page_number']
+        search          = jo['search']
+        order_direction = jo.get('order_direction', '')
+        order_by = jo.get('order_by', 'created_at')
+
+        offset = page_size * page_number
+        limit  = page_size
+
+        order = order_by if order_direction == 'asc' else ('-' + order_by)
+        count = Object.objects.filter(kind=self.kind, name__contains=search).count()
+        objs  = Object.objects.filter(kind=self.kind, name__contains=search) \
+                              .order_by(order).all()[offset:offset+limit]
+
+        jos = []
+        for obj in objs:
+            jo = json.loads(obj.value)
+            jo[self.id_name] = obj.object_id # Add the ID to the response
+            jos.append(jo)
+
+        return JsonResponse({
+            'total': count,
+            'data': jos,
+            'page': page_number,
+        })
+
     def post(self, request):
         if self.read_only:
             raise MethodNotAllowed()
@@ -66,8 +96,8 @@ class ObjectAPI:
         data = serializer.validated_data
 
         kwargs = {}
-        if 'name' in data:
-            kwargs['name'] = data['name']
+        if self.name_attr in data:
+            kwargs['name'] = data[self.name_attr]
         kwargs['kind'] = self.kind
         if self.ref_name:
             kwargs['ref'] = data[self.ref_name]
@@ -161,16 +191,17 @@ class Router:
     def get_urls(self):
         urls = []
         for Class in self.classes:
-            handler = make_api_handler(Class)
-            urls.append(path(util.make_api_url(Class.api_name), handler))
-            urls.append(path(util.make_api_url(f'{Class.api_name}/'), handler))
-            urls.append(path(util.make_api_url(f'{Class.api_name}/<int:id>'), handler))
+            rest_handler, table_handler = make_api_handlers(Class)
+            urls.append(path(util.make_api_url(Class.api_name),               rest_handler))
+            urls.append(path(util.make_api_url(f'{Class.api_name}/'),         rest_handler))
+            urls.append(path(util.make_api_url(f'{Class.api_name}/<int:id>'), rest_handler))
+            urls.append(path(util.make_api_url(f'{Class.api_name}/table'),    table_handler))            
         return urls
 
-def make_api_handler(API):
+def make_api_handlers(API):
     api = API()
     @csrf_exempt
-    def handler(request, id=None):
+    def rest_handler(request, id=None):
         if request.method == 'GET':
             resp = api.get(request, id)
             if isinstance(resp, dict):
@@ -188,4 +219,9 @@ def make_api_handler(API):
             resp = api.put(request, id)
             return resp
         raise MethodNotAllowed()
-    return handler
+    @csrf_exempt
+    def table_handler(request):
+        return api.table(request)
+        return resp            
+        
+    return (rest_handler, table_handler)
