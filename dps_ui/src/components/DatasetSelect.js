@@ -3,6 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import api from '../api';
 
 import AsyncSelect from 'react-select/async';
+import AsyncSelectCreatable from 'react-select/async-creatable';
 import FormHelperText from '@material-ui/core/FormHelperText';
 
 const customStyles = {
@@ -25,10 +26,11 @@ class DatasetSelect extends Component {
         // You can also use state.isFocused to conditionally style based on the focus state
       })
     }
+    let Select = this.props.creatable ? AsyncSelectCreatable : AsyncSelect;
     return (
       <div>
 
-        <AsyncSelect
+        <Select
           styles={styles}
           onChange={this.props.onChange}
           value={this.props.value}        

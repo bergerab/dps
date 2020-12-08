@@ -19,6 +19,7 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import WorkIcon from '@material-ui/icons/Work';
+import PeopleIcon from '@material-ui/icons/People';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
@@ -45,6 +46,7 @@ import SystemEdit from './SystemEdit';
 import BatchProcessPage from './BatchProcessPage';
 import DatasetPage from './DatasetPage';
 import SchedulePage from './SchedulePage';
+import UsersPage from './UsersPage';
 import AuthTokenPage from './AuthTokenPage';
 import Home from './Home';
 
@@ -230,12 +232,18 @@ class MiniDrawer extends React.Component {
                   <ListItemText primary="Schedules" />
                 </ListItem>
               </Link>
-              {/* <Link to="/admin/auth_token" style={linkStyle}> */}
-              {/*   <ListItem button> */}
-              {/*     <ListItemIcon><VpnKeyIcon/></ListItemIcon> */}
-              {/*     <ListItemText primary="Auth Tokens" /> */}
-              {/*   </ListItem> */}
-              {/* </Link> */}
+              <Link to="/admin/user" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><PeopleIcon/></ListItemIcon>
+                  <ListItemText primary="Users" />
+                </ListItem>
+              </Link>
+              <Link to="/admin/auth_token" style={linkStyle}>
+                <ListItem button>
+                  <ListItemIcon><VpnKeyIcon/></ListItemIcon>
+                  <ListItemText primary="Auth Tokens" />
+                </ListItem>
+              </Link>
             </List>
             <Divider />
             <List>
@@ -272,19 +280,29 @@ class MiniDrawer extends React.Component {
               </Route>
               <Route
                 path="/admin/schedule/:action?/:id?"
+                component={props => {
+                  const action = props.match.params.action;
+                  return (<SchedulePage key={action} {...props}/>);
+                }}   />
+              <Route
+                path="/admin/user/:action?/:id?"
                 render={props =>
-		        (<SchedulePage
+		        (<UsersPage
                            {...props} />)}
 	      />
-              <Route path="/admin/auth_token"
-                     component={props => <AuthTokenPage {...props}/>}>
+              <Route
+                path="/admin/auth_token/:action?/:id?"                
+                component={props => {
+                  const action = props.match.params.action;
+                  return (<AuthTokenPage key={action} {...props}/>);
+                }}>
               </Route>
               <Route
                 path="/admin/system/:action?/:id?"
                 render={props =>
 		        (<EntityPage
-                              key={'System'}
-		              {...props}
+                           key={'System'}
+		           {...props}
 		              fields={[['Name', x => x.name],
 			               ['KPIs', system => {
                                          return (<span>{system.kpis.filter(kpi => !kpi.hidden)

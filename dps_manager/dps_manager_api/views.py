@@ -26,9 +26,18 @@ from .serializers import \
     RegisterDatabaseManagerSerializer, \
     ScheduleSerializer, \
     AuthTokenSerializer, \
+    UserSerializer, \
     BatchProcessRequestSerializer
 
 from dplib import Component, KPI
+
+class UserAPI(ObjectAPI):
+    serializer = UserSerializer
+    kind = 'User'
+    id_name = 'user_id'
+    api_name = 'user'
+    plural_api_name = 'users'
+    
 
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer

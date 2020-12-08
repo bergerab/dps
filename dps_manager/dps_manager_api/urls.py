@@ -11,6 +11,7 @@ router.add(views.JobAPI)
 router.add(views.ResultsAPI)
 router.add(views.ScheduleAPI)
 router.add(views.AuthTokenAPI)
+router.add(views.UserAPI)
 
 urlpatterns = router.get_urls() + [
     path('', views.info),

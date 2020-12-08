@@ -32,18 +32,16 @@ const makeDefaultState = () => ({
 
   object: {
     /* The time picker uses whole dates. So we will cut off the date part and just use the time. 
-      The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */ 
-    start: '2020-12-08 08:00:00.000',
-    end:   '2020-12-08 08:05:00.000',
-    day: 1,
-    type: 0,        
+      The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */
+    email: null,
+    password: null,
   },
 
   errors: {
   }
 });
 
-export default class SchedulePage extends React.Component {
+export default class UsersPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = makeDefaultState();
@@ -54,16 +52,13 @@ export default class SchedulePage extends React.Component {
           id = this.props.match.params.id;
     if (action === 'edit') {
       this.setState({ loading: true });
-      api.get('schedule', id).then(schedule => {
+      api.get('user', id).then(user => {
         this.setState({
           object: {
-            dataset: schedule.dataset,
-            start: schedule.start,
-            end: schedule.end,
-            type: schedule.type,
-            day: schedule.day,
+            email: user.email,
+            password: user.password,
           },
-          loading: false,          
+          loading: false,
         });
       });
     }
@@ -99,15 +94,15 @@ export default class SchedulePage extends React.Component {
           loading={this.state.loading}
           text="Loading..."
         >
-          <Box header={(add ? 'Add' : 'Edit') + " Schedule"}>
+          <Box header={(add ? 'Add' : 'Edit') + " User"}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <InputLabel>Dataset *</InputLabel>                                
                 <DatasetSelect
+                  
                   limit={20}
                   value={{ value: this.state.object.dataset, label: this.state.object.dataset }}
                   helperText={this.state.errors.dataset}
-                  creatable={true}
                   error={this.state.errors.dataset !== undefined}
                   onChange={x => {
                     this.setObject({ dataset: x.value });
@@ -179,52 +174,25 @@ export default class SchedulePage extends React.Component {
         </Loader>);
 
     } else {
-      return (<Box header={"Schedules"}
-    >
+      return (<Box header={"Users"}
+              >
                 <EntityTable
-                  idName="schedule_id"
-                  entityName="schedule"
-                  entityDisplayName="Schedule"
-                  entityNameField={'dataset'}
+                  idName="user_id"
+                  entityName="user"
+                  entityDisplayName="User"
+                  entityNameField={'email'}
                   columns={[
-                    ['Dataset', x => x.dataset],
-                    ['Interval', x => {
-                      function th(x) {
-                        if (x === 1) return '1st';
-                        if (x === 2) return '2nd';
-                        if (x === 3) return '3rd';
-                        if (x === 21) return '21st';
-                        if (x === 22) return '22nd';
-                        if (x === 23) return '23rd';
-                        if (x === 31) return '31st';
-                        return x + 'th';
-                      }
-                      function fn(x) {
-                        x = x.toString();
-                        return x.length === 1 ? ('0' + x) : x;
-                      }
-                      function format(x) {
-                        x = new Date(Date.parse(x));
-                        console.log(x);
-                        return `${fn(x.getHours())}:${fn(x.getMinutes())}:${fn(x.getSeconds())}`;
-                      }
-                      if (x.type === 0) { /* Daily */
-                        return `Every day from ${format(x.start)} to ${format(x.end)}.`;
-                      } else { /* Monthly */
-                        return `Every ${th(x.day)} day of the month from ${format(x.start)} to ${format(x.end)}.`;
-                      }
-                    }],                    
                   ]}/>
                 <Grid container style={{ marginTop: '15px' }}>                
                   <Grid item>
-                    <Link to={'/admin/schedule/add'} style={{ color: 'white' }}>              
+                    <Link to={'/admin/user/add'} style={{ color: 'white' }}>              
                       <Button variant="contained" color="primary">
-                        Add Schedule
+                        Add User
                       </Button>
                     </Link>
                   </Grid>
                 </Grid>
-   </Box>);
+              </Box>);
     }
   }
 }

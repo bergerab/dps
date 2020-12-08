@@ -257,7 +257,13 @@ class ScheduleSerializer(serializers.Serializer):
         return data
 
 class AuthTokenSerializer(serializers.Serializer):
+    name = serializers.CharField()
     token = serializers.CharField()
+
+class UserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()    
+    is_superuser = serializers.BooleanField()
 
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()
