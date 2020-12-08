@@ -38,7 +38,6 @@ class UserAPI(ObjectAPI):
     api_name = 'user'
     plural_api_name = 'users'
     
-
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer
     kind = 'System'
@@ -109,7 +108,6 @@ class ScheduleAPI(ObjectAPI):
     id_name = 'schedule_id'
     api_name = 'schedule'
     plural_api_name = 'schedules'
-    name_attr = 'dataset' # Use the dataset name as the name for the object
 
 class AuthTokenAPI(ObjectAPI):
     serializer = AuthTokenSerializer

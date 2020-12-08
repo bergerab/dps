@@ -233,6 +233,7 @@ class JobSerializer(serializers.Serializer):
     batch_process = BatchProcessSerializer()
 
 class ScheduleSerializer(serializers.Serializer):
+    name = serializers.CharField()    
     dataset = serializers.CharField()
     
     type = serializers.IntegerField()

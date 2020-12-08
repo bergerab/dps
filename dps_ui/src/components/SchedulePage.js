@@ -31,6 +31,7 @@ const makeDefaultState = () => ({
   loading: false,
 
   object: {
+    name: '',    
     /* The time picker uses whole dates. So we will cut off the date part and just use the time. 
       The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */ 
     start: '2020-12-08 08:00:00.000',
@@ -57,6 +58,7 @@ export default class SchedulePage extends React.Component {
       api.get('schedule', id).then(schedule => {
         this.setState({
           object: {
+            name: schedule.name,
             dataset: schedule.dataset,
             start: schedule.start,
             end: schedule.end,
@@ -101,6 +103,19 @@ export default class SchedulePage extends React.Component {
         >
           <Box header={(add ? 'Add' : 'Edit') + " Schedule"}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <InputLabel>Name</InputLabel>                                                
+                <TextField
+                  name="name"
+                  value={this.state.object.name}
+                  required={true}
+                  onChange={e => this.setObject({ name: e.target.value })}
+                  label="Name"
+                  helperText={this.state.errors.name}
+                  error={this.state.errors.name !== undefined}
+                />
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <InputLabel>Dataset *</InputLabel>                                
                 <DatasetSelect
@@ -185,9 +200,9 @@ export default class SchedulePage extends React.Component {
                   idName="schedule_id"
                   entityName="schedule"
                   entityDisplayName="Schedule"
-                  entityNameField={'dataset'}
                   columns={[
-                    ['Dataset', x => x.dataset],
+                    ['Name', x => x.name],
+                    ['Dataset', x => x.dataset],                    
                     ['Interval', x => {
                       function th(x) {
                         if (x === 1) return '1st';
