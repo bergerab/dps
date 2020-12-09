@@ -256,9 +256,9 @@ class ScheduleSerializer(serializers.Serializer):
         
         return data
 
-class AuthTokenSerializer(serializers.Serializer):
+class APIKeySerializer(serializers.Serializer):
     name = serializers.CharField()
-    token = serializers.CharField()
+    key = serializers.CharField()
 
 class UserSerializer(serializers.Serializer):
     username = serializers.CharField()

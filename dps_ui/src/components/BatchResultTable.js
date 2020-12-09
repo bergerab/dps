@@ -146,27 +146,30 @@ export default class BatchResultTable extends React.Component {
             sorting: false,
             render: data => {
               return (
-                <span style={{ display: 'inline-flex' }}>
-                  <Link to={"/batch-process/" + data.batch_process_id}>
-                    <Button variant="outlined"
-                            color="primary"
-                            style={{ marginRight: '10px' }}>
-                      View
-                    </Button>
-                  </Link>
+                <div style={{textAlign: 'right' }}>
+                  <span style={{ display: 'inline-flex' }}>
+                    <Link to={"/batch-process/" + data.batch_process_id}>
+                      <Button variant="outlined"
+                              color="primary"
+                              style={{ marginRight: '10px' }}>
+                        View
+                      </Button>
+                    </Link>
 
-                  <ConfirmationDialog
-	            header={`Delete "${data.batch_process.name}"?`}
-                    deleteObj={() => {
-                      api.delete_batch_process(data.batch_process_id).then(() => {
-                        this.tableRef.current.onQueryChange();
-                      });
-                    }}
-                  >
-	            Are you sure you want to delete this batch process? This action is irreversible.
-                  </ConfirmationDialog>
+                    <ConfirmationDialog
+	              header={`Delete "${data.batch_process.name}"?`}
+                      deleteObj={() => {
+                        api.delete_batch_process(data.batch_process_id).then(() => {
+                          this.tableRef.current.onQueryChange();
+                        });
+                      }}
+                    >
+	              Are you sure you want to delete this batch process? This action is irreversible.
+                    </ConfirmationDialog>
 
-                </span>
+                  </span>
+
+                </div>
               )
             }
           }

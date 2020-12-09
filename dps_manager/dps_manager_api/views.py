@@ -1,13 +1,15 @@
 import json
 from threading import Lock
+import uuid
+import math
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
-
-import math
+from django.contrib.auth import authenticate
+from django.utils import timezone
 
 import requests
 from dateutil.relativedelta import relativedelta
@@ -15,7 +17,8 @@ from datetime import datetime, timedelta
 
 import dps_services.util as util
 
-from .models import Object
+from .auth import require_auth
+from .models import Object, AuthToken
 
 from .object_api import ObjectAPI
 from .serializers import \
@@ -27,7 +30,7 @@ from .serializers import \
     GetKPIsSerializer, \
     RegisterDatabaseManagerSerializer, \
     ScheduleSerializer, \
-    AuthTokenSerializer, \
+    APIKeySerializer, \
     UserSerializer, \
     BatchProcessRequestSerializer
 
@@ -221,15 +224,16 @@ class ScheduleAPI(ObjectAPI):
     api_name = 'schedule'
     plural_api_name = 'schedules'
 
-class AuthTokenAPI(ObjectAPI):
-    serializer = AuthTokenSerializer
-    kind = 'AuthToken'
-    id_name = 'auth_token_id'
-    api_name = 'auth_token'
-    plural_api_name = 'auth_tokens'
-    name_attr = 'token'
+class APIKeyAPI(ObjectAPI):
+    serializer = APIKeySerializer
+    kind = 'APIKey'
+    id_name = 'api_key_id'
+    api_name = 'api_key'
+    plural_api_name = 'api_keys'
+    name_attr = 'key'
 
 @csrf_exempt
+@require_auth
 def get_required_mappings(request):
     serializer = RequiredMappingsRequestSerializer(data=json.loads(request.body))
     if not serializer.is_valid():
@@ -279,7 +283,7 @@ def get_required_mappings(request):
 # will have to reside somewhere else (e.g. database), so that the
 # memory is shared in the cluster.
 job_mutex = Lock()
-@csrf_exempt
+@require_auth
 def pop_job(request):
     job_mutex.acquire()
     try:
@@ -297,7 +301,7 @@ def pop_job(request):
     finally:
         job_mutex.release()
 
-@csrf_exempt
+@require_auth
 def get_kpis(request):
     serializer = GetKPIsSerializer(data=json.loads(request.body))
     if not serializer.is_valid():
@@ -319,7 +323,7 @@ def get_kpis(request):
         
     return JsonResponse({ 'kpis': kpis })
 
-@csrf_exempt
+@require_auth
 def batch_process_results(request):
     serializer = BatchProcessRequestSerializer(data=json.loads(request.body))
     if not serializer.is_valid():
@@ -350,7 +354,7 @@ def batch_process_results(request):
     })
 
 
-@csrf_exempt
+@require_auth
 def signal_names_table(request):
     jo = json.loads(request.body)
     
@@ -414,7 +418,7 @@ def signal_names_table(request):
     })
 
 
-@csrf_exempt
+@require_auth
 def dataset_table(request):
     jo = json.loads(request.body)
     
@@ -441,7 +445,7 @@ def dataset_table(request):
         'data': list(map(lambda x: { 'name': x }, resp['results'][0]['values'])),
     })
 
-@csrf_exempt
+@require_auth
 def add_dataset(request):
     jo = json.loads(request.body)
     
@@ -463,7 +467,7 @@ def add_dataset(request):
         'message': 'OK',
     })
 
-@csrf_exempt
+@require_auth
 def dataset_table(request):
     jo = json.loads(request.body)
     
@@ -490,7 +494,7 @@ def dataset_table(request):
         'data': list(map(lambda x: { 'name': x }, resp['results'][0]['values'])),
     })
 
-@csrf_exempt
+@require_auth
 def get_batch_process_result(request, id):
     obj = Object.objects.filter(object_id=id).first()
     if not obj:
@@ -528,7 +532,7 @@ def info(request):
         'debug':     settings.DEBUG,
     })
 
-@csrf_exempt
+@require_auth
 def get_signal_names(request):
     jo = json.loads(request.body)
     resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
@@ -542,7 +546,7 @@ def get_signal_names(request):
     resp = resp['results'][0]
     return JsonResponse(resp)
 
-@csrf_exempt
+@require_auth
 def get_dataset_names(request):
     jo = json.loads(request.body)
     resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
@@ -552,7 +556,7 @@ def get_dataset_names(request):
     }).json()['results'][0]
     return JsonResponse(resp)
 
-@csrf_exempt
+@require_auth
 def delete_batch_process(request, id):
     # Delete the actual batch process KPIs stored in TimescaleDB
     resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
@@ -578,8 +582,9 @@ def delete_batch_process(request, id):
     
     return JsonResponse(resp)
 
-@csrf_exempt
+@require_auth
 def delete_dataset(request):
+    require_auth(request)
     jo = json.loads(request.body)
     resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
         'dataset':   jo['dataset'],
@@ -593,6 +598,24 @@ def delete_dataset(request):
     return JsonResponse(resp)
 
 @csrf_exempt
+def login(request):
+    jo = json.loads(request.body)
+
+    username = jo['username']
+    password = jo['password']
+
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        # Delete existing tokens
+        AuthToken.objects.filter(user_id=user.id).delete()
+        token = AuthToken.objects.create(user=user,
+                                         uid=uuid.uuid4(),
+                                         expires_at=timezone.now() + timedelta(hours=1)
+        )
+        return JsonResponse({ 'token': token.uid, 'expires_at': token.expires_at, 'is_admin': user.is_superuser })
+    return JsonResponse({}, status=403)
+
+@require_auth
 def get_chart_data(request):
     '''
     The request should be like this:

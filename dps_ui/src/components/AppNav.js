@@ -4,7 +4,8 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
+  Link,
+  Redirect
 } from "react-router-dom";
 
 import { withStyles } from '@material-ui/core/styles';
@@ -13,10 +14,14 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Chip from '@material-ui/core/Chip';
 import List from '@material-ui/core/List';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
+import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import MenuIcon from '@material-ui/icons/Menu';
 import WorkIcon from '@material-ui/icons/Work';
 import PeopleIcon from '@material-ui/icons/People';
@@ -50,15 +55,15 @@ import UsersPage from './UsersPage';
 import AuthTokenPage from './AuthTokenPage';
 import Home from './Home';
 import NotFound from './NotFound';
+import Login from './Login';
 
 import EntityPage from './EntityPage';
 import EndUserSystemPage from './EndUserSystemPage';
 import BatchProcessViewPage from './BatchProcessViewPage';
 
 import { list } from '../api';
+import api from '../api';
 import util from '../util';
-
-const drawerWidth = 240;
 
 const indexToIcon = i => {
   return [
@@ -68,6 +73,7 @@ const indexToIcon = i => {
   ][i % 9]
 };
 
+const drawerWidth = 240;
 const styles = theme => ({
   root: {
     display: 'flex',
@@ -136,16 +142,22 @@ class MiniDrawer extends React.Component {
     this.state = {
       open: false,
       systems: [],
+      loadingSystems: true,
+      anchorEl: null,
     };
   }
   
   async componentDidMount() {
     list('system').then(systems => {
-      this.setState({ systems });
+      this.setState({ systems, loadingSystems: false });
     });
   }
 
   render() {
+    if (!api.isLoggedIn()) {
+      return (<Redirect to="/login"/>);
+    }
+    
     const { classes } = this.props;
     const handleDrawerOpen = () => {
       this.setState({ open: true });
@@ -156,6 +168,14 @@ class MiniDrawer extends React.Component {
     };
 
     const linkStyle = { textDecoration: 'none', color: 'initial' };
+
+    const handleMenuClick = (event) => {
+      this.setState({ anchorEl: event.currentTarget });
+    };
+
+    const handleMenuClose = () => {
+      this.setState({ anchorEl: null });      
+    };
 
     return (
       <Router>
@@ -184,6 +204,23 @@ class MiniDrawer extends React.Component {
               }} >
                 DPS
               </Typography>
+              <div style={{ marginLeft: 'auto' }}>
+                <IconButton aria-label="profile" style={{ color: 'white' }} onClick={handleMenuClick}>
+                  <AccountCircleIcon fontSize={'large'} />
+                </IconButton>
+                <Menu
+                  id="simple-menu"
+                  anchorEl={this.state.anchorEl}
+                  keepMounted
+                  open={Boolean(this.state.anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={() => {
+                    api.removeToken();
+                    window.location = '/login';
+                  }}>Logout</MenuItem>
+                </Menu>
+              </div>
             </Toolbar>
           </AppBar>
           <Drawer
@@ -239,10 +276,10 @@ class MiniDrawer extends React.Component {
                   <ListItemText primary="Users" />
                 </ListItem>
               </Link>
-              <Link to="/admin/auth_token" style={linkStyle}>
+              <Link to="/admin/api_key" style={linkStyle}>
                 <ListItem button>
                   <ListItemIcon><VpnKeyIcon/></ListItemIcon>
-                  <ListItemText primary="Auth Tokens" />
+                  <ListItemText primary="API Key" />
                 </ListItem>
               </Link>
             </List>
@@ -301,7 +338,7 @@ class MiniDrawer extends React.Component {
 	      />
               <Route
                 exact
-                path="/admin/auth_token/:action?/:id?"                
+                path="/admin/api_key/:action?/:id?"                
                 component={props => {
                   const action = props.match.params.action;
                   return (<AuthTokenPage key={action} {...props}/>);
@@ -358,7 +395,7 @@ class MiniDrawer extends React.Component {
                                         system_name={system.name}                                        
                                         key={Date.now()} {...props} />)} />
               ))}
-              <Route component={NotFound}/>
+              {this.state.loadingSystems ? null : (<Route component={NotFound}/>)}
             </Switch>
           </main>
         </div>

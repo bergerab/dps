@@ -34,7 +34,7 @@ const makeDefaultState = () => ({
 
   object: {
     name: '',
-    token: '',
+    key: '',
   },
 
   errors: {
@@ -50,7 +50,7 @@ function makeToken() {
   return r;
 }
 
-export default class AuthTokenPage extends React.Component {
+export default class APIKeyPage extends React.Component {
   constructor(props) {
     super(props);
 
@@ -60,14 +60,14 @@ export default class AuthTokenPage extends React.Component {
   async componentDidMount() {
     const action = this.props.match.params.action,
           id = this.props.match.params.id;
-    this.setObject({ token: makeToken() });
+    this.setObject({ key: makeToken() });
     if (action === 'edit') {
       this.setState({ loading: true });
-      api.get('auth_token', id).then(token => {
+      api.get('api_key', id).then(token => {
         this.setState({
           object: {
             name: token.name,
-            token: token.token,
+            key: token.key,
           },
           loading: false,
         });
@@ -93,7 +93,7 @@ export default class AuthTokenPage extends React.Component {
           loading={this.state.loading}
           text="Loading..."
         >
-          <Box header={(add ? 'Add' : 'Edit') + " Auth Token"}>
+          <Box header={(add ? 'Add' : 'Edit') + " API Key"}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -114,11 +114,11 @@ export default class AuthTokenPage extends React.Component {
                   InputProps={{
                     readOnly: true,
                   }}
-                  name="token"
-                  value={this.state.object.token}
-                  label="Token"
-                  helperText={this.state.errors.token}
-                  error={this.state.errors.token !== undefined}
+                  name="key"
+                  value={this.state.object.key}
+                  label="Key"
+                  helperText={this.state.errors.key}
+                  error={this.state.errors.key !== undefined}
                 />
               </Grid>
 
@@ -133,12 +133,12 @@ export default class AuthTokenPage extends React.Component {
                           }
                           
                           if (add) {
-                            api.post('auth_token', this.state.object).then(r => {
+                            api.post('api_key', this.state.object).then(r => {
                               window.history.back();
                               this.setState(makeDefaultState())
                             }).catch(handleError);
                           } else {
-                            api.put('auth_token', id, this.state.object).then(r => {
+                            api.put('api_key', id, this.state.object).then(r => {
                               window.history.back();
                               this.setState(makeDefaultState())                                                            
                             }).catch(handleError);
@@ -152,21 +152,21 @@ export default class AuthTokenPage extends React.Component {
         </Loader>);
 
     } else if (action === undefined) {
-      return (<Box header={"Auth Tokens"}>
+      return (<Box header={"API Keys"}>
                 <EntityTable
-                  idName="auth_token_id"
-                  entityName="auth_token"
-                  entityDisplayName="Auth Token"
-                  entityNameField="token"
+                  idName="api_key_id"
+                  entityName="api_key"
+                  entityDisplayName="API Key"
+                  entityNameField="key"
                   columns={[
                     ['Name', x => (<span style={{ wordBreak: 'break-all' }}>{x.name}</span>)],
                   ]}/>
                 <Grid container style={{ marginTop: '15px' }}>                
                   <Grid item>
-                    <Link to={'/admin/auth_token/add'} style={{ color: 'white' }}>              
+                    <Link to={'/admin/api_key/add'} style={{ color: 'white' }}>              
                       <Button variant="contained"
                               color="primary">
-                        Add Auth Token
+                        Add API Key
                       </Button>
                     </Link>
                   </Grid>

@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 import dps_services.util as util
 
 from .models import Object
+from .auth import require_auth
 
 class ObjectAPI:
     serializer = None
@@ -206,7 +207,7 @@ class Router:
 
 def make_api_handlers(API):
     api = API()
-    @csrf_exempt
+    @require_auth
     def rest_handler(request, id=None):
         if request.method == 'GET':
             resp = api.get(request, id)
@@ -225,7 +226,8 @@ def make_api_handlers(API):
             resp = api.put(request, id)
             return resp
         raise MethodNotAllowed()
-    @csrf_exempt
+    
+    @require_auth
     def table_handler(request):
         return api.table(request)
         

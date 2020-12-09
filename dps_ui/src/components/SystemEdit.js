@@ -537,22 +537,25 @@ render () {
 
 function EditAndDeleteLocal(props) {
   return (
-    <div style={{ display: 'inline-flex' }}>
-      <Button
-        variant="outlined"
-        color="primary"
-        style={{ marginRight: '10px' }}
-        onClick={props.onClickEdit}
-      >
-        <EditIcon/>
-      </Button>
-      <ConfirmationDialog
-        deleteText='Remove'
-        deleteObj={props.onClickDelete}
-	header={`Remove "${props.entityName}" ${props.entityType}?`}
-      >
-	Are you sure you want to remove this {props.entityType}?
-      </ConfirmationDialog>
+    <div style={{ textAlign: 'right' }}>
+      <div style={{ display: 'inline-flex' }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          style={{ marginRight: '10px' }}
+          onClick={props.onClickEdit}
+        >
+          <EditIcon/>
+        </Button>
+        <ConfirmationDialog
+          deleteText='Remove'
+          deleteObj={props.onClickDelete}
+	  header={`Remove "${props.entityName}" ${props.entityType}?`}
+        >
+	  Are you sure you want to remove this {props.entityType}?
+        </ConfirmationDialog>
+      </div>
+
     </div>
   );
 }
