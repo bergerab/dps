@@ -4,6 +4,8 @@ from threading import Lock
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, render
 
 import math
 
@@ -31,12 +33,74 @@ from .serializers import \
 
 from dplib import Component, KPI
 
+User = get_user_model()
 class UserAPI(ObjectAPI):
+    # This API involves a lot of copy and pasting from object_api.py
+    # If I had more time I would design object_api to support other models besides Object.
+    
     serializer = UserSerializer
     kind = 'User'
     id_name = 'user_id'
     api_name = 'user'
     plural_api_name = 'users'
+    name_attr = 'username'
+
+    def serialize(self, user):
+        return {
+            'username': user.username,
+            'is_admin': user.is_superuser,
+            'last_login': user.last_login,
+            'created_at': user.date_joined,
+            'user_id': user.id,
+        }
+
+    def get(self, request, id=None):
+        if id:
+            user = get_object_or_404(User, pk=id)
+            return self.serialize(user)
+        else:
+            # If no id was provided, list all objects
+            users = User.objects.order_by('username').all()
+            data = []
+            for user in users:
+                data.append(self.serialize(user))
+            return {
+                'users': data,
+            }
+
+    def table(self, request):
+        # An API that supports react-table for querying over data
+        jo = json.loads(request.body)
+        
+        page_size       = jo['page_size']
+        page_number     = jo['page_number']
+        search          = jo['search']
+        order_direction = jo.get('order_direction', '')
+        order_by = jo.get('order_by', 'created_at')
+
+        offset = page_size * page_number
+        limit  = page_size
+
+        order = order_by if order_direction == 'asc' else ('-' + order_by)
+        if self.name_attr is None: # If the entity has no name
+            count = User.objects.count()
+            objs  = User.objects.order_by(order).all()[offset:offset+limit]
+        else:
+            count = User.objects.filter(username__contains=search).count()
+            objs  = User.objects.filter(username__contains=search) \
+                                  .order_by(order).all()[offset:offset+limit]
+
+        jos = []
+        for obj in objs:
+            jo = self.serialize(obj)
+            jos.append(jo)
+
+        return JsonResponse({
+            'total': count,
+            'data': jos,
+            'page': page_number,
+        })
+        
     
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer

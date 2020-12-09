@@ -3,6 +3,10 @@ import React from 'react';
 import moment from 'moment';
 import {CSVLink, CSVDownload} from 'react-csv';
 
+import Checkbox from '@material-ui/core/Checkbox';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -26,6 +30,7 @@ import DatasetSelect from './DatasetSelect';
 import Loader from './Loader';
 
 import api from '../api';
+import util from '../util';
 
 const makeDefaultState = () => ({
   loading: false,
@@ -33,8 +38,10 @@ const makeDefaultState = () => ({
   object: {
     /* The time picker uses whole dates. So we will cut off the date part and just use the time. 
       The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */
-    email: null,
-    password: null,
+    username: '',
+    password1: '',
+    password2: '',    
+    isAdmin: false,
   },
 
   errors: {
@@ -96,51 +103,50 @@ export default class UsersPage extends React.Component {
         >
           <Box header={(add ? 'Add' : 'Edit') + " User"}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <InputLabel>Dataset *</InputLabel>                                
-                <DatasetSelect
-                  
-                  limit={20}
-                  value={{ value: this.state.object.dataset, label: this.state.object.dataset }}
-                  helperText={this.state.errors.dataset}
-                  error={this.state.errors.dataset !== undefined}
-                  onChange={x => {
-                    this.setObject({ dataset: x.value });
-                  }}
+              <Grid item xs={12}>
+                <InputLabel>Username</InputLabel>                
+                <TextField
+                  fullWidth={true}
+                  label="Username"
+                  value={this.state.object.username}
                 />
               </Grid>
+
               <Grid item xs={12}>
-                <InputLabel>Interval *</InputLabel>                                
-                <Select
-                  value={this.state.object.type}
-                  onChange={e => {
-                    this.setObject({ type: e.target.value });                        
-                  }}>
-                  <MenuItem value={0}>Daily</MenuItem>
-                  <MenuItem value={1}>Monthly</MenuItem>
-                </Select>
+                <InputLabel>Password</InputLabel>                                
+                <TextField
+                  fullWidth={true}                  
+                  label="Password"
+                  type="password"
+                  onChange={e => this.setObject({ password1: e.target.value })}                  
+                  value={this.state.object.password1}
+                />
               </Grid>
 
-              {this.state.object.type === 1 ? dayInput : null}
-              
               <Grid item xs={12}>
-                <InputLabel>Time Range</InputLabel>            
-                <TimePicker value={this.state.object.start}
-                            onChange={date => this.setObject({ start: date })}
-                            label="Start Time"
-                            error={this.state.errors.start !== undefined}
-                            helperText={this.state.errors.start}                                           
-                            style={{marginRight: '20px'}}
-                            required />
-                <TimePicker
-                  value={this.state.object.end}
-                  onChange={date =>
-                            this.setObject({ end: date })
-                           }
-                  error={this.state.errors.end !== undefined}
-                  helperText={this.state.errors.end}
-                  label="End Time"
-                  required />
+                <TextField
+                  fullWidth={true}                  
+                  label="Re-Enter Password"
+                  type="password"
+                  onChange={e => this.setObject({ password2: e.target.value })}
+                  value={this.state.object.password2}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={this.state.object.isAdmin}
+                      onChange={e => {
+                        this.setObject({ isAdmin: e.target.checked })
+                      }}
+                      name="checkedB"
+                      color="primary"
+                    />
+                  }
+                  label="Is Admin"
+                />
               </Grid>
 
               <Grid item>
@@ -180,8 +186,13 @@ export default class UsersPage extends React.Component {
                   idName="user_id"
                   entityName="user"
                   entityDisplayName="User"
-                  entityNameField={'email'}
+                  entityNameField={'username'}
+                  orderBy={'username'}
                   columns={[
+                    ['Username', x => x.username],
+                    ['Is Admin', x => x.is_admin ? 'Yes' : 'No' ],                                                    
+                    ['Last Login', x => util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
+                    ['Created At', x => util.dateToPrettyDate(new Date(Date.parse(x.created_at)))],
                   ]}/>
                 <Grid container style={{ marginTop: '15px' }}>                
                   <Grid item>

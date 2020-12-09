@@ -164,7 +164,7 @@ export default class AuthTokenPage extends React.Component {
                                    <Link to={'/admin/auth_token/add'} style={{ color: 'white' }}>              
                                      <Button variant="contained"
                                              color="primary">
-                                       Create Auth Token
+                                       Add Auth Token
                                      </Button>
                                    </Link>
                                  </Grid>

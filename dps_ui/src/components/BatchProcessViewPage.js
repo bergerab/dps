@@ -317,7 +317,7 @@ export default class BatchProcessViewPage extends React.Component {
                 <Button style={{ margin: '1em 0 0 0' }}
                         variant="contained"
                         color="primary">
-                  Export
+                  Download Summary
                 </Button>
               </CSVLink>                      
             </Grid>
@@ -329,6 +329,13 @@ export default class BatchProcessViewPage extends React.Component {
               header="Output Signals">
               <Grid container spacing={2}>
                 {charts}
+                <Grid item xs={12}>
+                  <Button style={{ margin: '1em 0 0 0' }}
+                          variant="contained"
+                          color="primary">
+                    Export
+                  </Button>
+                </Grid>
               </Grid>
             </Box>
 

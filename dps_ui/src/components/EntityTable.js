@@ -96,7 +96,6 @@ export default class EntityTable extends React.Component {
           { title: '',
             field: '',
             render: data => {
-              console.log(data, this.props.entityNameField);
               return (
                 <div style={{ width: '100%', textAlign: 'right' }}>
                   <span style={{ display: 'inline-flex' }}>

@@ -228,6 +228,5 @@ def make_api_handlers(API):
     @csrf_exempt
     def table_handler(request):
         return api.table(request)
-        return resp            
         
     return (rest_handler, table_handler)

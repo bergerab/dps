@@ -106,6 +106,7 @@ export default class SchedulePage extends React.Component {
               <Grid item xs={12}>
                 <InputLabel>Name</InputLabel>                                                
                 <TextField
+                  fullWidth={true}                  
                   name="name"
                   value={this.state.object.name}
                   required={true}
@@ -175,7 +176,6 @@ export default class SchedulePage extends React.Component {
                           
                           if (add) {
                             api.post('schedule', this.state.object).then(r => {
-                              console.log(r);
                               window.history.back();
                               this.setState(makeDefaultState())                              
                             }).catch(handleError);
@@ -220,7 +220,6 @@ export default class SchedulePage extends React.Component {
                       }
                       function format(x) {
                         x = new Date(Date.parse(x));
-                        console.log(x);
                         return `${fn(x.getHours())}:${fn(x.getMinutes())}:${fn(x.getSeconds())}`;
                       }
                       if (x.type === 0) { /* Daily */
