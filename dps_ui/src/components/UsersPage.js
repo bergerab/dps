@@ -39,9 +39,11 @@ const makeDefaultState = () => ({
     /* The time picker uses whole dates. So we will cut off the date part and just use the time. 
       The default will just be to collect 5 minutes of data from 8:00 to 8:05 (local time). */
     username: '',
+    email: '',
     password1: '',
-    password2: '',    
-    isAdmin: false,
+    password2: '',
+    password_was_set: false,
+    is_admin: false,
   },
 
   errors: {
@@ -62,8 +64,11 @@ export default class UsersPage extends React.Component {
       api.get('user', id).then(user => {
         this.setState({
           object: {
+            username: user.username,            
             email: user.email,
-            password: user.password,
+            password1: '********', // A fake password (because the real password isn't sent)
+            password2: '********',
+            is_admin: user.is_admin,                        
           },
           loading: false,
         });
@@ -78,19 +83,6 @@ export default class UsersPage extends React.Component {
   render() {
     const action = this.props.match.params.action,
           id = this.props.match.params.id;
-
-    const dayInput = (<Grid item xs={12}>
-                        <TextField
-                          name="day"
-                          value={this.state.object.day}
-                          type={'number'}
-                          required={true}
-                          onChange={e => this.setObject({ day: e.target.value })}
-                          label="Day of the Month"
-                          helperText={this.state.errors.day}
-                          error={this.state.errors.day !== undefined}
-                        />
-                      </Grid>);
 
     const add = action === 'add',
           edit = action === 'edit';
@@ -109,6 +101,21 @@ export default class UsersPage extends React.Component {
                   fullWidth={true}
                   label="Username"
                   value={this.state.object.username}
+                  onChange={x => this.setObject({ username: x.target.value })}
+                  error={this.state.errors.username !== undefined}
+                  helperText={this.state.errors.username}                  
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <InputLabel>Email</InputLabel>                
+                <TextField
+                  fullWidth={true}
+                  label="Email"
+                  value={this.state.object.email}
+                  onChange={x => this.setObject({ email: x.target.value })}
+                  error={this.state.errors.email !== undefined}
+                  helperText={this.state.errors.email}                  
                 />
               </Grid>
 
@@ -118,8 +125,10 @@ export default class UsersPage extends React.Component {
                   fullWidth={true}                  
                   label="Password"
                   type="password"
-                  onChange={e => this.setObject({ password1: e.target.value })}                  
+                  onChange={e => this.setObject({ password1: e.target.value, password_was_set: true })}                  
                   value={this.state.object.password1}
+                  error={this.state.errors.password1 !== undefined}
+                  helperText={this.state.errors.password1}                  
                 />
               </Grid>
 
@@ -128,8 +137,10 @@ export default class UsersPage extends React.Component {
                   fullWidth={true}                  
                   label="Re-Enter Password"
                   type="password"
-                  onChange={e => this.setObject({ password2: e.target.value })}
+                  onChange={e => this.setObject({ password2: e.target.value, password_was_set: true, })}
                   value={this.state.object.password2}
+                  error={this.state.errors.password2 !== undefined}
+                  helperText={this.state.errors.password2}                  
                 />
               </Grid>
 
@@ -137,12 +148,13 @@ export default class UsersPage extends React.Component {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={this.state.object.isAdmin}
+                      checked={this.state.object.is_admin}
                       onChange={e => {
-                        this.setObject({ isAdmin: e.target.checked })
+                        this.setObject({ is_admin: e.target.checked })
                       }}
                       name="checkedB"
                       color="primary"
+
                     />
                   }
                   label="Is Admin"
@@ -160,13 +172,12 @@ export default class UsersPage extends React.Component {
                           }
                           
                           if (add) {
-                            api.post('schedule', this.state.object).then(r => {
-                              console.log(r);
+                            api.post('user', this.state.object).then(r => {
                               window.history.back();
                               this.setState(makeDefaultState())                              
                             }).catch(handleError);
                           } else {
-                            api.put('schedule', id, this.state.object).then(r => {
+                            api.put('user', id, this.state.object).then(r => {
                               window.history.back();
                               this.setState(makeDefaultState())                                                            
                             }).catch(handleError);
@@ -190,8 +201,9 @@ export default class UsersPage extends React.Component {
                   orderBy={'username'}
                   columns={[
                     ['Username', x => x.username],
+                    ['Email', x => x.email],                    
                     ['Is Admin', x => x.is_admin ? 'Yes' : 'No' ],                                                    
-                    ['Last Login', x => util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
+                    ['Last Login', x => x.last_login === null ? 'Never' : util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
                     ['Created At', x => util.dateToPrettyDate(new Date(Date.parse(x.created_at)))],
                   ]}/>
                 <Grid container style={{ marginTop: '15px' }}>                

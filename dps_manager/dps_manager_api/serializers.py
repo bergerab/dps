@@ -245,7 +245,6 @@ class ScheduleSerializer(serializers.Serializer):
     end = serializers.CharField()
 
     def validate(self, data):
-        # TODO: Make sure batch_process_id refers to a valid object
         day = data['day']
         type = data['type']        
         if type == 1 and (day > 32 or day < 1):
@@ -263,8 +262,19 @@ class AuthTokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.Serializer):
     username = serializers.CharField()
-    password = serializers.CharField()    
-    is_superuser = serializers.BooleanField()
+    email = serializers.CharField()    
+    password1 = serializers.CharField()
+    password2 = serializers.CharField()
+    password_was_set = serializers.BooleanField(default=False) # indicates if the password that was passed should be used (otherwise it is ignored)
+    is_admin = serializers.BooleanField()
+
+    def validate(self, data):
+        if data['password1'] != data['password2']:
+            raise serializers.ValidationError({
+                'password1': 'The passwords you entered do not match.',
+                'password2': 'The passwords you entered do not match.',
+            })
+        return data
 
 class ResultsSerializer(serializers.Serializer):
     batch_process_id = serializers.IntegerField()

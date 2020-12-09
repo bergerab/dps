@@ -48,6 +48,7 @@ class UserAPI(ObjectAPI):
     def serialize(self, user):
         return {
             'username': user.username,
+            'email': user.email,            
             'is_admin': user.is_superuser,
             'last_login': user.last_login,
             'created_at': user.date_joined,
@@ -100,7 +101,53 @@ class UserAPI(ObjectAPI):
             'data': jos,
             'page': page_number,
         })
+
+    def post(self, request):
+        if self.read_only:
+            raise MethodNotAllowed()
+        jo = json.loads(request.body)
+        self.before_update(jo)
+        serializer = self.serializer(data=jo)
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+        data = serializer.validated_data
+            
+        user = User.objects.create_user(data['username'],
+                                       data['email'],
+                                       data['password1'],
+        )
+        if data['is_admin']:
+            user.is_superuser = True
+            user.save()
+        return {}
+
+    def delete(self, request, id):
+        if self.read_only:
+            raise MethodNotAllowed()
+        if id:
+            user = get_object_or_404(User, pk=id)
+            user.delete()
+            return HttpResponse(204)
+        else:
+            return HttpResponse('You must provide an id for the user to delete.', 400)
+
+    def put(self, request, id):
+        if self.read_only:
+            raise MethodNotAllowed()
+        user = get_object_or_404(User, pk=id)
+        jo = json.loads(request.body)
+        self.before_update(jo)        
+        serializer = self.serializer(data=jo)
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+        data = serializer.validated_data
         
+        user.username = data['username']
+        if data['password_was_set']:
+            user.password = data['password1']
+        user.is_superuser = data['is_admin']
+        user.save()
+        return JsonResponse({}, status=200)
     
 class SystemAPI(ObjectAPI):
     serializer = SystemSerializer

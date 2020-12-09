@@ -286,9 +286,12 @@ class MiniDrawer extends React.Component {
                 }}   />
               <Route
                 path="/admin/user/:action?/:id?"
-                render={props =>
-		        (<UsersPage
-                           {...props} />)}
+                component={props => {
+                  const action = props.match.params.action;                  
+		  return (<UsersPage
+                            key={action}
+                            {...props} />);
+                }}
 	      />
               <Route
                 path="/admin/auth_token/:action?/:id?"                
@@ -345,7 +348,7 @@ class MiniDrawer extends React.Component {
                                         system_name={system.name}                                        
                                         key={Date.now()} {...props} />)} />
               ))}
-            </Switch>
+      </Switch>
           </main>
         </div>
       </Router>
