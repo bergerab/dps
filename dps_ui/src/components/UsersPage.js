@@ -214,7 +214,7 @@ export default class UsersPage extends React.Component {
                           ['Username', x => x.username],
                           ['Email', x => x.email],                    
                           ['Is Admin', x => x.is_admin ? 'Yes' : 'No' ],                                                    
-                          ['Last Login', x => x.last_login === null ? 'Never' : util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
+                          /* ['Last Login', x => x.last_login === null ? 'Never' : util.dateToPrettyDate(new Date(Date.parse(x.last_login)))], */
                           ['Created At', x => util.dateToPrettyDate(new Date(Date.parse(x.created_at)))],
                         ]}/>
                       <Grid container style={{ marginTop: '15px' }}>                

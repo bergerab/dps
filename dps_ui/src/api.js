@@ -174,11 +174,19 @@ export function getTokenExpires(token) {
 }
 
 export function setIsAdmin(token) {
-  localStorage.setItem('TOKEN_EXPIRATION', token);
+  localStorage.setItem('TOKEN_IS_ADMIN', token);
 }
 
 export function getIsAdmin(token) {
-  return localStorage.getItem('TOKEN_EXPIRATION');
+  return localStorage.getItem('TOKEN_IS_ADMIN') === 'true';
+}
+
+export function setUsername(token) {
+  localStorage.setItem('TOKEN_USERNAME', token);
+}
+
+export function getUsername(token) {
+  return localStorage.getItem('TOKEN_USERNAME');
 }
 
 function makeAuth() {
@@ -199,4 +207,7 @@ export default {
   removeToken,
   setTokenExpires,
   setIsAdmin,
+  getIsAdmin,
+  setUsername,
+  getUsername,
 };

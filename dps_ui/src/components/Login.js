@@ -155,7 +155,9 @@ class Login extends React.Component {
                   } else {
                     r.json().then(x => {
                       api.setToken(x.token);
-                      api.setTokenExpires(x.expires_at);                      
+                      api.setTokenExpires(x.expires_at);
+                      api.setIsAdmin(x.is_admin);
+                      api.setUsername(x.username);                      
                       this.setState({ error: false, success: true });
                     });
                   }

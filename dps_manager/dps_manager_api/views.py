@@ -612,7 +612,7 @@ def login(request):
                                          uid=uuid.uuid4(),
                                          expires_at=timezone.now() + timedelta(hours=1)
         )
-        return JsonResponse({ 'token': token.uid, 'expires_at': token.expires_at, 'is_admin': user.is_superuser })
+        return JsonResponse({ 'token': token.uid, 'expires_at': token.expires_at, 'is_admin': user.is_superuser, 'username': user.username })
     return JsonResponse({}, status=403)
 
 @require_auth
