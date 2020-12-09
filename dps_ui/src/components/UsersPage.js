@@ -32,6 +32,8 @@ import Loader from './Loader';
 import api from '../api';
 import util from '../util';
 
+import NotFound from './NotFound';
+
 const makeDefaultState = () => ({
   loading: false,
 
@@ -71,7 +73,12 @@ export default class UsersPage extends React.Component {
             is_admin: user.is_admin,                        
           },
           loading: false,
+          notFound: false,
         });
+      }).catch(r => {
+        if (r.status === 404) {
+          this.setState({ notFound: true });
+        }
       });
     }
   }
@@ -88,6 +95,10 @@ export default class UsersPage extends React.Component {
           edit = action === 'edit';
 
     if (add || edit) {
+      if (this.state.notFound) {
+        return (<NotFound/>);
+      }
+
       return (
         <Loader
           loading={this.state.loading}
@@ -190,32 +201,34 @@ export default class UsersPage extends React.Component {
           </Box>
         </Loader>);
 
-    } else {
+    } else if (action === undefined) {
       return (<Box header={"Users"}
-              >
-                <EntityTable
-                  idName="user_id"
-                  entityName="user"
-                  entityDisplayName="User"
-                  entityNameField={'username'}
-                  orderBy={'username'}
-                  columns={[
-                    ['Username', x => x.username],
-                    ['Email', x => x.email],                    
-                    ['Is Admin', x => x.is_admin ? 'Yes' : 'No' ],                                                    
-                    ['Last Login', x => x.last_login === null ? 'Never' : util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
-                    ['Created At', x => util.dateToPrettyDate(new Date(Date.parse(x.created_at)))],
-                  ]}/>
-                <Grid container style={{ marginTop: '15px' }}>                
-                  <Grid item>
-                    <Link to={'/admin/user/add'} style={{ color: 'white' }}>              
-                      <Button variant="contained" color="primary">
-                        Add User
-                      </Button>
-                    </Link>
-                  </Grid>
-                </Grid>
-              </Box>);
+                                            >
+                      <EntityTable
+                        idName="user_id"
+                        entityName="user"
+                        entityDisplayName="User"
+                        entityNameField={'username'}
+                        orderBy={'username'}
+                        columns={[
+                          ['Username', x => x.username],
+                          ['Email', x => x.email],                    
+                          ['Is Admin', x => x.is_admin ? 'Yes' : 'No' ],                                                    
+                          ['Last Login', x => x.last_login === null ? 'Never' : util.dateToPrettyDate(new Date(Date.parse(x.last_login)))],
+                          ['Created At', x => util.dateToPrettyDate(new Date(Date.parse(x.created_at)))],
+                        ]}/>
+                      <Grid container style={{ marginTop: '15px' }}>                
+                        <Grid item>
+                          <Link to={'/admin/user/add'} style={{ color: 'white' }}>              
+                            <Button variant="contained" color="primary">
+                              Add User
+                            </Button>
+                          </Link>
+                        </Grid>
+                      </Grid>
+                    </Box>);
+    } else {
+      return (<NotFound/>);
     }
   }
 }

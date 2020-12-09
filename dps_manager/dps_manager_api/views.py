@@ -143,6 +143,7 @@ class UserAPI(ObjectAPI):
         data = serializer.validated_data
         
         user.username = data['username']
+        user.email = data['email']        
         if data['password_was_set']:
             user.password = data['password1']
         user.is_superuser = data['is_admin']

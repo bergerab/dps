@@ -25,6 +25,8 @@ import EntityTable from './EntityTable';
 import DatasetSelect from './DatasetSelect';
 import Loader from './Loader';
 
+import NotFound from './NotFound';
+
 import api from '../api';
 
 const makeDefaultState = () => ({
@@ -62,7 +64,6 @@ export default class AuthTokenPage extends React.Component {
     if (action === 'edit') {
       this.setState({ loading: true });
       api.get('auth_token', id).then(token => {
-        console.log('wefawefawef', token);
         this.setState({
           object: {
             name: token.name,
@@ -70,6 +71,8 @@ export default class AuthTokenPage extends React.Component {
           },
           loading: false,
         });
+      }).catch(r => {
+        console.log('asdf', r);
       });
     }
   }
@@ -148,28 +151,29 @@ export default class AuthTokenPage extends React.Component {
           </Box>
         </Loader>);
 
-    } else {
-
+    } else if (action === undefined) {
       return (<Box header={"Auth Tokens"}>
-                                           <EntityTable
-                                             idName="auth_token_id"
-                                             entityName="auth_token"
-                                             entityDisplayName="Auth Token"
-                                             entityNameField="token"
-                                             columns={[
-                                               ['Name', x => (<span style={{ wordBreak: 'break-all' }}>{x.name}</span>)],
-                                             ]}/>
-                               <Grid container style={{ marginTop: '15px' }}>                
-                                 <Grid item>
-                                   <Link to={'/admin/auth_token/add'} style={{ color: 'white' }}>              
-                                     <Button variant="contained"
-                                             color="primary">
-                                       Add Auth Token
-                                     </Button>
-                                   </Link>
-                                 </Grid>
-                               </Grid>
-                             </Box>);
+                <EntityTable
+                  idName="auth_token_id"
+                  entityName="auth_token"
+                  entityDisplayName="Auth Token"
+                  entityNameField="token"
+                  columns={[
+                    ['Name', x => (<span style={{ wordBreak: 'break-all' }}>{x.name}</span>)],
+                  ]}/>
+                <Grid container style={{ marginTop: '15px' }}>                
+                  <Grid item>
+                    <Link to={'/admin/auth_token/add'} style={{ color: 'white' }}>              
+                      <Button variant="contained"
+                              color="primary">
+                        Add Auth Token
+                      </Button>
+                    </Link>
+                  </Grid>
+                </Grid>
+              </Box>);
+    } else {
+      return (<NotFound/>);
     }
   }
 }

@@ -49,6 +49,7 @@ import SchedulePage from './SchedulePage';
 import UsersPage from './UsersPage';
 import AuthTokenPage from './AuthTokenPage';
 import Home from './Home';
+import NotFound from './NotFound';
 
 import EntityPage from './EntityPage';
 import EndUserSystemPage from './EndUserSystemPage';
@@ -263,28 +264,33 @@ class MiniDrawer extends React.Component {
           <main className={classes.content}>
             <div className={classes.toolbar} />
             <Switch>
-              <Route path="/home">
+              <Route
+                exact
+                path="/home"
+              >
                 <Home />
               </Route>
-              <Route path="/batch-process/:id"
+              <Route exact path="/batch-process/:id"
                      component={BatchProcessViewPage}>
               </Route>
-              <Route path="/admin/dataset"
+              <Route exact path="/admin/dataset"
                      component={DatasetPage}>
               </Route>
-              <Route path="/admin/view-dataset/:name"
+              <Route exact path="/admin/view-dataset/:name"
                      component={DatasetPage}>
               </Route>
-              <Route path="/admin/dataset/add"
+              <Route exact path="/admin/dataset/add"
                      component={() => <DatasetPage add={true} />}>
               </Route>
               <Route
+                exact
                 path="/admin/schedule/:action?/:id?"
                 component={props => {
                   const action = props.match.params.action;
                   return (<SchedulePage key={action} {...props}/>);
                 }}   />
               <Route
+                exact
                 path="/admin/user/:action?/:id?"
                 component={props => {
                   const action = props.match.params.action;                  
@@ -294,6 +300,7 @@ class MiniDrawer extends React.Component {
                 }}
 	      />
               <Route
+                exact
                 path="/admin/auth_token/:action?/:id?"                
                 component={props => {
                   const action = props.match.params.action;
@@ -301,6 +308,7 @@ class MiniDrawer extends React.Component {
                 }}>
               </Route>
               <Route
+                exact
                 path="/admin/system/:action?/:id?"
                 render={props =>
 		        (<EntityPage
@@ -331,6 +339,7 @@ class MiniDrawer extends React.Component {
               /* Add batch process pages. */
               {this.state.systems.map(system => (
                 <Route
+                  exact
                   key={system.system_id}
                   path={"/system/" + system.system_id + "/batch-process"}
                 /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
@@ -340,6 +349,7 @@ class MiniDrawer extends React.Component {
               /* Add system pages. */
               {this.state.systems.map(system => (
                 <Route
+                  exact
                   key={system.system_id}
                   path={"/system/" + system.system_id}
                 /* Setting the key to Date.now forces a component remount when the same link is clicked more than once. */
@@ -348,7 +358,8 @@ class MiniDrawer extends React.Component {
                                         system_name={system.name}                                        
                                         key={Date.now()} {...props} />)} />
               ))}
-      </Switch>
+              <Route component={NotFound}/>
+            </Switch>
           </main>
         </div>
       </Router>

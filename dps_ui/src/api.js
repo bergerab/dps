@@ -60,7 +60,10 @@ export function get(entityUrl, id) {
     headers: {
       'Content-Type': 'application/json'
     },
-  }).then(r => r.json());
+  }).then(r => {
+    if (r.status >= 400) throw r;
+    return r.json();
+  });
 }
 
 export function del(entityUrl, id) {
