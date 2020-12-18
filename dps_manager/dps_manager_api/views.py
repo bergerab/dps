@@ -16,10 +16,12 @@ import requests
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
 
+
 import dps_services.util as util
 
 from .auth import require_auth
 from .models import Object, AuthToken
+from .writers import CSVStream
 
 from .object_api import ObjectAPI
 from .serializers import \
@@ -589,6 +591,78 @@ def delete_batch_process(request, id):
                           object_id=id).delete()
     
     return JsonResponse(resp)
+
+@require_auth
+def export_dataset(request):
+    jo = json.loads(request.body)
+
+    dataset    = jo['dataset']
+    signals    = jo['signals']
+    start_time = util.parse_datetime(jo['start'])
+    end_time   = util.parse_datetime(jo['end'])
+    limit      = 50000 # how many samples to query for at once
+    
+    def data():
+        nonlocal dataset, signals, start_time, end_time, limit
+
+        # yield the header
+        yield ['Time'] + signals
+        
+        dbm_has_data = True
+        samples      = []
+        times        = []
+        result       = None
+    
+        while dbm_has_data:
+            resp = None
+            try:
+                resp = dbm_post('query', {
+                    "queries": [
+                        {
+                            "dataset": dataset,
+                            "signals": signals,
+                            "interval": {
+                                "start": util.format_datetime(start_time),
+                                "end": util.format_datetime(end_time),
+                            },
+                            "limit": limit,
+                        }
+                    ]
+                })
+            except Exception as e:            
+                raise Exception('error when fetching data from DPS Database Manager. Reason: ' + str(e))
+            jo = resp.json()
+            if resp.status_code != 200 or 'results' not in jo:
+                raise Exception(resp.text)
+            
+            results = jo['results'][0]
+            samples += results['samples']
+            times   += [util.parse_datetime(time) for time in results['times']]
+
+            # If there is no more data after this, end the process after this batch completes.
+            if len(signals) * len(samples) < limit:
+                dbm_has_data = False
+            else:
+                # Start the next batch of data at the last time we got from this batch.
+                # Don't use that batch's sample data because there is a chance the samples
+                # could be missing if the limit is not a multiple of the # of signals.
+                samples.pop()
+                start_time = times.pop()
+    
+            for i in range(len(times)):
+                yield ([times[i]] + samples[i])
+                
+            samples = []
+            times = []
+
+    def serialize(data):
+        return data
+
+    try:
+        csv_stream = CSVStream()
+        return csv_stream.export("myfile", data(), serialize)
+    except Exception as e:
+        return JsonResponse({ message: str(e) }, status=500)
 
 @require_auth
 def delete_dataset(request):
