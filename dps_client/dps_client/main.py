@@ -208,13 +208,13 @@ def _normalize_url(url):
     url += 'api/v1/'
     return url
     
-def connect(url, dataset):
+def connect(url, dataset, api_key):
     '''Connects to a DPS Manager.
 
     :param url: The URL of the DPS Manager
     :returns: A :class:`Client`
     '''
-    return Client(url, dataset)
+    return Client(url, dataset, api_key)
 
 def timestep_units_to_timedelta(n, units):
     if units == 's':
