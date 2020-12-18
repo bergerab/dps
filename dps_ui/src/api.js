@@ -60,6 +60,17 @@ export function post(entityUrl, entity) {
   });
 }
 
+export function rawPost(entityUrl, entity) {
+  return fetch(API_PREFIX + entityUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': makeAuth(),      
+    },
+    body: JSON.stringify(entity),
+  });
+}
+
 export function get(entityUrl, id) {
   let postfix;
   if (id === undefined) postfix = '';
@@ -103,7 +114,7 @@ export function delete_dataset(name) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': makeAuth(),            
+      'Authorization': makeAuth(),
     },
     body: JSON.stringify({ dataset: name }),    
   });
@@ -196,6 +207,7 @@ function makeAuth() {
 export default {
   get, list,
   post, put,
+  rawPost,
   delete_batch_process,
   del,
   get_required_mappings,

@@ -623,7 +623,7 @@ def export_dataset(request):
                             "signals": signals,
                             "interval": {
                                 "start": util.format_datetime(start_time),
-                                "end": util.format_datetime(end_time),
+                                "end":   util.format_datetime(end_time),
                             },
                             "limit": limit,
                         }
@@ -650,7 +650,8 @@ def export_dataset(request):
                 start_time = times.pop()
     
             for i in range(len(times)):
-                yield ([times[i]] + samples[i])
+                t = times[i].isoformat() + 'Z'
+                yield ([t] + samples[i])
                 
             samples = []
             times = []

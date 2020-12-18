@@ -16,6 +16,7 @@
     "chart.js": "^2.9.4",
     "chartjs-plugin-zoom": "^0.7.7",
     "codemirror": "^5.55.0",
+    "downloadjs": "^1.4.7",
     "fontsource-roboto": "^2.1.4",
     "material-table": "^1.69.1",
     "material-ui-chip-input": "^2.0.0-beta.2",
@@ -31,6 +32,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-select": "^3.1.0",
+    "streamsaver": "^2.0.5",
     "yarn": "^1.22.5"
   },
   "scripts": {

@@ -6,6 +6,8 @@ import {
 import moment from 'moment';
 import {CSVLink, CSVDownload} from 'react-csv';
 
+import download from 'downloadjs';
+
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -18,6 +20,7 @@ import BarChart from './BarChart';
 import Link from './Link';
 import InputLabel from './InputLabel';
 import PrettyTable from './PrettyTable';
+import Loader from './Loader';
 
 import api from '../api';
 
@@ -28,6 +31,7 @@ export default class BatchProcessViewPage extends React.Component {
     this.state = {
       result: null,
       loading: true,
+      loadingExport: false,
     };
   }
 
@@ -328,20 +332,39 @@ export default class BatchProcessViewPage extends React.Component {
           </Grid>
         </Box>
 
-            <Box
-              header="Output Signals">
-              <Grid container spacing={2}>
-                {charts}
-                <Grid item xs={12}>
-                  <Button style={{ margin: '1em 0 0 0' }}
-                          variant="contained"
-                          color="primary">
-                    Export
-                  </Button>
-                </Grid>
+        <Loader
+          text="Exporting data..."
+          loading={this.state.loadingExport}>
+          
+          <Box
+            header="Output Signals">
+            <Grid container spacing={2}>
+              {charts}
+              <Grid item xs={12}>
+                <Button style={{ margin: '1em 0 0 0' }}
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                          this.setState({ loadingExport: true });
+                          api.rawPost('export_dataset', {
+                            'dataset': 'batch_process' + result.batch_process_id,
+                            /* Only export signals that are line charts */
+                            'signals': kpiRows.filter(x => !resultHasObject(x[2])).map(x => x[0]),                              
+                            'start':   bp.interval.start,
+                            'end':     bp.interval.end,                              
+                          }).then(resp => {
+                            resp.blob().then(blob => {
+                              download(blob, bp.name + '.csv', 'application/octet-stream');
+                              this.setState({ loadingExport: false });
+                            });
+                          });
+                        }}>
+                  Export
+                </Button>
               </Grid>
-            </Box>
-
+            </Grid>
+          </Box>
+        </Loader>
         <Box
           header="Input Signals">
           <SignalTable
