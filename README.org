@@ -134,6 +134,7 @@ Run the batch processor by running this command:
 dps_batch_processor --dps-manager-url=http://localhost:8000/ 
                     --database-manager-url=http://localhost:3002 
                     --verbose=1 --max-batch-size=100000
+                    --api-key=APIKEY
 #+END_SRC
 
 There is some configuration that can be done in this command to optimize batch process speed,
