@@ -5,18 +5,21 @@ import dps_services.util as ddt
 from .util import *
 
 class APIClient:
-    def __init__(self, url):
+    def __init__(self, url, key):
         # Ensure URL ends with a slash
         if url[-1] != '/':
             url += '/'
         self.url = url
+        self.key = key
 
     async def get(self, session, postfix):
         resp = await session.get(self.url + postfix)
         return json.loads(await resp.text())
 
     async def post(self, session, postfix, data):
-        resp = await session.post(self.url + postfix, json=data)
+        resp = await session.post(self.url + postfix, json=data, headers={
+            'Authentication': 'API ' + self.key,
+        })
         if resp.status == 404:
             return 404
         return json.loads(await resp.text())

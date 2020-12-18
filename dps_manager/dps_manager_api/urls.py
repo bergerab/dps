@@ -28,5 +28,6 @@ urlpatterns = router.get_urls() + [
     path('api/v1/signal_names_table', views.signal_names_table),
     path('api/v1/dataset_table', views.dataset_table),
     path('api/v1/add_dataset', views.add_dataset),
-    path('api/v1/get_chart_data', views.get_chart_data),    
+    path('api/v1/get_chart_data', views.get_chart_data),
+    path('api/v1/authenticate_api_key', views.authenticate_api_key),        
 ]

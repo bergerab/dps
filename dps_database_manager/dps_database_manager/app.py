@@ -3,9 +3,11 @@ from datetime import datetime
 from io import StringIO
 import itertools
 import math
+import requests
 
 from sqlalchemy import and_, not_
 from sqlalchemy.sql import func
+from expiringdict import ExpiringDict
 
 import dps_services.database_manager as dbm
 import dps_services.util as util
@@ -24,7 +26,7 @@ class TimescaleDBDataStore(dbm.DataStore):
     UPSERT_QUERY = UpsertQuery('signal_data',
                                ('signal_id', 'time'),
                                ('value',))
-    
+
     def insert_signals(self, dataset_name, signal_names, batches, times, upsert):
         '''
         `upsert` is a bool parameter that specifies if the signal should be upserted instead of inserted.
@@ -102,7 +104,6 @@ class TimescaleDBDataStore(dbm.DataStore):
         '''
         Gets the times of the first and last datapoints for the signal.
         '''
-        print('getting signal_id')        
         if dataset_name is None:
             dataset_id = None
         else:
@@ -202,7 +203,6 @@ class TimescaleDBDataStore(dbm.DataStore):
         else:
             return query.filter(and_(SignalData.signal_id.in_(signal_ids)))            
 
-    # NOTE: Implementing delete_dataset is optional. It is only needed if you want to run the integration tests.
     def delete_dataset(self, dataset_name):
         dbc.delete_dataset(dataset_name)
 

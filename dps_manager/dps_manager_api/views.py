@@ -584,7 +584,6 @@ def delete_batch_process(request, id):
 
 @require_auth
 def delete_dataset(request):
-    require_auth(request)
     jo = json.loads(request.body)
     resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
         'dataset':   jo['dataset'],
@@ -596,6 +595,19 @@ def delete_dataset(request):
     resp = resp.json()
 
     return JsonResponse(resp)
+
+@csrf_exempt
+def authenticate_api_key(request):
+    '''
+    Returns if the API key should be allowed access. This endpoint is for the DPS Database Manager to ask if API keys should be allowed.
+
+    This isn't a great way to do the security (could be broken by tricking the DPS Database Manager to talk to some other server that always returns true). But, at the moment, we don't assume our software will be targeted by attackers in this way.
+    '''
+    jo = json.loads(request.body)
+    key = jo['key']
+    if not Object.objects.filter(kind=APIKeyAPI.kind, name=key).first():
+        return JsonResponse({ 'allowed': False }, status=403)
+    return JsonResponse({ 'allowed': True }, status=200)    
 
 @csrf_exempt
 def login(request):

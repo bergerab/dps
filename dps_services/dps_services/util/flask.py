@@ -15,7 +15,10 @@ def json_api(view):
     def view_wrapper():
         jo = request.get_json()
         try:
-            return make_response(to_json(view(jo)), 200)
+            ret = view(jo)
+            if not isinstance(ret, dict):
+                return ret
+            return make_response(to_json(ret), 200)
         except ValidationException as e:
             return make_error_response(e, 400)
         except Exception as e:

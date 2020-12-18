@@ -27,11 +27,12 @@ exceptions = (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exc
 @click.command()
 @click.option('--dps-manager-url',      required=True,  help='The URL of the DPS Manager.')
 @click.option('--database-manager-url', required=True,  help='The URL of the DPS Database Manager.')
+@click.option('--api-key',              required=True,  help='The API key to use.')
 @click.option('--polling-interval',     default=5,      help='The number of seconds to wait between checking for jobs.')
 @click.option('--max-batch-size',       default=10000, help='The maximum number of datapoints to process in one batch.')
 @click.option('--interval',             default=5,      help='The number of seconds to wait between checking for jobs.')
 @click.option('--verbose',                              help='Show the progress of jobs in the command line.')
-def cli(dps_manager_url, database_manager_url, polling_interval, max_batch_size, interval=5, verbose=False):
+def cli(dps_manager_url, database_manager_url, api_key, polling_interval, max_batch_size, interval=5, verbose=False):
     if not url_is_valid(dps_manager_url):
         raise Exception(f'DPS Manager URL is invalid: "{dps_manager_url}". Ensure the URL is properly formatted and includes a scheme.')
     elif not url_is_valid(database_manager_url):
@@ -42,14 +43,14 @@ def cli(dps_manager_url, database_manager_url, polling_interval, max_batch_size,
     # `main` is written as a `asyncio` co-routine, so that if multiple batch processors
     # are supported (running multiple batch processes at once), this capability could be added,
     # by spawning another instance of the `main` co-routine.
-    loop.run_until_complete(main(dps_manager_url, database_manager_url, max_batch_size, logger, interval))
+    loop.run_until_complete(main(dps_manager_url, database_manager_url, api_key, max_batch_size, logger, interval))
     # Windows requires explicitly attaching signal handlers to
     # process signals for SIGINT/SIGTERM (for Ctrl-C to quit).
     loop.add_signal_handler(SIGINT, main_task.cancel)
     loop.add_signal_handler(SIGTERM, main_task.cancel)
 
-async def main(dps_manager_url, database_manager_url, max_batch_size, logger, interval=5):
-    api = DPSManagerAPIClient(dps_manager_url)
+async def main(dps_manager_url, database_manager_url, api_key, max_batch_size, logger, interval=5):
+    api = DPSManagerAPIClient(dps_manager_url, api_key)
     while True:
         async with aiohttp.ClientSession() as session:
             try:

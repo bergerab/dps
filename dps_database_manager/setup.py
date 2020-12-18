@@ -11,6 +11,7 @@ setup(
         'Flask',
         'SQLAlchemy',
         'psycopg2-binary',
+        'expiringdict',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],    
