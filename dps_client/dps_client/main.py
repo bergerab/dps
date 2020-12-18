@@ -166,10 +166,15 @@ class Client:
                 batch_request.value.extend(batch)
 
             pb_string = inserts_request.SerializeToString()
-            return requests.post(url, data=pb_string, headers={
+            response = requests.post(url, data=pb_string, headers={
                 'Content-Type': 'application/protobuf',
                 'Authorization': 'API ' + self.api_key,
             })
+            if response.status_code == 403:
+                raise Exception('Invalid API key. If running from command line, ensure the API key is surrounded in quotation marks.')
+            if response.status_code != 200:
+                raise Exception(response.text)
+            return response
         elif self.protocol == 'json':
             o = self._flush()
             response = requests.post(url, json={
@@ -180,8 +185,11 @@ class Client:
             }, headers={
                 'Authorization': 'API ' + self.api_key,
             })
+            if response.status_code == 403:
+                raise Exception('Invalid API key. If running from command line, ensure the API key is surrounded in quotation marks.')
             if response.status_code != 200:
                 raise Exception(response.text)
+            return response
         else:
             raise Exception(f'Invalid DPS Client protocol "{self.protocol}"')
 

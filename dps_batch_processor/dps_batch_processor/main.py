@@ -154,6 +154,18 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         await send_error("Failed to connect to DPS Database Manager server when sending results.",
                          logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
 
+    if total_samples == 0:
+        resp = await api.send_result(session,
+                                     batch_process_id,
+                                     {},
+                                     inter_results,
+                                     STATUS_COMPLETE,
+                                     result_id=result_id,
+                                     processed_samples=processed_samples,
+                                     total_samples=total_samples)
+        logger.log('Ending batch process, as there are no input samples.')
+        return
+
     while dbm_has_data:
         try:
             data = await dbc.get_data(session, dataset, mapped_signals,

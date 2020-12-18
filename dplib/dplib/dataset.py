@@ -91,7 +91,6 @@ class Dataset:
     def __repr__(self):
         return repr(self.dataset)
 
-
     @staticmethod
     def lift(x):
         if isinstance(x, pd.DataFrame):
