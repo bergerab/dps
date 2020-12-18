@@ -25,11 +25,12 @@ class Client:
 
     Protocol can be either "protobuf" or "json"
     '''
-    def __init__(self, url, dataset='', protocol='protobuf'):
+    def __init__(self, url, dataset, api_key, protocol='protobuf'):
         self.url = _normalize_url(url)
         self.dataset = dataset
         self.batches = []
         self.protocol = protocol
+        self.api_key = api_key
 
     def make_batch(self, time=None):
         '''Create a :class:`BatchClient` for sending multiple signal values
@@ -167,6 +168,7 @@ class Client:
             pb_string = inserts_request.SerializeToString()
             return requests.post(url, data=pb_string, headers={
                 'Content-Type': 'application/protobuf',
+                'Authorization': 'API ' + self.api_key,
             })
         elif self.protocol == 'json':
             o = self._flush()
@@ -175,6 +177,8 @@ class Client:
                 'inserts': [
                     o
                 ]
+            }, headers={
+                'Authorization': 'API ' + self.api_key,
             })
             if response.status_code != 200:
                 raise Exception(response.text)

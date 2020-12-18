@@ -2,6 +2,7 @@ import json
 from threading import Lock
 import uuid
 import math
+import uuid
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
@@ -35,6 +36,13 @@ from .serializers import \
     BatchProcessRequestSerializer
 
 from dplib import Component, KPI
+
+def dbm_post(endpoint, json):
+    return requests.post(settings.DBM_URL + '/api/v1/' + endpoint,
+                         json=json,
+                         headers={
+                             'Authorization': 'API ' + DPS_MANAGER_SECRET_API_KEY,
+                         })
 
 User = get_user_model()
 class UserAPI(ObjectAPI):
@@ -367,7 +375,7 @@ def signal_names_table(request):
     offset = page_size * page_number
     limit  = page_size
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
+    resp = dbm_post('get_signal_names', {
         'dataset': dataset,
         'query':   search,
         'offset':  offset,
@@ -395,8 +403,8 @@ def signal_names_table(request):
             'data': [],
         })
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
-        'queries': queries,
+    resp = dbm_post('query', { 
+        'queries': queries 
     }).json()
 
     if 'results' not in resp:
@@ -430,7 +438,7 @@ def dataset_table(request):
     offset = page_size * page_number
     limit  = page_size
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
+    resp = dbm_post('get_dataset_names', {
         'query':   search,
         'offset':  offset,
         'limit':   limit,
@@ -451,7 +459,7 @@ def add_dataset(request):
     
     name = jo['name']
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/insert', json={
+    resp = dbm_post('insert', {
         'inserts': [{
             'dataset': name,
             'signals': [],
@@ -479,7 +487,7 @@ def dataset_table(request):
     offset = page_size * page_number
     limit  = page_size
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
+    resp = dbm_post('get_dataset_names', {
         'query':   search,
         'offset':  offset,
         'limit':   limit,
@@ -535,7 +543,7 @@ def info(request):
 @require_auth
 def get_signal_names(request):
     jo = json.loads(request.body)
-    resp = requests.post(settings.DBM_URL + '/api/v1/get_signal_names', json={
+    resp = dbm_post('get_signal_names', {
         'dataset': jo['dataset'],
         'query':   jo['query'],
         'offset':  jo['offset'],
@@ -549,7 +557,7 @@ def get_signal_names(request):
 @require_auth
 def get_dataset_names(request):
     jo = json.loads(request.body)
-    resp = requests.post(settings.DBM_URL + '/api/v1/get_dataset_names', json={
+    resp = dbm_post('get_dataset_names', {
         'query':   jo['query'],
         'offset':  jo['offset'],
         'limit':   jo['limit'],
@@ -559,11 +567,11 @@ def get_dataset_names(request):
 @require_auth
 def delete_batch_process(request, id):
     # Delete the actual batch process KPIs stored in TimescaleDB
-    resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
+    resp = dbm_post('delete_dataset', {
         'dataset':   'batch_process_' + str(id),
     })
     if resp.status_code >= 400:
-        return JsonResponse(resp, status=500)
+        return HttpResponse(resp.text, status=500)
     resp = resp.json()
 
     # Delete any jobs that haven't been popped yet
@@ -585,7 +593,7 @@ def delete_batch_process(request, id):
 @require_auth
 def delete_dataset(request):
     jo = json.loads(request.body)
-    resp = requests.post(settings.DBM_URL + '/api/v1/delete_dataset', json={
+    resp = dbm_post('delete_dataset', {
         'dataset':   jo['dataset'],
     })
 
@@ -596,6 +604,7 @@ def delete_dataset(request):
 
     return JsonResponse(resp)
 
+DPS_MANAGER_SECRET_API_KEY = str(uuid.uuid4()) # DPS Manager controls access to DPS Database Manager. This key is for DPS Manager to always be allowed to talk to DPS Database Manager
 @csrf_exempt
 def authenticate_api_key(request):
     '''
@@ -605,6 +614,8 @@ def authenticate_api_key(request):
     '''
     jo = json.loads(request.body)
     key = jo['key']
+    if key == DPS_MANAGER_SECRET_API_KEY:
+        return JsonResponse({ 'allowed': True }, status=200)            
     if not Object.objects.filter(kind=APIKeyAPI.kind, name=key).first():
         return JsonResponse({ 'allowed': False }, status=403)
     return JsonResponse({ 'allowed': True }, status=200)    
@@ -695,7 +706,7 @@ def get_chart_data(request):
             dataset     = s['dataset']
 
             # Infer what the correct time range should be
-            resp = requests.post(settings.DBM_URL + '/api/v1/get_range', json={
+            resp = dbm_post('get_range', {
                 'dataset': dataset,
                 'signal': signal,
             }).json()['results'][0]
@@ -735,7 +746,7 @@ def get_chart_data(request):
                 }
             })
 
-    resp = requests.post(settings.DBM_URL + '/api/v1/query', json={
+    resp = dbm_post('query', {
         'queries': queries,
     }).json()
 

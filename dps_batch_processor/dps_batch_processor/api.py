@@ -13,19 +13,30 @@ class APIClient:
         self.key = key
 
     async def get(self, session, postfix):
-        resp = await session.get(self.url + postfix)
+        resp = await session.get(self.url + postfix,
+                                 headers={
+                                     'Authorization': 'API ' + self.key,
+                                 })
+        if resp.status == 403:
+            return 403
         return json.loads(await resp.text())
 
     async def post(self, session, postfix, data):
-        resp = await session.post(self.url + postfix, json=data, headers={
-            'Authentication': 'API ' + self.key,
-        })
+        resp = await session.post(self.url + postfix,
+                                  json=data,
+                                  headers={
+                                      'Authorization': 'API ' + self.key,
+                                  })
         if resp.status == 404:
             return 404
         return json.loads(await resp.text())
 
     async def put(self, session, postfix, id, data):
-        resp = await session.put(self.url + postfix + '/' + str(id), json=data)
+        resp = await session.put(self.url + postfix + '/' + str(id),
+                                 json=data,
+                                 headers={
+                                     'Authorization': 'API ' + self.key,
+                                 })
         if resp.status == 404:
             return 404
         return json.loads(await resp.text())

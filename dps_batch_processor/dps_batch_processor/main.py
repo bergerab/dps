@@ -57,10 +57,12 @@ async def main(dps_manager_url, database_manager_url, api_key, max_batch_size, l
                 job = await api.pop_job(session)
                 if not job:
                     logger.log('No jobs were available.')
+                elif job == 403:
+                    logger.error('Failed fetching jobs due to an invalid API key.')
                 else:
                     logger.log('Acquired a job.')
                     await process_job(api, logger, session, job,
-                                      DatabaseManagerAPIClient(database_manager_url),
+                                      DatabaseManagerAPIClient(database_manager_url, api_key),
                                       max_batch_size)
             except exceptions:
                 logger.error('Failed connecting to DPS Manager server.')

@@ -17,6 +17,8 @@ def json_api(view):
         try:
             ret = view(jo)
             if not isinstance(ret, dict):
+                if ret is True:
+                    return jsonify({ 'message': 'OK' })
                 return ret
             return make_response(to_json(ret), 200)
         except ValidationException as e:
