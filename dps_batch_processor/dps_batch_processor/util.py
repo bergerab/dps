@@ -80,10 +80,10 @@ def dict_to_mappings(d, ds):
         result = {
             'key': key,
         }
-        
-        if key not in ds.dataset: # If this aggregation doesn't provide any charting data, indicate that in the result.
-            result['no_chart'] = True
-            
+
+        if key in ds.dataset: # If this ever has some data to plot, indicate that in the result.
+            result['show_chart'] = True
+
         if isinstance(value, dict):
             result['object_value'] = json.dumps(d[key])
         else:

@@ -144,7 +144,7 @@ class MappingSerializer(serializers.Serializer):
     # Whether or not this item has a chart available
     # This is major "cross cutting concern" and bad programming.
     # It should be abstracted into some new object.
-    no_chart = serializers.BooleanField(required=False)
+    show_chart = serializers.BooleanField(required=False)
     
 class IntervalSerializer(serializers.Serializer):
     start = serializers.CharField()

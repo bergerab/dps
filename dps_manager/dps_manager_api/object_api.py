@@ -162,6 +162,31 @@ class ObjectAPI:
         
         return JsonResponse(data)
 
+    def patch(self, request, id):
+        if self.read_only:
+            raise MethodNotAllowed()
+        obj = get_object_or_404(Object, pk=id)
+        jo = json.loads(request.body)
+        self.before_update(jo)
+        serializer = self.serializer(data=jo)
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+        data = serializer.validated_data
+
+        value = json.loads(obj.value)
+        for key in data:
+            value[key] = data[key]
+        obj.value = json.dumps(value)
+        if self.name_attr is not None:
+            obj.name = data.get(self.name_attr)
+        obj.save()
+
+        self.after_update(data, obj)
+
+        self.add_metafields(data, obj)
+        
+        return JsonResponse(data)
+
     def after_update(self, data, obj):
         '''
         Called after this entity is updated or created for the first time (after it is written to the database)
@@ -218,6 +243,9 @@ def make_api_handlers(API):
             resp = api.post(request)
             if isinstance(resp, dict):
                 return JsonResponse(resp, status=201)
+            return resp
+        elif request.method == 'PATCH':
+            resp = api.patch(request, id)
             return resp
         elif request.method == 'DELETE':
             resp = api.delete(request, id)

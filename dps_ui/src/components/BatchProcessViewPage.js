@@ -224,7 +224,7 @@ export default class BatchProcessViewPage extends React.Component {
     charts =
       kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
         if (resultDontChart(kpiResults) || kpiResults === undefined) {
-          return (<span/>);
+          return (<span key={kpiName}/>);
         }
         
         if (resultHasObject(kpiResults)) {
@@ -418,5 +418,5 @@ function resultHasObject(x) {
 
 function resultDontChart(x) {
   if (x === undefined) return false;
-  return x.no_chart === true;
+  return x.show_chart !== true;
 }

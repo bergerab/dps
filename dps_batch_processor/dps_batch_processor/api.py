@@ -41,6 +41,16 @@ class APIClient:
             return 404
         return json.loads(await resp.text())
 
+    async def patch(self, session, postfix, id, data):
+        resp = await session.patch(self.url + postfix + '/' + str(id),
+                                 json=data,
+                                 headers={
+                                     'Authorization': 'API ' + self.key,
+                                 })
+        if resp.status == 404:
+            return 404
+        return json.loads(await resp.text())
+
 STATUS_ERROR    = 0
 STATUS_RUNNING  = 1
 STATUS_COMPLETE = 2
@@ -67,7 +77,7 @@ class DPSManagerAPIClient(APIClient):
         if result_id is None:
             return await self.post(session, self.RESULT_POSTFIX, data)
         else:
-            return await self.put(session, self.RESULT_POSTFIX, result_id, data)
+            return await self.patch(session, self.RESULT_POSTFIX, result_id, data)
 
     async def pop_job(self, session):
         return await self.get(session, self.POP_JOB_POSTFIX)
