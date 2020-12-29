@@ -106,6 +106,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     times              = []
     result             = None
     inter_results      = dp.Dataset() # Intermediate results
+    chartables         = set() # Keep track of which signals are plottable on a chart
     total_samples      = 0 # A counter to keep track of the number of samples to process    
     processed_samples  = 0 # A counter to keep track of the number of samples that we have processed
 
@@ -122,6 +123,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                              batch_process_id,
                                              [],
                                              inter_results,
+                                             chartables,
                                              STATUS_ERROR,
                                              message=str(data['error'][-1]),
                                              processed_samples=processed_samples,
@@ -135,7 +137,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             return
     except exceptions:
         await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, None, processed_samples, total_samples)
+                         logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
         return
 
     try:
@@ -143,6 +145,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                             batch_process_id,
                                             {},
                                             inter_results,
+                                            chartables,
                                             STATUS_RUNNING,
                                             processed_samples=processed_samples,
                                             total_samples=total_samples)
@@ -152,13 +155,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         result_id = temp_result['result_id']
     except exceptions:
         await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+                         logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
 
     if total_samples == 0:
         resp = await api.send_result(session,
                                      batch_process_id,
                                      {},
                                      inter_results,
+                                     chartables,
                                      STATUS_COMPLETE,
                                      result_id=result_id,
                                      processed_samples=processed_samples,
@@ -173,7 +177,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                       limit=max_batch_size)
         except exceptions:            
             await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                             logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+                             logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
             return
         # If no results are returned, print it as an error and return.
         if 'results' not in data:
@@ -257,6 +261,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                                  batch_process_id,
                                                  result.get_aggregations() if result is not None else {},
                                                  inter_results,
+                                                 chartables,
                                                  STATUS_ERROR,
                                                  result_id=result_id,
                                                  message=str(traceback.format_exc()),
@@ -266,23 +271,25 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                     return
                 except exceptions:                            
                     await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                                     logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+                                     logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
                     return
     
         # After every batch is run, send the intermediate results
         inter_results = inter_results.merge(values)
+        chartables = chartables.union(set(inter_results.dataset.keys()))
+
         try:
             ires = await flush_inter_results(api, logger,
                                       dbc, session,
                                       batch_process_id, inter_results,
+                                             chartables,
                                       result, result_id,
                                       processed_samples, total_samples)
             if ires == 404:
                 return
         except exceptions:                                        
             await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                             logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
-            
+                             logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
         inter_results = dp.Dataset()
 
     try:
@@ -290,6 +297,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         await flush_inter_results(api, logger,
                                   dbc, session,
                                   batch_process_id, inter_results,
+                                  chartables,
                                   result, result_id,
                                   processed_samples, total_samples)
 
@@ -297,6 +305,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                                      batch_process_id,
                                      result.get_aggregations() if result is not None else {},
                                      inter_results,
+                                     chartables,
                                      STATUS_COMPLETE,
                                      result_id=result_id,
                                      processed_samples=processed_samples,
@@ -305,12 +314,12 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         logger.log(resp)
     except exceptions:                                                
         await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+                         logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
     
     logger.log('Finished processing job.')
     logger.log(resp)
 
-async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, result, result_id, processed_samples, total_samples):
+async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples):
     try:
         logger.log('Sending intermediate results.')        
         resp = await dbc.send_data(session, 'batch_process' + str(batch_process_id), inter_results)
@@ -324,6 +333,7 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
                                      batch_process_id,
                                      result.get_aggregations() if result is not None else {},
                                      inter_results,
+                                     chartables,
                                      STATUS_RUNNING,
                                      result_id=result_id,
                                      processed_samples=processed_samples,
@@ -336,12 +346,13 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
                          logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
     return resp
 
-async def send_error(message, logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples):
+async def send_error(message, logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples):
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
                                      result.get_aggregations() if result is not None else {},
                                      inter_results,
+                                     chartables,
                                      STATUS_ERROR,
                                      result_id=result_id,
                                      message=str(message),
