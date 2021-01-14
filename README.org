@@ -101,6 +101,11 @@ Then, install the dependencies using `requirements.txt`:
 pip3 install -r requirements.txt
 #+END_SRC
 
+Next, configure the URL of database manager.
+#+BEGIN_SRC shell
+set DBM_URL=http://localhost:3002 
+#+END_SRC
+
 Then run Django migrations by running:
 
 #+BEGIN_SRC shell
@@ -109,8 +114,7 @@ python3 manage.py migrate
 
 Now to run the development server, run:
 
-#+BEGIN_SRC shell
-set DBM_URL=http://localhost:3002
+#+BEGIN_SRC shell 
 python3 manage.py runserver
 #+END_SRC
 
