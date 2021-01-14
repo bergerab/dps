@@ -72,7 +72,7 @@ Then install the dependecies:
 python3 setup.py install
 #+END_SRC
 
-Before starting the DPS Database Manager server, we must tell it what URL our DPS Manager will be deployed at. This exact URL will be determined after the next section (DPS Manager), so launching the server should wait until this URL is known. The URL is sent via an environment variable named \verb|DPS_MANAGER_URL| as follows:
+Before starting the DPS Database Manager server, we must tell it what URL our DPS Manager will be deployed at. This exact URL will be determined after the next section (DPS Manager), so launching the server should wait until this URL is known. The URL is sent via an environment variable named DPS_MANAGER_URL as follows:
 
 #+BEGIN_SRC shell
 set DPS_MANAGER_URL=http://localhost:8000
@@ -120,7 +120,7 @@ python3 manage.py runserver
 
 (Note that the first command sets the URL for the Database Manager as an enviornment variable.)
 
-The server will be hosted on http://localhost:8000/
+The DPS server will be hosted on http://localhost:8000/
 
 *** DPS Batch Processor
 Change directory to the "dps_batch_processor" directory:
