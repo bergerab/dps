@@ -70,7 +70,7 @@ def make_app(AppDataStore, debug=False):
             o = load_insert_json(request.get_json())
         AppDataStore.insert(o)
         # return make_response({})
-        return make_response('')
+        return make_response('{}')
 
     @app.route('/' + util.make_api_url('delete_dataset'), methods=['POST'])
     @util.json_api
