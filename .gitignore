@@ -16,3 +16,7 @@ node_modules/
 
 docker/.env.dev
 docker/.env.prod
+
+.egg
+
+dist/
