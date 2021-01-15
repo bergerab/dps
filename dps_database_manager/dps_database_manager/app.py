@@ -228,8 +228,10 @@ def make_app():
     dbc = DatabaseClient()
     return dbm.make_app(TimescaleDBDataStore, DEBUG)
 
+app = make_app()
+
 if __name__ == '__main__':
     try:
-        make_app().run(debug=DEBUG, port=3002, threaded=True)
+        app.run(debug=DEBUG, port=3002, threaded=True)
     finally:
         dbc.engine.dispose()

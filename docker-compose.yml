@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+  dps_python:
+    build:
+      context: .
+      dockerfile: ./docker/dps_python/Dockerfile
+    image: dps_python
+      
+  dps_manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_manager/dev.Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./dps_manager/:/usr/src/dps_manager/
+    ports:
+      - 8000:8000
+    env_file:
+      - ./docker/dps_manager/dev.env
+    depends_on:
+      - dps_python
+      - dps_manager_database
+      
+  dps_manager_database:
+    image: postgres:12.0-alpine
+    volumes:
+      - dps_manager_database:/var/lib/postgresql/data/
+    env_file:
+      - ./docker/dps_manager_database/dev.env
+
+  dps_ui:
+    build:
+      context: .
+      dockerfile: ./docker/dps_ui/dev.Dockerfile
+    stdin_open: true
+    volumes:
+      - ./dps_ui/:/dps_ui
+    ports:
+      - 3005:3005
+    environment:
+      - PORT=3005
+
+  dps_database_manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_database_manager/dev.Dockerfile
+    volumes:
+      - ./dps_database_manager:/app
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./docker/dps_database_manager/dev.env
+    command: flask run --host=0.0.0.0 --port=3002
+    # Infinite loop, to keep it alive, for debugging
+    # command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
+
+volumes:
+  dps_manager_database:
