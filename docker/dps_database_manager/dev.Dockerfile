@@ -1,21 +1,17 @@
-# pull official base image
 FROM dps_python
 
 # Install netcat for entrypoint.sh
-RUN apt install -y netcat
+RUN apt-get install -y netcat
 
-# copy project and docker related files
-WORKDIR /usr/src/dps_manager
-COPY ./dps_manager .
+COPY ./dps_database_manager /usr/src/dps_database_manager
 
-WORKDIR /usr/src/docker/dps_manager/
-COPY ./docker/dps_manager .
+WORKDIR /usr/src/docker/dps_database_manager/
+COPY ./docker/dps_database_manager .
 
-WORKDIR /usr/src/dps_manager
+WORKDIR /usr/src/dps_database_manager
 
 # install dependencies
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install .
 
-# run entrypoint.sh
-ENTRYPOINT ["/usr/src/docker/dps_manager/dev.sh"]
+ENTRYPOINT ["/usr/src/docker/dps_database_manager/dev.sh"]

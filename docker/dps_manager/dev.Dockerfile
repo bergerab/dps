@@ -2,7 +2,7 @@
 FROM dps_python
 
 # Install netcat for entrypoint.sh
-RUN apt install -y netcat
+RUN apt-get install -y netcat
 
 # copy project and docker related files
 WORKDIR /usr/src/dps_manager

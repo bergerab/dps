@@ -1,18 +1,12 @@
 #!/bin/sh
 
-if [ "$DATABASE" = "postgres" ]
-then
-    echo "Waiting for postgres..."
+echo "Waiting for TimescaleDB..."
 
-    while ! nc -z $SQL_HOST $SQL_PORT; do
-	sleep 0.1
-    done
+while ! nc -z $SQL_HOST $SQL_PORT; do
+    sleep 0.1
+done
 
-    echo "PostgreSQL started"
+echo "TimescaleDB started"
 fi
-
-python manage.py flush --no-input
-python manage.py loaddata dps_manager_api/fixtures/objects.json
-python manage.py migrate
 
 exec "$@"

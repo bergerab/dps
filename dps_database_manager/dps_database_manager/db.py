@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool        
 
-
 from config import CONNECTION
 
 Base = declarative_base()

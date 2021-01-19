@@ -601,7 +601,7 @@ def export_dataset(request):
     start_time = util.parse_datetime(jo['start'])
     end_time   = util.parse_datetime(jo['end'])
     limit      = 50000 # how many samples to query for at once
-    
+
     def data():
         nonlocal dataset, signals, start_time, end_time, limit
 
@@ -945,4 +945,3 @@ def get_sample_ranges(start_time, end_time, offset, pad=False):
         # Add an extra interval to the end, so that the chart doesn't end abruptly
         ranges.append((t1, t1 + step))
     return ranges
-    
