@@ -11,8 +11,7 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py flush --no-input
-python manage.py loaddata dps_manager_api/fixtures/objects.json
 python manage.py migrate
+python manage.py initadmin
 
 exec "$@"

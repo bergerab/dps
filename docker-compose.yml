@@ -38,7 +38,7 @@ services:
       dockerfile: ./docker/dps_ui/dev.Dockerfile
     stdin_open: true
     volumes:
-      - ./dps_ui/:/dps_ui
+      - ./dps_ui/:/usr/src/dps_ui
     ports:
       - 3005:3005
     environment:

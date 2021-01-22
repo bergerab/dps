@@ -156,9 +156,9 @@ class UserAPI(ObjectAPI):
         data = serializer.validated_data
         
         user.username = data['username']
-        user.email = data['email']        
+        user.email = data['email']
         if data['password_was_set']:
-            user.password = data['password1']
+            user.set_password(data['password1'])
         user.is_superuser = data['is_admin']
         user.save()
         return JsonResponse({}, status=200)

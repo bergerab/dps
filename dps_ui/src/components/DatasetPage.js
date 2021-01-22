@@ -33,7 +33,7 @@ export default class DatasetPage extends React.Component {
   }
 
   render() {
-    const add = this.props.location.pathname.startsWith('/admin/dataset/add');
+    const add = window.location.pathname.startsWith('/admin/dataset/add');
     if (add) {
       return (
         <Box header={"Add Dataset"} >
