@@ -112,61 +112,37 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
     try:
         logger.log('Getting sample count.')
-        data = await dbc.get_count(session, dataset, mapped_signals,
-                                  current_start_time, end_time)
-        if 'results' in data:
-            total_samples = sum(data['results'][0]['values'])
-            logger.log(f'Got total samples (was {total_samples}).')
-        else:
-            try:
-                resp = await api.send_result(session,
-                                             batch_process_id,
-                                             [],
-                                             inter_results,
-                                             chartables,
-                                             STATUS_ERROR,
-                                             message=str(data['error'][-1]),
-                                             processed_samples=processed_samples,
-                                             total_samples=total_samples)
-                if resp == 404:
-                    logger.log('Batch process was cancelled.')
-                    return
-                logger.log(f'Sent error that occured when getting sample count from Database Manager.')
-            except exceptions:
-                logger.error('Failed to connect to DPS Manager server when sending results.')
-            return
+        data = await dbc.get_count(session, dataset, mapped_signals, current_start_time, end_time)
+
     except exceptions:
-        await send_error("Failed to connect to DPS Database Manager server when sending results.",
+        await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
                          logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+
+        logger.log(f'Sent error that occured when getting sample count from Database Manager.')
         return
 
-    try:
-        temp_result = await api.send_result(session,
-                                            batch_process_id,
-                                            {},
-                                            inter_results,
-                                            chartables,
-                                            STATUS_RUNNING,
-                                            processed_samples=processed_samples,
-                                            total_samples=total_samples)
-        if temp_result == 404:
-            logger.log('Batch process was cancelled.')
-            return
-        result_id = temp_result['result_id']
-    except exceptions:
-        await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+    if 'results' in data:
+        total_samples = sum(data['results'][0]['values'])
+        logger.log(f'Got total samples (was {total_samples}).')
+
+    else:
+        await send_error(str(data['error'][-1]),
+                         logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+
+        logger.log(f'Sent error that occured when getting sample count from Database Manager.')
+        return 
+
+    temp_result = await send_result(STATUS_RUNNING, 
+                                    logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+
+    if temp_result == 404: 
+        return
+
+    result_id = temp_result['result_id']
 
     if total_samples == 0:
-        resp = await api.send_result(session,
-                                     batch_process_id,
-                                     {},
-                                     inter_results,
-                                     chartables,
-                                     STATUS_COMPLETE,
-                                     result_id=result_id,
-                                     processed_samples=processed_samples,
-                                     total_samples=total_samples)
+        await send_result(STATUS_COMPLETE, 
+                          logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
         logger.log('Ending batch process, as there are no input samples.')
         return
 
@@ -256,68 +232,27 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                 logger.log('Aggregations', aggregations)
             except Exception as e:
                 # Send the error message to the server.
-                try:
-                    resp = await api.send_result(session,
-                                                 batch_process_id,
-                                                 result.get_aggregations() if result is not None else {},
-                                                 inter_results,
-                                                 chartables,
-                                                 STATUS_ERROR,
-                                                 result_id=result_id,
-                                                 message=str(traceback.format_exc()),
-                                                 processed_samples=processed_samples,
-                                                 total_samples=total_samples)
-                    logger.log(f'Sent error that occured when running KPI computation to server: {e}')
-                    return
-                except exceptions:                            
-                    await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                                     logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
-                    return
+                send_error(f'Error occured when running KPI computation: {e}',
+                           logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples) 
+
     
         # After every batch is run, send the intermediate results
         inter_results = inter_results.merge(values)
         chartables = chartables.union(set(inter_results.dataset.keys()))
 
-        try:
-            ires = await flush_inter_results(api, logger,
-                                      dbc, session,
-                                      batch_process_id, inter_results,
-                                             chartables,
-                                      result, result_id,
-                                      processed_samples, total_samples)
-            if ires == 404:
-                return
-        except exceptions:                                        
-            await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                             logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+        ires = await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
+        if ires == 404: 
+            return
+
         inter_results = dp.Dataset()
 
-    try:
-        # Write any remaining intermediate results
-        await flush_inter_results(api, logger,
-                                  dbc, session,
-                                  batch_process_id, inter_results,
-                                  chartables,
-                                  result, result_id,
-                                  processed_samples, total_samples)
+    # Write any remaining intermediate results
+    await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
 
-        resp = await api.send_result(session,
-                                     batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
-                                     inter_results,
-                                     chartables,
-                                     STATUS_COMPLETE,
-                                     result_id=result_id,
-                                     processed_samples=processed_samples,
-                                     total_samples=total_samples)
-        
-        logger.log(resp)
-    except exceptions:                                                
-        await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
-    
+    await send_result(STATUS_COMPLETE, 
+                      logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+
     logger.log('Finished processing job.')
-    logger.log(resp)
 
 async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples):
     try:
@@ -326,24 +261,11 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
         logger.log(resp)
     except exceptions:                                                        
         await send_error("Failed to connect to DPS Database Manager server when sending intermediate results.",
-                         logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+                         logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
 
-    try:
-        resp = await api.send_result(session,
-                                     batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
-                                     inter_results,
-                                     chartables,
-                                     STATUS_RUNNING,
-                                     result_id=result_id,
-                                     processed_samples=processed_samples,
-                                     total_samples=total_samples)
-        if resp == 404:
-            logger.log('Batch process was cancelled.')
-            return 404
-    except exceptions:                                                                
-        await send_error("Failed to connect to DPS Database Manager server when sending results.",
-                         logger, api, session, batch_process_id, result, inter_results, result_id, processed_samples, total_samples)
+    resp = await send_result(STATUS_RUNNING, 
+                             logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+
     return resp
 
 async def send_error(message, logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples):
@@ -358,6 +280,35 @@ async def send_error(message, logger, api, session, batch_process_id, result, in
                                      message=str(message),
                                      processed_samples=processed_samples,
                                      total_samples=total_samples)
+
+        if resp == 404:
+            logger.log('Batch process was cancelled.')
+
     except Exception as e:
-        print('Failed to send error result to DPS Manager. Reason: ' + str(e))
+        print('Failed to send error to DPS Manager. Reason: ' + str(e))
+        resp = 404
+
+    logger.log(resp)
     
+async def send_result(status, logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples):
+    try:
+        resp = await api.send_result(session,
+                                     batch_process_id,
+                                     result.get_aggregations() if result is not None else {},
+                                     inter_results,
+                                     chartables,
+                                     status,
+                                     result_id=result_id,
+                                     processed_samples=processed_samples,
+                                     total_samples=total_samples)
+
+        if resp == 404:
+            logger.log('Batch process was cancelled.')
+
+    except Exception as e:
+        logger.error('Failed to send result to DPS Manager. Reason: ' + str(e))
+        resp = 404
+
+    logger.log(resp)
+    return resp
+
