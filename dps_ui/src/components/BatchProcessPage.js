@@ -89,8 +89,14 @@ export default class BatchProcessPage extends React.Component {
         value: this.state.parameterInputs[x]
       }))
     );
-    const startDate = util.dateToString(util.dateToUTCDate(this.state.startDate));
-    const endDate = util.dateToString(util.dateToUTCDate(this.state.endDate));
+   
+    // If date is chosen by DateTimePicker, it becomes the stupid Moment object
+    // and we have to call 'toDate' to get the date.
+    let startDate = this.state.startDate, endDate = this.state.endDate;
+    if(startDate.toDate) startDate = startDate.toDate();
+    if(endDate.toDate) endDate = endDate.toDate();
+    startDate = util.dateToString(util.dateToUTCDate(startDate));
+    endDate = util.dateToString(util.dateToUTCDate(endDate));
     return {
       name: this.state.name,
       dataset: this.state.dataset.value,
@@ -451,7 +457,8 @@ export default class BatchProcessPage extends React.Component {
             <Grid item xs={12}>
               <InputLabel>Date Range</InputLabel>            
               <DateTimePicker value={this.state.startDate}
-                              onChange={date => this.setState({ startDate: date })}
+                              onChange={date => this.setState({ startDate: date })
+			      }
                               label="Start Time"
                               error={hasStartTimeError}
                               helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
