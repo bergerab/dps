@@ -137,7 +137,7 @@ export default class BatchResultTable extends React.Component {
                 );
               } else if (data.status === 3) { // If queued,
                 return (
-                  <LinearProgressWithLabel label="Queued" />
+                  <LinearProgressWithLabel label="Queued" value={0} />
                 );
               }
             }},
