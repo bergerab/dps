@@ -192,6 +192,15 @@ export default class BatchProcessPage extends React.Component {
     });
   }
 
+  getParameterDefault(name) {
+    for (const parameter of this.state.system.parameters) {
+      if (parameter.name === name) {
+        return parameter.default;
+      }
+    }
+    return undefined;
+  }
+
   updateMappings() {
     return get_required_mappings(this.state.system, Array.from(this.state.kpis))
       .then(resp => {
@@ -205,6 +214,15 @@ export default class BatchProcessPage extends React.Component {
           signals: resp.signals.sort(),
           parameters: resp.parameters.sort(),
         });
+
+	this.state.parameters.map(name => {
+		if (! this.state.parameterInputs[name]) { 
+			this.state.parameterInputs[name] = this.getParameterDefault(name); 
+		}
+	});
+
+	// force the UI to update the parameter values
+	this.setState({parameterInputs: this.state.parameterInputs});
       });
   }
 
@@ -402,14 +420,14 @@ export default class BatchProcessPage extends React.Component {
                        fullWidth={true}
                        name="name"
                        error={hasError}
-                                            helperText={hasError ? this.state.mappingErrors[mappingIndex].value : ''}
-                                            value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
-                                            onChange={e => {
-                                              this.state.parameterInputs[parameter] = e.target.value;
-                                              // Force an update
-                                              this.setState({ parameters: this.state.parameters });
-                                            }}
-                                  />)
+                       helperText={hasError ? this.state.mappingErrors[mappingIndex].value : ''}
+                       value={parameter in this.state.parameterInputs ? this.state.parameterInputs[parameter] : ''}
+                       onChange={e => {
+                                        this.state.parameterInputs[parameter] = e.target.value;
+                                        // Force an update
+                                        this.setState({ parameters: this.state.parameters });
+                                }}
+                     />)
                   ];
                 })}
               />
