@@ -3,7 +3,21 @@
 IF %1.==. GOTO MissingURL
 IF %2.==. GOTO MissingDataset
 IF %3.==. GOTO MissingAPIKey
+IF %4.==. GOTO MissingStartTime
 
+ECHO Sending water quality data...
+dps_client --input=WaterQuality.csv                  ^
+           --dbm-url=%1                              ^
+	   --dataset=%2                              ^
+	   --api-key=%3                              ^
+	   --time-column=Time                        ^
+           --start-time=%4                           ^
+	   --time-offset=3600
+ECHO Water quality data sent.
+
+GOTO End
+
+:MissingStartTime
 ECHO Sending water quality data...
 dps_client --input=WaterQuality.csv                  ^
            --dbm-url=%1                              ^
@@ -12,7 +26,6 @@ dps_client --input=WaterQuality.csv                  ^
 	   --time-column=Time                        ^
 	   --time-offset=3600
 ECHO Water quality data sent.
-
 GOTO End
 
 :MissingURL
