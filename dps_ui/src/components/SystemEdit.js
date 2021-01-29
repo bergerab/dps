@@ -185,12 +185,15 @@ export default class KPIEdit extends React.Component {
     }, overrides);
 
     if (this.state.system_id === -1) {
+	    /*
       return post('system', o).catch(error => {
         error.then(jo => {
           this.onError(jo);
         });
         throw error;
       });
+	    */
+      return Promise.resolve(o);
     } else {
       return put('system', this.state.system_id, o).catch(error => {
         error.then(jo => {
