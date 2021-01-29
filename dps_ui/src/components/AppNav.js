@@ -310,11 +310,11 @@ class MiniDrawer extends React.Component {
                       <main className={classes.content}>
                         <div className={classes.toolbar} />
                         <Switch>
-                          <Route
-                            exact
-                            path="/home"
-                          >
-                            <Home />
+                          <Route exact path="/home" > 
+	    			<Home />
+                          </Route>
+                          <Route exact path="/" > 
+	    			<Home />
                           </Route>
                           <Route exact path="/batch-process/:id"
                                  component={BatchProcessViewPage}>
