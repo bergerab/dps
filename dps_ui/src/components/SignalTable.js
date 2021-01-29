@@ -104,6 +104,8 @@ export default class SignalTable extends React.Component {
                             'signal': data.name,
                           }]}
                           minimal={true}
+		          startTime={this.props.startTime}
+		          endTime={this.props.endTime}
                         />
                       </div>);
             },

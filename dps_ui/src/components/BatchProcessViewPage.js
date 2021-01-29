@@ -52,6 +52,9 @@ export default class BatchProcessViewPage extends React.Component {
     const bp = result.batch_process;
     const system = bp.system;
 
+    const startTime = moment(bp.interval.start + 'Z')
+    const endTime = moment(bp.interval.end + 'Z')
+
     let percentComplete = '0%';
     if (result.total_samples !== 0)
       percentComplete = ((result.processed_samples / result.total_samples) * 100).toFixed(2) + '%';
@@ -247,8 +250,8 @@ export default class BatchProcessViewPage extends React.Component {
      batch_process_id={result.batch_process_id}
      key={kpiName}
      title={kpiName}                      
-     startTime={moment(bp.interval.start + 'Z')}
-     endTime={moment(bp.interval.end + 'Z')}
+     startTime={startTime}
+     endTime={endTime}
    />
  </Grid>);
         }
@@ -369,6 +372,8 @@ export default class BatchProcessViewPage extends React.Component {
           header="Input Signals">
           <SignalTable
             dataset={bp.dataset}
+	    startTime={startTime}
+	    endTime={endTime}
           />
         </Box>
             
