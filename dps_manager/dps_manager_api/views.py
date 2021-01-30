@@ -763,7 +763,7 @@ def get_chart_data(request):
     interval  = jo['interval']
     offset    = jo['offset'] # How many hours away from UTC the time is
     pad       = jo.get('pad', True) # Whether or not to add an additional time unit to the beginning and end of the time range
-    infer     = jo.get('infer', False) # Whether or not to infer the time range (has priority over interval)
+    infer     = jo.get('infer', False) # Whether or not to infer the time range (has priority over interval if it is more precise)
     interval_start = util.parse_datetime(interval['start'])
     interval_end = util.parse_datetime(interval['end'])
     
@@ -771,7 +771,7 @@ def get_chart_data(request):
         # Inferred time range
         # Used if the user doesn't know what time range to look for data.
         # We look for the range in all of the signals, and include all of the data
-        # in the range.
+        # in the range if it is more precise than the specified interval.
         inferred_start_time = None
         inferred_end_time = None
 
@@ -797,8 +797,14 @@ def get_chart_data(request):
                     inferred_end_time = util.parse_datetime(last)
                 else:
                     inferred_end_time = max(inferred_end_time, util.parse_datetime(last))
-        interval_start = inferred_start_time
-        interval_end = inferred_end_time
+
+        # use inferred start if it is more precise
+        if interval_start < inferred_start_time: 
+            interval_start = inferred_start_time
+
+        # use inferred end if it is more precise
+        if inferred_end_time < interval_end: 
+            interval_end = inferred_end_time
 
     intervals = get_sample_ranges(interval_start,
                                   interval_end,

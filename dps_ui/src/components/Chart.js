@@ -30,18 +30,12 @@ class SignalChart extends React.Component {
   }
 
   componentDidMount() {
-    // FIX: Don't even infer time range for the first chart load 
-    // since startTime and endTime may come from props.
-	  
     // Infer time range for first chart load 
     // any subsequent loads should not be inferred (the user will pan/zoom)
-    this.doFetch(undefined, undefined, undefined);
+    this.doFetch(undefined, undefined, true);
   }
 
   doFetch = debounce((startTime=this.props.startTime, endTime=this.props.endTime, infer=false, pad=false) => {
-    // if no start or end time, infer time range
-    if (!startTime || !endTime) infer=true;
-
     this.setState({ loading: true });
     fetchData(this.getChartInstance(),
               this.props.signals, startTime,
