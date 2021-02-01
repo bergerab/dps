@@ -226,10 +226,11 @@ export default class BatchProcessViewPage extends React.Component {
     let charts;
     charts =
       kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
-        if (// resultDontChart(kpiResults) ||  // Ignore 'chartable' Boolean so even series KPI can be plotted.
-		kpiResults === undefined) {
-          return (<span key={kpiName}/>);
-        }
+	// Don't check the show_chart flag.
+	      
+        // if (resultDontChart(kpiResults) || kpiResults === undefined) {
+        //   return (<span key={kpiName}/>);
+        // }
         
         if (resultHasObject(kpiResults)) {
           const o = JSON.parse(kpiResults.object_value);
