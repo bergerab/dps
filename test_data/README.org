@@ -9,7 +9,8 @@ Each sub-directory one or more CSV files with test data, and a script that will 
 Running these scripts requires that Python 3 is installed, and the ~dps_client~ package is installed (see ~../dps_client~ for directions).
 
 Once all dependencies are met, change your directory into one of the test file directories that you want to upload to
-the DPS system. Then run ~upload <DATABASE_MANAGER_URL> <DATASET_NAME>~
+the DPS system. Then run ~upload <DATABASE_MANAGER_URL> <DATASET_NAME> <"API KEY"> <"START TIME">~
+~<START TIME>~ is in the format of ~YYYY-MM-DD HH:mm:ss-hh:nn~ where ~hh:nn~ is the UTC timezone offset
 
 The ~DATABASE_MANAGER_URL~ should be a URL to a currently online and accessible DPS Database Manager server.
 
