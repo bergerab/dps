@@ -59,7 +59,7 @@ class DPL:
         dpl.parse(text)
         return dpl.run(env)
 
-time_pattern = re.compile('(\\d+)(ms|s|m|h|d)')
+time_pattern = re.compile('(\d+(\.\d+)?)(ms|s|m|h|d)')
 '''
 Times are represented as strings of the form:
 200ms -> 200 milliseconds
@@ -86,5 +86,5 @@ def parse_time(id):
     '''
     result = time_pattern.search(id)
     if not result: return None
-    magnitude, units = result.groups()
-    return timedelta(**{ unit_map[units]: int(magnitude) })
+    magnitude, frac, units = result.groups()
+    return timedelta(**{ unit_map[units]: float(magnitude) })

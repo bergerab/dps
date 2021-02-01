@@ -90,7 +90,7 @@ export default class BatchProcessPage extends React.Component {
       }))
     );
    
-    // If date is chosen by DateTimePicker, it becomes the stupid Moment object
+    // If date is chosen by DateTimePicker, it becomes the Moment object
     // and we have to call 'toDate' to get the date.
     let startDate = this.state.startDate, endDate = this.state.endDate;
     if(startDate.toDate) startDate = startDate.toDate();

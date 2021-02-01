@@ -4,6 +4,7 @@ from .series import Series
 from .aggregation import Aggregation, ValuesAggregation, AbsAggregation
 
 import numpy as np
+import math
 
 BUILTINS = {}
 builtin = make_builtin_decorator(BUILTINS)
@@ -182,3 +183,19 @@ def thd2(series, base_harmonic, fs):
         v_rms_harmonics = v_rms_harmonics + (hrm_pwr ** 2)
 
     return 100 * np.sqrt(v_rms_harmonics) / p_fund
+
+
+@builtin('rms', aggregate=True)
+def rms(series):
+    data = series.array
+    ret = 0
+    i = 0
+    size = len(data)
+
+    while(i < size):
+        x = data[i]
+        ret = ret + x * x
+        i = i + 1
+
+    return math.sqrt(ret/size)
+
