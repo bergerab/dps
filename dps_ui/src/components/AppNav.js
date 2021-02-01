@@ -176,6 +176,9 @@ class MiniDrawer extends React.Component {
     const handleMenuClose = () => {
       this.setState({ anchorEl: null });      
     };
+ 
+    // redirect direct access of URL for non-admin users 
+    const userRedirect = component => !api.getIsAdmin() ? (<Redirect to="/home"/>) : component; 
 
     return (
       <Router>
@@ -219,168 +222,143 @@ class MiniDrawer extends React.Component {
                   onClose={handleMenuClose}
                 >
                   <MenuItem disabled={true}>Logged in as {api.getUsername()} ({api.getIsAdmin() ? 'Admin': 'End-User'})</MenuItem>
-                  <MenuItem onClick={() => {
-                    api.removeToken();
-                                window.location = '/login';
-                              }}>Logout</MenuItem>
-                            </Menu>
-                          </div>
-                        </Toolbar>
-                      </AppBar>
-                      <Drawer
-                        variant="permanent"
-                        className={clsx(classes.drawer, {
+                  <MenuItem onClick={() => { api.removeToken(); window.location = '/login'; }}>Logout</MenuItem>
+                </Menu>
+              </div>
+            </Toolbar>
+          </AppBar>
+          <Drawer
+            variant="permanent"
+            className={clsx(classes.drawer, {
 	                  [classes.drawerOpen]: this.state.open,
 	                  [classes.drawerClose]: !this.state.open,
-                        })}
-                        classes={{
-	                  paper: clsx({
-	                    [classes.drawerOpen]: this.state.open,
-	                    [classes.drawerClose]: !this.state.open,
-	                  }),
-                        }}>
-                        <div className={classes.toolbar}>
-                          <IconButton onClick={handleDrawerClose}>
-                            {/* {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />} */}
-                            {<ChevronLeftIcon/>}
-                          </IconButton>
-                        </div>
-                        <Divider />
-                        <List>
-                          <Link to="/home" style={linkStyle}>
-                            <ListItem button key="Home">
-                              <ListItemIcon><HomeIcon/></ListItemIcon>
-                              <ListItemText primary="Home" />
+                      })}
+            classes={{paper: clsx({
+	                  [classes.drawerOpen]: this.state.open,
+	                  [classes.drawerClose]: !this.state.open,
+	            }), }}
+	  >
+          <div className={classes.toolbar}>
+             <IconButton onClick={handleDrawerClose}>
+                 {/* {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />} */}
+                 {<ChevronLeftIcon/>}
+             </IconButton>
+          </div>
+          <Divider />
+             <List>
+               <Link to="/home" style={linkStyle}>
+                 <ListItem button key="Home">
+                   <ListItemIcon><HomeIcon/></ListItemIcon>
+                   <ListItemText primary="Home" />
+                 </ListItem>
+               </Link>
+             </List>
+             { !api.getIsAdmin() ? null :
+               (<span>
+                  <Divider />
+                    <List>
+                      <Link to="/admin/system" style={linkStyle}>
+                        <ListItem button>
+                          <ListItemIcon><MemoryIcon/></ListItemIcon>
+                          <ListItemText primary="Systems" />
+                        </ListItem>
+                      </Link>
+                      <Link to="/admin/dataset" style={linkStyle}>
+                        <ListItem button>
+                          <ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
+                          <ListItemText primary="Datasets" />
+                        </ListItem>
+                      </Link>
+                      <Link to="/admin/schedule" style={linkStyle}>
+                        <ListItem button>
+                          <ListItemIcon><ScheduleIcon/></ListItemIcon>
+                          <ListItemText primary="Schedules" />
+                        </ListItem>
+                      </Link>
+                      <Link to="/admin/user" style={linkStyle}>
+                        <ListItem button>
+                          <ListItemIcon><PeopleIcon/></ListItemIcon>
+                          <ListItemText primary="Users" />
+                        </ListItem>
+                      </Link>
+                      <Link to="/admin/api_key" style={linkStyle}>
+                        <ListItem button>
+                          <ListItemIcon><VpnKeyIcon/></ListItemIcon>
+                          <ListItemText primary="API Key" />
+                        </ListItem>
+                      </Link>
+                    </List>
+                  </span>
+	       )
+             }
+                  <Divider />
+                     <List>
+                        {this.state.systems.map((system, i) => (
+                          <Link
+                            key={system.system_id}
+                            to={"/system/" + system.system_id}
+                            style={linkStyle}>
+                            <ListItem button key={system.name}>
+                              <ListItemIcon>{indexToIcon(i)}</ListItemIcon>
+                              <ListItemText primary={system.name} />
                             </ListItem>
                           </Link>
-                        </List>
-                        {
-                          !api.getIsAdmin() ? null :
-                            (<span>
-    <Divider />
-    <List>
-      <Link to="/admin/system" style={linkStyle}>
-        <ListItem button>
-          <ListItemIcon><MemoryIcon/></ListItemIcon>
-          <ListItemText primary="Systems" />
-        </ListItem>
-      </Link>
-      <Link to="/admin/dataset" style={linkStyle}>
-        <ListItem button>
-          <ListItemIcon><InsertDriveFileIcon/></ListItemIcon>
-          <ListItemText primary="Datasets" />
-        </ListItem>
-      </Link>
-      <Link to="/admin/schedule" style={linkStyle}>
-        <ListItem button>
-          <ListItemIcon><ScheduleIcon/></ListItemIcon>
-          <ListItemText primary="Schedules" />
-        </ListItem>
-      </Link>
-      <Link to="/admin/user" style={linkStyle}>
-        <ListItem button>
-          <ListItemIcon><PeopleIcon/></ListItemIcon>
-          <ListItemText primary="Users" />
-        </ListItem>
-      </Link>
-      <Link to="/admin/api_key" style={linkStyle}>
-        <ListItem button>
-          <ListItemIcon><VpnKeyIcon/></ListItemIcon>
-          <ListItemText primary="API Key" />
-        </ListItem>
-      </Link>
-    </List>
-  </span>)
-                        }
-                        <Divider />
-                        <List>
-                          {this.state.systems.map((system, i) => (
-                            <Link
-                              key={system.system_id}
-                              to={"/system/" + system.system_id}
-                              style={linkStyle}>
-                              <ListItem button key={system.name}>
-                                <ListItemIcon>{indexToIcon(i)}</ListItemIcon>
-                                <ListItemText primary={system.name} />
-                              </ListItem>
-                            </Link>
-                          ))}
-                        </List>
-                      </Drawer>
-                      <main className={classes.content}>
-                        <div className={classes.toolbar} />
-                        <Switch>
-                          <Route exact path="/home" > 
-	    			<Home />
-                          </Route>
-                          <Route exact path="/" > 
-	    			<Home />
-                          </Route>
-                          <Route exact path="/batch-process/:id"
-                                 component={BatchProcessViewPage}>
-                          </Route>
-                          <Route exact path="/admin/dataset"
-                                 component={DatasetPage}>
-                          </Route>
-                          <Route exact path="/admin/view-dataset/:name"
-                                 component={DatasetPage}>
-                          </Route>
-                          <Route exact path="/admin/dataset/add"
-                                 component={() => <DatasetPage add={true} />}>
-                          </Route>
-                          <Route
-                            exact
-                            path="/admin/schedule/:action?/:id?"
+                        ))}
+                     </List>
+          </Drawer>
+          <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Switch>
+              <Route exact path="/home" > <Home/> </Route>
+              <Route exact path="/" > <Home/> </Route>
+              <Route exact path="/batch-process/:id" 		component={BatchProcessViewPage}/>
+              <Route exact path="/admin/dataset" 		component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
+              <Route exact path="/admin/view-dataset/:name" 	component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
+              <Route exact path="/admin/dataset/add" 		component={props => userRedirect( (<DatasetPage add={true} {...props}/>) )}/> 
+              <Route exact path="/admin/schedule/:action?/:id?"
                             component={props => {
                               const action = props.match.params.action;
-                              return (<SchedulePage key={action} {...props}/>);
-                            }}   />
-                          <Route
-                            exact
-                            path="/admin/user/:action?/:id?"
+                              return userRedirect( (<SchedulePage key={action} {...props}/>) );
+                            }}   
+	      />
+              <Route exact path="/admin/user/:action?/:id?"
                             component={props => {
                               const action = props.match.params.action;                  
-		              return (<UsersPage
-                                 key={action}
-                                 {...props} />);
+		              return userRedirect( (<UsersPage key={action} {...props} />) );
                             }}
-	                  />
-                          <Route
-                            exact
-                            path="/admin/api_key/:action?/:id?"                
+	      />
+              <Route exact path="/admin/api_key/:action?/:id?"                
                             component={props => {
                               const action = props.match.params.action;
-                              return (<AuthTokenPage key={action} {...props}/>);
-                  }}>
-                </Route>
-                <Route
-                  exact
-                  path="/admin/system/:action?/:id?"
-                  render={props =>
-		          (<EntityPage
-                                                                      key={'System'}
+                              return userRedirect( (<AuthTokenPage key={action} {...props}/>) );
+                  }}
+	      />
+              <Route exact path="/admin/system/:action?/:id?" 
+	                    render={props => userRedirect( (
+			     <EntityPage key={'System'}
 		                         {...props}
 		                         fields={[['Name', x => x.name],
 			                          ['KPIs', system => {
-                                                    return (<span>{system.kpis.filter(kpi => !kpi.hidden)
-                                                        .map(kpi => <Chip
-                                                        key={kpi.name}
-                                                        label={kpi.name}
-                                                        style={{ margin: '5px' }}/>)}
-                        </span>)
-                                       }],
-			               ['Parameters', system => {
-                                         return (<span>{system.parameters.filter(param => !param.hidden)
-                                                        .map(parameter => <Chip
-                                                                         key={parameter.name}
-                                                                         label={parameter.name}
-                                                                         style={{ margin: '5px' }}/>)}
-                                                                         </span>)                                       
-                                       }]]}
-		              entityUrl="system"
-		              entityName="System"
-		              editComponent={SystemEdit}
-                   />)}
+                                                    return (<span>{
+							    system.kpis.filter(kpi => !kpi.hidden).map(kpi => 
+								    <Chip key={kpi.name} label={kpi.name} style={{ margin: '5px' }}/>
+							    )}</span>)
+                                       
+						  }],
+			               
+						  ['Parameters', system => { 
+						    return (<span>{
+							    system.parameters.filter(param => !param.hidden).map(parameter => 
+								    <Chip key={parameter.name} label={parameter.name} style={{ margin: '5px' }}/>
+							    )}</span>)                                       
+                                       
+						  }]
+					 ]}
+		              		 entityUrl="system"
+		              		 entityName="System"
+		             		 editComponent={SystemEdit}
+                   	     />
+			    ) )}
 	      />
               /* Add batch process pages. */
               {this.state.systems.map(system => (
@@ -411,5 +389,7 @@ class MiniDrawer extends React.Component {
       </Router>
     );
   }
-                            }
+}
+
+
 export default withStyles(styles)(MiniDrawer);
