@@ -84,10 +84,20 @@ export default class BatchProcessPage extends React.Component {
       key: x,
       value: this.state.signalInputs[x].value
     })).concat(
-      this.state.parameters.map((x, i) => ({
-        key: this.getParameterIdentifier(x),
-        value: this.state.parameterInputs[x]
-      }))
+      this.state.parameters.map((x, i) => {
+	let value = this.state.parameterInputs[x];
+	let re = new RegExp(/^(\d+(\.\d+)?)(ms|s|m|h|d)$/)
+
+	// if value is a time duration without quotes, then add quotes to make it a string literal.
+	if (re.test(value)) {
+		value = '"' + value + '"';
+	}
+	      
+      	return {
+        	key: this.getParameterIdentifier(x),
+        	value: value
+      	};
+      })
     );
    
     // If date is chosen by DateTimePicker, it becomes the Moment object

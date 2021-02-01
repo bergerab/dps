@@ -799,11 +799,11 @@ def get_chart_data(request):
                     inferred_end_time = max(inferred_end_time, util.parse_datetime(last))
 
         # use inferred start if it is more precise
-        if interval_start < inferred_start_time: 
+        if inferred_start_time != None and interval_start < inferred_start_time: 
             interval_start = inferred_start_time
 
         # use inferred end if it is more precise
-        if inferred_end_time < interval_end: 
+        if inferred_end_time != None and inferred_end_time < interval_end: 
             interval_end = inferred_end_time
 
     intervals = get_sample_ranges(interval_start,
