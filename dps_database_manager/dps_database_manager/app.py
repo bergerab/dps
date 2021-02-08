@@ -5,6 +5,8 @@ import itertools
 import math
 import requests
 
+from flask import Flask
+
 from sqlalchemy import and_, not_
 from sqlalchemy.sql import func
 from expiringdict import ExpiringDict
@@ -226,10 +228,13 @@ def flush_buffer(result, buffer, previous_time, signal_ids):
 def make_app():
     global dbc
     dbc = DatabaseClient()
-    return dbm.make_app(TimescaleDBDataStore, DEBUG)
+    app = Flask(__name__)
+    return dbm.init_app(app, TimescaleDBDataStore, DEBUG)
+
+app = make_app()
 
 if __name__ == '__main__':
     try:
-        make_app().run(debug=DEBUG, port=3002, threaded=True)
+        app.run(debug=DEBUG, port=3002, threaded=True)
     finally:
         dbc.engine.dispose()

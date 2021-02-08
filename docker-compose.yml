@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  dps-python:
+    build:
+      context: .
+      dockerfile: ./docker/dps_python/dev.Dockerfile
+    image: dps_python
+      
+  dps-manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_manager/dev.Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    env_file:
+      - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
+    depends_on:
+      - dps-python
+      - dps-manager-database 
+     
+  dps-manager-database:
+    image: postgres:12.0-alpine
+    env_file:
+      - ./docker/dps_manager_database/dev.env
+
+  # Configure two batch processors
+  # I created one config here, and just copied it, because there
+  # was no obvious way to launch multiple containers of the same service.
+  dps-batch-processor-1:
+    build:
+      context: .
+      dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
+    env_file:
+      - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
+
+  dps-batch-processor-2:
+    build:
+      context: .
+      dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
+    env_file:
+      - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
+
+  dps-ui:
+    build:
+      context: .
+      dockerfile: ./docker/dps_ui/dev.Dockerfile
+    stdin_open: true
+    ports:
+      - 3005:3005
+    environment:
+      - PORT=3005
+      - CHOKIDAR_USEPOLLING=true      
+
+  dps-database-manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_database_manager/dev.Dockerfile
+    ports:
+      - 3002:3002
+    env_file:
+      - ./docker/dps_database_manager/dev.env
+    command: flask run --host=0.0.0.0 --with-threads --port=3002
+    # Infinite loop, to keep it alive, for debugging
+#    command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
+    depends_on:
+      - dps-python
+      - dps-database-manager-database
+
+  dps-database-manager-database:
+    build:
+      context: .
+      dockerfile: ./docker/dps_database_manager_database/Dockerfile
+    env_file:
+      - ./docker/dps_database_manager_database/dev.env
+
+volumes:
+  dps_manager_database:
+  dps_database_manager_database:

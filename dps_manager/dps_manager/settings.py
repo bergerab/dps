@@ -16,18 +16,20 @@ from urllib.parse import urlparse
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'un7(3w)1tv-ogc5dc-4$glb#fw365sz-ga^uk6$_q$%=in2r#7'
+SECRET_KEY = os.environ.get("SECRET_KEY", "foo_changeme")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", 'localhost 127.0.0.1 [::1]').split(" ")
 
+ADMINS = ['admin'] # the name of the default superuser (see management/initadmin.py)
 
 # Application definition
 
@@ -84,12 +86,15 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -120,10 +125,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://127.0.0.1:3002",
-    "http://127.0.0.1:3003",        
+    "http://127.0.0.1:3003",
     "http://127.0.0.1:3004",
     "http://127.0.0.1:3005",
-    "http://127.0.0.1:3006",    
+    "http://127.0.0.1:3006",
 ]
 
 # Internationalization
@@ -153,6 +158,3 @@ def url_is_valid(url):
 DBM_URL = os.environ.get('DBM_URL')
 if not DBM_URL:
     raise Exception('DPS Manager requires that you specify a `DBM_URL` environment variable. The value should be a URL to a DPS Database Manager.')
-else:
-    if not url_is_valid(DBM_URL):
-        raise Exception('`DBM_URL` environment variable has an invalid URL value of "%s". Ensure the URL has a scheme (http:// or https://).' % DBM_URL)

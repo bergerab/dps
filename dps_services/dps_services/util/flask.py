@@ -1,5 +1,6 @@
 import functools
 import traceback
+import sys
 
 from flask import request, jsonify, make_response
 
@@ -28,7 +29,9 @@ def json_api(view):
     return view_wrapper
 
 def make_error_response(e, status_code):
-    return make_response(jsonify({ 'error': traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__) }), status_code)    
+    msg = '\n'.join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+    print(msg, file=sys.stderr)
+    return make_response(jsonify({ 'error': msg }), status_code)    
     
 def make_api_url(name, version=1):
     return f'api/v{version}/{name}'

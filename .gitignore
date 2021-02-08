@@ -1,5 +1,4 @@
-__pycache__/
-dist/
+__pycache
 build/
 .eggs/
 *.egg-info/
@@ -14,3 +13,16 @@ node_modules/
 *.pyc
 
 .idea/
+
+docker/.env.dev
+docker/.env.prod
+
+.egg
+
+dist/
+
+package-lock.json
+
+docker/secrets.env
+
+dps_manager/db.sqlite3

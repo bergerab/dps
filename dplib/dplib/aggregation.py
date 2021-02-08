@@ -3,7 +3,7 @@ class Aggregation:
     def __init__(self, series, value):
         self.series = series
         self.value = value
-
+        
     def __add__(self, other):
         if not isinstance(other, Aggregation):
             other = Aggregation.lift(other)

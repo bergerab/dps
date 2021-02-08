@@ -14,4 +14,4 @@ from .data_store import DataStore
 from .data_store import SignalQueryResult
 from .data_store import AggregateQueryResult
 
-from .main import make_app
+from .main import init_app

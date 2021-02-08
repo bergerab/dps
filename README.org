@@ -1,6 +1,6 @@
 * Data Processing System (DPS)
 
-** Installation
+** Installation Overview
 
 The installation process involves setting up four main components:
     1. DPS Manager
@@ -13,6 +13,38 @@ and have Python 3 installed. Note that some of the commands may vary slightly
 between machines. For example, I use "python3" to specify the Python 3 executable.
 But on some Windows systems the correct command might be "py" or "python".
 
+** Installation with Docker
+*** Development Setup
+You must provide an initial API key that will be hard coded into the DPS Manager for built-in services to use (such as DPS Batch Processor):
+
+#+BEGIN_SRC sh
+echo "BATCH_PROCESSOR_API_KEY=enter secret here" > docker/secrets.env
+#+END_SRC
+
+Then to build all images and start containers run:
+#+BEGIN_SRC sh
+docker-compose -f docker-compose.yml up
+#+END_SRC
+
+This takes a while to complete.
+
+After all containers are online, you can navigate to `http://localhost:3005` to view the UI.
+
+*** Production Setup
+To build all images and start containers run:
+
+#+BEGIN_SRC sh
+docker-compose up
+#+END_SRC
+
+For production setups you must manually run migrations and load fixtures (this is done automatically on each build for development).
+
+#+BEGIN_SRC sh
+docker-compose exec dps_manager python manage.py migrate --noinput
+docker-compose exec dps_manager python manage.py loaddata objects.json
+#+END_SRC
+
+** Manual Installation
 *** Installing TimescaleDB
 Before installing this software, you must first install TimescaleDB. I did this via
 Docker (as instructed by the TimescaleDB website). Here is the command I used:
@@ -165,7 +197,25 @@ All of these components must be online all at once.
 
 Now, you can go to http://localhost:3005/ in a web browser to view the system. Use the drawer on the left to navigate.
 
-** Updating
+
+** Manual Updates
 Whenever some component changes, you should pull the new code from the repository (git pull), repeat the steps from 
 "Install supporting packages", and then restart all of the components (DPS Manager, DPS Database Manager, DPS Batch Processor,
 the DPS UI).
+
+** Development Details
+
+There are default systems that are present when a new DPS Manager system is deployed. These are created via Django's "fixtures".
+To update the fixtures, run this command:
+
+#+BEGIN_SRC sh
+cd dps_manager && python3 manage.py dumpdata dps_manager_api.object --indent=2 > ./dps_manager_api/fixtures/objects.json
+#+END_SRC
+
+The fixtures can be loaded using this command (while in the ~dps_manager~ directory).
+
+#+BEGIN_SRC 
+python3 manage.py loaddata dps_manager_api/fixtures/objects.json
+#+END_SRC
+
+These fixtures are automatically loaded when using Docker only done once when the container is built.
