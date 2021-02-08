@@ -34,7 +34,6 @@ services:
       context: .
       dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
     env_file:
-      - ./docker/dps_manager/dev.env
       - ./docker/secrets.env
 
   dps-batch-processor-2:
@@ -42,8 +41,24 @@ services:
       context: .
       dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
     env_file:
-      - ./docker/dps_manager/dev.env
       - ./docker/secrets.env
+
+  dps-relay:
+    build:
+      context: .
+      dockerfile: ./docker/dps_relay/dev.Dockerfile
+    ports:
+      - 3042:3042
+    command: flask run --host=0.0.0.0 --with-threads --port=3042
+    env_file:
+      - ./docker/secrets.env
+    environment:
+      - DPS_RELAY_DEBUG=1
+      - DPS_MANAGER_URL=http://dps-manager:8000/
+      - DBM_URL=http://dps-database-manager:3002/
+      - SEND_THRESHOLD=10000
+      - FLASK_DEBUG=1
+      - FLASK_ENV=development
 
   dps-ui:
     build:

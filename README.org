@@ -18,7 +18,7 @@ But on some Windows systems the correct command might be "py" or "python".
 You must provide an initial API key that will be hard coded into the DPS Manager for built-in services to use (such as DPS Batch Processor):
 
 #+BEGIN_SRC sh
-echo "BATCH_PROCESSOR_API_KEY=enter secret here" > docker/secrets.env
+echo "API_KEY=enter secret here" > docker/secrets.env
 #+END_SRC
 
 Then to build all images and start containers run:

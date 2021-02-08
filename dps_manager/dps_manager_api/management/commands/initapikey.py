@@ -7,12 +7,12 @@ from dps_manager_api.views import APIKeyAPI
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        secret = os.getenv('BATCH_PROCESSOR_API_KEY')        
+        secret = os.getenv('API_KEY')        
         if not Object.objects.filter(kind=APIKeyAPI.kind, name=secret).first():
             if not secret:
-                raise Exception('You must specify the BATCH_PROCESSOR_API_KEY environment variable (it should contain the secret token).')
+                raise Exception('You must specify the API_KEY environment variable (it should contain the secret token).')
             key = {
-                'name': 'Batch Processor',
+                'name': 'Internal',
                 'key': secret,
             }
             key = Object.objects.create(kind=APIKeyAPI.kind,

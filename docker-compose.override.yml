@@ -33,6 +33,10 @@ services:
     volumes:
       - ./dps_ui/:/usr/src/dps_ui
 
+  dps-relay:
+    volumes:
+      - ./dps_relay/:/usr/src/dps_relay
+
   dps-database-manager:
     volumes:
       - ./dps_database_manager:/usr/src/dps_database_manager
