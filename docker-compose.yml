@@ -33,7 +33,10 @@ services:
     env_file:
       - ./docker/dps_manager_database/dev.env
 
-  dps-batch-processor:
+  # Configure two batch processors
+  # I created one config here, and just copied it, because there
+  # was no obvious way to launch multiple containers of the same service.
+  dps-batch-processor-1:
     build:
       context: .
       dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
@@ -45,10 +48,19 @@ services:
       - ./dps_services/:/usr/src/dps_services/
       - ./dps_client/:/usr/src/dps_client/
       - ./dps_batch_processor/:/usr/src/dps_batch_processor/
-    # Infinite loop, to keep it alive, for debugging
-    command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
-    # command:
-    #   dps_batch_processor 
+
+  dps-batch-processor-2:
+    build:
+      context: .
+      dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
+    env_file:
+      - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
+    volumes:
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
+      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
 
   dps-ui:
     build:
