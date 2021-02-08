@@ -20,3 +20,5 @@ docker/.env.prod
 .egg
 
 dist/
+
+package-lock.json
