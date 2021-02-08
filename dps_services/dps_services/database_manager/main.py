@@ -45,7 +45,7 @@ def init_app(app, AppDataStore, debug=False):
                               'key': key,
                           })
             if resp.status_code >= 400:
-                return make_response(jsonify(resp.json()), resp.status_code)
+                return make_response({'error': resp.text}, resp.status_code)
     
             jo = resp.json()
             if jo['allowed'] == True:
