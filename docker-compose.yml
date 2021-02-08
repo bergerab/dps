@@ -1,13 +1,13 @@
 version: '3.7'
 
 services:
-  dps_python:
+  dps-python:
     build:
       context: .
       dockerfile: ./docker/dps_python/dev.Dockerfile
     image: dps_python
       
-  dps_manager:
+  dps-manager:
     build:
       context: .
       dockerfile: ./docker/dps_manager/dev.Dockerfile
@@ -22,17 +22,17 @@ services:
     env_file:
       - ./docker/dps_manager/dev.env
     depends_on:
-      - dps_python
-      - dps_manager_database
+      - dps-python
+      - dps-manager-database
       
-  dps_manager_database:
+  dps-manager-database:
     image: postgres:12.0-alpine
     volumes:
       - dps_manager_database:/var/lib/dps_manager_database/data/
     env_file:
       - ./docker/dps_manager_database/dev.env
 
-  dps_ui:
+  dps-ui:
     build:
       context: .
       dockerfile: ./docker/dps_ui/dev.Dockerfile
@@ -44,7 +44,7 @@ services:
     environment:
       - PORT=3005
 
-  dps_database_manager:
+  dps-database-manager:
     build:
       context: .
       dockerfile: ./docker/dps_database_manager/dev.Dockerfile
@@ -54,17 +54,17 @@ services:
       - ./dps_services/:/usr/src/dps_services/
       - ./dps_client/:/usr/src/dps_client/
     ports:
-      - "3002:3002"
+      - 3002:3002
     env_file:
       - ./docker/dps_database_manager/dev.env
-    command: flask run --host=0.0.0.0 --port=3002
+    command: flask run --host=0.0.0.0 --with-threads --port=3002
     # Infinite loop, to keep it alive, for debugging
-    # command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
+#    command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
     depends_on:
-      - dps_python
-      - dps_database_manager_database
+      - dps-python
+      - dps-database-manager-database
 
-  dps_database_manager_database:
+  dps-database-manager-database:
     build:
       context: .
       dockerfile: ./docker/dps_database_manager_database/Dockerfile
@@ -72,8 +72,6 @@ services:
       - ./docker/dps_database_manager_database/dev.env
     volumes:
       - dps_database_manager_database:/var/lib/dps_database_manager_database/data
-    ports:
-      - "5532:5432"
 
 volumes:
   dps_manager_database:

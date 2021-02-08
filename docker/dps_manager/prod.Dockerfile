@@ -19,3 +19,5 @@ RUN pip install -r requirements.txt
 
 # run entrypoint.sh
 ENTRYPOINT ["/usr/src/docker/dps_manager/prod.sh"]
+
+EXPOSE 8000

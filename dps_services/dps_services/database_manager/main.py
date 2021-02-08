@@ -4,7 +4,6 @@ from datetime import datetime
 
 import requests
 
-from flask import Flask
 from flask import request, make_response, jsonify
 
 from expiringdict import ExpiringDict
@@ -16,9 +15,7 @@ from .data_store import DataStore
 from .insert import load_insert_protobuf
 from .insert import load_insert_json
 
-def make_app(AppDataStore, debug=False):
-    app = Flask(__name__)
-
+def init_app(app, AppDataStore, debug=False):
     DPSMANURL  = os.getenv('DPS_MANAGER_URL', None)
     if DPSMANURL is None:
         raise Exception('You must provide the URL of your DPS Manager in the environment variable: DPS_MANAGER_URL.')

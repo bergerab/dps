@@ -1,4 +1,3 @@
-# pull official base image
 FROM dps_python
 
 # Install netcat for entrypoint.sh
@@ -19,3 +18,5 @@ RUN pip install -r requirements.txt
 
 # run entrypoint.sh
 ENTRYPOINT ["/usr/src/docker/dps_manager/dev.sh"]
+
+EXPOSE 8000

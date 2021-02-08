@@ -128,7 +128,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3003",
     "http://127.0.0.1:3004",
     "http://127.0.0.1:3005",
-    "http://127.0.0.1:3006",    
+    "http://127.0.0.1:3006",
 ]
 
 # Internationalization
@@ -158,6 +158,3 @@ def url_is_valid(url):
 DBM_URL = os.environ.get('DBM_URL')
 if not DBM_URL:
     raise Exception('DPS Manager requires that you specify a `DBM_URL` environment variable. The value should be a URL to a DPS Database Manager.')
-else:
-    if not url_is_valid(DBM_URL):
-        raise Exception('`DBM_URL` environment variable has an invalid URL value of "%s". Ensure the URL has a scheme (http:// or https://).' % DBM_URL)
