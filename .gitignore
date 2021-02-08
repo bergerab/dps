@@ -22,3 +22,7 @@ docker/.env.prod
 dist/
 
 package-lock.json
+
+docker/secrets.env
+
+dps_manager/db.sqlite3

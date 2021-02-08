@@ -21,16 +21,34 @@ services:
       - 8000:8000
     env_file:
       - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
     depends_on:
       - dps-python
-      - dps-manager-database
-      
+      - dps-manager-database 
+     
   dps-manager-database:
     image: postgres:12.0-alpine
     volumes:
       - dps_manager_database:/var/lib/dps_manager_database/data/
     env_file:
       - ./docker/dps_manager_database/dev.env
+
+  dps-batch-processor:
+    build:
+      context: .
+      dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
+    env_file:
+      - ./docker/dps_manager/dev.env
+      - ./docker/secrets.env
+    volumes:
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
+      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
+    # Infinite loop, to keep it alive, for debugging
+    command: bash -c "while true; do echo 'sleeping...' && sleep 10; done"
+    # command:
+    #   dps_batch_processor 
 
   dps-ui:
     build:

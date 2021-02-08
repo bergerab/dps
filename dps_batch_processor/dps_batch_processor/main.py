@@ -33,11 +33,6 @@ exceptions = (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exc
 @click.option('--interval',             default=5,      help='The number of seconds to wait between checking for jobs.')
 @click.option('--verbose',                              help='Show the progress of jobs in the command line.')
 def cli(dps_manager_url, database_manager_url, api_key, polling_interval, max_batch_size, interval=5, verbose=False):
-    if not url_is_valid(dps_manager_url):
-        raise Exception(f'DPS Manager URL is invalid: "{dps_manager_url}". Ensure the URL is properly formatted and includes a scheme.')
-    elif not url_is_valid(database_manager_url):
-        raise Exception(f'DPS Database Manager URL is invalid: "{database_manager_url}". Ensure the URL is properly formatted and includes a scheme.')
-    
     logger = Logger(verbose)
     loop = asyncio.get_event_loop()
     # `main` is written as a `asyncio` co-routine, so that if multiple batch processors
