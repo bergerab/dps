@@ -43,6 +43,7 @@ services:
       - 3005:3005
     environment:
       - PORT=3005
+      - CHOKIDAR_USEPOLLING=true      
 
   dps-database-manager:
     build:
