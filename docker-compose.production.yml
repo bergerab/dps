@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  dps-python:
+    build:
+      context: .
+      dockerfile: ./docker/dps_python/prod.Dockerfile
+    image: dps_python
+  
+  dps-manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_manager/prod.Dockerfile
+    command: gunicorn dps_manager.wsgi:application --bind 0.0.0.0:8000
+    env_file:
+      - ./docker/dps_manager/prod.env
+
+  dps-manager-database:
+    env_file:
+      - ./docker/dps_manager_database/prod.env
+
+  dps-database-manager:
+    build:
+      context: .
+      dockerfile: ./docker/dps_database_manager/prod.Dockerfile
+    env_file:
+      - ./docker/dps_database_manager/prod.env
+
+  dps-database-manager-database:
+    env_file:
+      - ./docker/dps_database_manager_database/prod.env

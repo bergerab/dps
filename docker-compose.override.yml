@@ -1,33 +1,45 @@
-version: '3.7'
+version: '3.8'
 
+# All volume definitions are in this override file
+# to make it easier for production to not use volumes
+# (they apparently slow containers down).
 services:
-  dps-python:
-    build:
-      context: .
-      dockerfile: ./docker/dps_python/prod.Dockerfile
-    image: dps_python
-  
   dps-manager:
-    build:
-      context: .
-      dockerfile: ./docker/dps_manager/prod.Dockerfile
     volumes:
-    command: gunicorn dps_manager.wsgi:application --bind 0.0.0.0:8000
-    env_file:
-      - ./docker/dps_manager/prod.env
-
+      - ./dps_manager/:/usr/src/dps_manager/
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
+     
   dps-manager-database:
-    env_file:
-      - ./docker/dps_manager_database/prod.env
+    volumes:
+      - dps_manager_database:/var/lib/dps_manager_database/data/
+
+  dps-batch-processor-1:
+    volumes:
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
+      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
+
+  dps-batch-processor-2:
+    volumes:
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
+      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
+
+  dps-ui:
+    volumes:
+      - ./dps_ui/:/usr/src/dps_ui
 
   dps-database-manager:
-    build:
-      context: .
-      dockerfile: ./docker/dps_database_manager/prod.Dockerfile
     volumes:
-    env_file:
-      - ./docker/dps_database_manager/prod.env
+      - ./dps_database_manager:/usr/src/dps_database_manager
+      - ./dplib/:/usr/src/dplib/
+      - ./dps_services/:/usr/src/dps_services/
+      - ./dps_client/:/usr/src/dps_client/
 
   dps-database-manager-database:
-    env_file:
-      - ./docker/dps_database_manager_database/prod.env
+    volumes:
+      - dps_database_manager_database:/var/lib/dps_database_manager_database/data

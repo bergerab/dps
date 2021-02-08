@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 services:
   dps-python:
@@ -12,11 +12,6 @@ services:
       context: .
       dockerfile: ./docker/dps_manager/dev.Dockerfile
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./dps_manager/:/usr/src/dps_manager/
-      - ./dplib/:/usr/src/dplib/
-      - ./dps_services/:/usr/src/dps_services/
-      - ./dps_client/:/usr/src/dps_client/
     ports:
       - 8000:8000
     env_file:
@@ -28,8 +23,6 @@ services:
      
   dps-manager-database:
     image: postgres:12.0-alpine
-    volumes:
-      - dps_manager_database:/var/lib/dps_manager_database/data/
     env_file:
       - ./docker/dps_manager_database/dev.env
 
@@ -43,11 +36,6 @@ services:
     env_file:
       - ./docker/dps_manager/dev.env
       - ./docker/secrets.env
-    volumes:
-      - ./dplib/:/usr/src/dplib/
-      - ./dps_services/:/usr/src/dps_services/
-      - ./dps_client/:/usr/src/dps_client/
-      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
 
   dps-batch-processor-2:
     build:
@@ -56,19 +44,12 @@ services:
     env_file:
       - ./docker/dps_manager/dev.env
       - ./docker/secrets.env
-    volumes:
-      - ./dplib/:/usr/src/dplib/
-      - ./dps_services/:/usr/src/dps_services/
-      - ./dps_client/:/usr/src/dps_client/
-      - ./dps_batch_processor/:/usr/src/dps_batch_processor/
 
   dps-ui:
     build:
       context: .
       dockerfile: ./docker/dps_ui/dev.Dockerfile
     stdin_open: true
-    volumes:
-      - ./dps_ui/:/usr/src/dps_ui
     ports:
       - 3005:3005
     environment:
@@ -79,11 +60,6 @@ services:
     build:
       context: .
       dockerfile: ./docker/dps_database_manager/dev.Dockerfile
-    volumes:
-      - ./dps_database_manager:/usr/src/dps_database_manager
-      - ./dplib/:/usr/src/dplib/
-      - ./dps_services/:/usr/src/dps_services/
-      - ./dps_client/:/usr/src/dps_client/
     ports:
       - 3002:3002
     env_file:
@@ -101,8 +77,6 @@ services:
       dockerfile: ./docker/dps_database_manager_database/Dockerfile
     env_file:
       - ./docker/dps_database_manager_database/dev.env
-    volumes:
-      - dps_database_manager_database:/var/lib/dps_database_manager_database/data
 
 volumes:
   dps_manager_database:
