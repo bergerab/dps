@@ -26,7 +26,7 @@ docker-compose up
 
 This takes a while to complete.
 
-After all containers are online, you can navigate to `http://localhost:3005` to view the UI.
+After all containers are online, you can navigate to ~http://localhost:3005~ to view the UI.
 
 *** Production Installation
 The first step is to provide an initial API key that will be hard coded into the DPS Manager for built-in services to use (such as DPS Batch Processor). In the root of this repository (the main ~dps~ directory), run this command (replacing "enter secret here" with some secret text):
