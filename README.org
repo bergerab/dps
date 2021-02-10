@@ -10,6 +10,8 @@ Data Processing System (DPS) is a platform for data analytics and visualization.
 ** Installation
 There are two different ways to install the system. First, there are instructions for installing a development environment. This should be done for anyone wanting to modify the code. The second installation, is a production installation which should be used when deploying the system to servers for high performance.
 
+Both development and production installations require the use of Docker. If you do not have Docker installed already you can find it here: https://www.docker.com/ .
+
 *** Development Installation
 You must provide an initial API key that will be hard coded into the DPS Manager for built-in services to use (such as DPS Batch Processor):
 
