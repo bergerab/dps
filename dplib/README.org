@@ -4,22 +4,22 @@ point-wise and windowed computations. The library can be used on
 batches of data to perform historical analysis of data, as well as
 perform stream processing (provided the stream is buffered into batches).
 
-~DPLib~ provides one abstraction which wraps a list of samples (absolute-time-bound
-values) called a ~DataSeries~. ~DataSeries~ objects are where all the
-computations take place. The interface to ~DataSeries~ is designed to
+~DPLib~ provides ~Series~ class which wraps a list of samples (absolute-time-bound
+values). ~Series~ objects are where all
+computations take place. The interface to ~Series~ is designed to
 feel native to Python 
 by overloading common operators. 
 
 For example, a (point-wise) power computation could be expressed as:
 #+BEGIN_SRC python
-I = DataSeries(...) 
-V = DataSeries(...)
+I = Series(...) 
+V = Series(...)
 P = I * V
 #+END_SRC
 
 An averaging function (windowed) could be expressed as:
 #+BEGIN_SRC python
-V = DataSeries(...)
+V = Series(...)
 window = V.time_window(timedelta(seconds=1), stride=timedelta(seconds=1))
 V_averaged = window.average()
 #+END_SRC
@@ -29,7 +29,7 @@ second.
 There are a few builtin functions for specific computations. Such as
 THD:
 #+BEGIN_SRC python
-V = DataSeries(...)
+V = Series(...)
 THD = V.thd(timedelta(seconds=2))
 #+END_SRC
 Which computes the total harmonic distortion (THD) of a voltage signal
@@ -42,12 +42,14 @@ POWER = KPI('Voltage * Current')
 
 This is easy to compute on its own, but when there are multiple KPIs involved which rely on each other, a dataflow graph must be made to track the connection between KPIs:
 
+#+BEGIN_SRC python
 POWER = KPI('Voltage * Current')
 LOAD = KPI('Power / MaxPower')
 THD_V = KPI('thd(Voltage)')
 THD_AT_50_LOAD = KPI('THD_V if LOAD == 50 else 0')
+#+END_SRC
 
-The dataflow graph will organize the KPIs so we know which KPI to compute first, then second, etc... In the example above, we must compute POWER, then THD_V, then LOAD, then THD_AT_50_LOAD.
+The dataflow graph will organize the KPIs so we know which KPI to compute first, then second, etc... In the example above, we must compute ~POWER~, then ~THD_V~, then ~LOAD~, then ~THD_AT_50_LOAD~.
 
 The ordering of the statements in Python doesn't matter (POWER could be defined after LOAD), so we must impose the ordering based off of the relationships between the symbols.
 
@@ -55,7 +57,7 @@ The ordering of the statements in Python doesn't matter (POWER could be defined 
 ~MiniPy~ is a tiny language which is based off of Python. It uses the
 Python parser (ast.parse) to parse valid Python code, but provides
 slightly different semantics to the code. There are no variable definitions, no
-looping constructs, no branching (if-else). There are only values
+and looping constructs. There are only values
 (numbers, strings) and builtin functions. It sounds like the language
 is feature-deprived, and it is, but that is on purpose.
 
@@ -81,8 +83,8 @@ the ~DPLib~ example, instead of having to include the boilerplate code
 in a power calculation:
 
 #+BEGIN_SRC python
-V = DataSeries(...)
-I = DataSeries(...)
+V = Series(...)
+I = Series(...)
 I * V
 #+END_SRC
 
