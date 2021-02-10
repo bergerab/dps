@@ -40,12 +40,6 @@ To build all images and start containers run:
 docker-compose -f docker-compose.yml -f docker-compose.production.yml up
 #+END_SRC
 
-For production setups you can manually run migrations and load fixtures to update your environment.
-
-#+BEGIN_SRC sh
-docker-compose exec dps_manager python manage.py migrate --noinput
-docker-compose exec dps_manager python manage.py loaddata objects.json
-#+END_SRC
 
 ** Development FAQ
 
@@ -67,3 +61,11 @@ python3 manage.py loaddata dps_manager_api/fixtures/objects.json
 #+END_SRC
 
 These fixtures are automatically loaded when using Docker only done once when the container is built.
+
+*** How do I run migrations and load fixtures?
+
+#+BEGIN_SRC sh
+docker-compose exec dps_manager python manage.py migrate --noinput
+docker-compose exec dps_manager python manage.py loaddata objects.json
+#+END_SRC
+
