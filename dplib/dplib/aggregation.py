@@ -1,3 +1,5 @@
+import numpy as np
+
 class Aggregation:
     name = 'constant'
     def __init__(self, series, value):
@@ -250,6 +252,13 @@ class MinAggregation(Aggregation):
     name = 'min'    
     def merge(self, other):
         return MinAggregation(other.series, min(self.value, other.value))
+
+class CumSumAggregation(Aggregation):
+    name = 'cumsum'
+    def merge(self, other):
+        cumsum = other.series.series + self.value
+        other.series.series = cumsum
+        return CumSumAggregation(other.series, cumsum[-1])
 
 class ValuesAggregation(Aggregation):
     name = 'values'

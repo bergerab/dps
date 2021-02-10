@@ -231,7 +231,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
             except Exception as e:
                 # Send the error message to the server.
-                send_error(f'Error occured when running KPI computation: {e}',
+                await send_error(f'Error occured when running KPI computation: {e}',
                            logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples) 
 
         chartables = chartables.union(set(inter_results.dataset.keys()))

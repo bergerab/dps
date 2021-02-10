@@ -1,7 +1,7 @@
 from .decorators import make_builtin_decorator
 
 from .series import Series
-from .aggregation import Aggregation, ValuesAggregation, AbsAggregation
+from .aggregation import Aggregation, ValuesAggregation, AbsAggregation, CumSumAggregation
 
 import numpy as np
 import math
@@ -15,6 +15,14 @@ def average(series):
         if series.is_windowed(): return series.average()
         else: return series.average_aggregation()
     else: raise Exception('Unsupported type for average.')
+
+@builtin('cumsum')
+def cumsum(x):
+    if isinstance(x, Series):
+        cumsum = np.cumsum(x.series)
+        return CumSumAggregation(Series(cumsum), cumsum[-1])
+    else:
+        raise Exception('Unexpected input datatype for cumsum.')
 
 @builtin('values')
 def values_agg(*args):
