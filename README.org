@@ -1,11 +1,11 @@
 * Data Processing System (DPS)
 Data Processing System (DPS) is a platform for data analytics and visualization. The platform handles ingestion of data, specifying user-defined analytics on that data, and visualizing the results. The code is design in a micro-service oriented way. As an overview, the following is a comprehnsive list of micro-serivces and their purposes:
 
-- DPS UI: The user interface for both administrators and end-users (a React app).
-- DPS Manager: The primary configuration server, where analytics are defined, and the backend for the user interface.
-- DPS Database Manager: An interface to data that has been ingested by the system (uses TimescaleDB).
-- DPS Batch Processor: A worker process which runs computations (any number can be running at once).
-- DPS Relay: An adapter service which provides an API to send data to the system (allows for scheduling when data ingestion occurs).
+- ~DPS UI~: The user interface for both administrators and end-users (a React app).
+- ~DPS Manager~: The primary configuration server, where analytics are defined, and the backend for the user interface.
+- ~DPS Database Manager~: An interface to data that has been ingested by the system (uses TimescaleDB).
+- ~DPS Batch Processor~: A worker process which runs computations (any number can be running at once).
+- ~DPS Relay~: An adapter service which provides an API to send data to the system (allows for scheduling when data ingestion occurs).
 
 ** Installation
 There are two different ways to install the system. First, there are instructions for installing a development environment. This should be done for anyone wanting to modify the code. The second installation, is a production installation which should be used when deploying the system to servers for high performance.
