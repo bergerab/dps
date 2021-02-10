@@ -56,8 +56,8 @@ The dataflow graph will organize the KPIs so we know which KPI to compute first,
 The ordering of the statements in Python doesn't matter (POWER could be defined after LOAD), so we must impose the ordering based off of the relationships between the symbols.
 
 *** MiniPy
-~MiniPy~ is a tiny language which is based off of Python. It uses the
-Python parser (ast.parse) to parse valid Python code, but provides
+~MiniPy~ is a tiny language which is based off of Python. The implementation is found in ~minipy.py~ in ~dplib~.
+It uses the Python parser (ast.parse) to parse valid Python code, but provides
 slightly different semantics to the code. There are no variable definitions, no
 and looping constructs. There are only values
 (numbers, strings) and builtin functions. It sounds like the language
@@ -96,7 +96,7 @@ You can just say:
 I * V
 #+END_SRC
 
-And not have the user of ~MiniPy~ have to ever see what a ~DataSeries~
+And not have the user of ~MiniPy~ have to ever see what a ~Series~
 object is. This is because when you execute ~MiniPy~ you can pass in ~I~
 and ~V~ in the environment. This could be done through Python hacking by
 calling ~exec~ with some values stored in Python's global environment,
