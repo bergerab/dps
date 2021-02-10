@@ -84,6 +84,8 @@ class Aggregation:
             return MinAggregation(None, d['value'])
         elif name == MaxAggregation.name:
             return MaxAggregation(None, d['value'])
+        elif name == CumSumAggregation.name:
+            return CumSumAggregation(None, d['value'])
         elif name == AbsAggregation.name:
             return AbsAggregation(None, d['value'])
         elif name == SumAggregation.name:
