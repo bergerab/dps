@@ -38,7 +38,9 @@ V over a 2 second window.
 *** Algorithm for KPI computations
 Special care is needed when processing KPI computations via DPL. Here is a power computation:
 
+#+BEGIN_SRC python
 POWER = KPI('Voltage * Current')
+#+END_SRC
 
 This is easy to compute on its own, but when there are multiple KPIs involved which rely on each other, a dataflow graph must be made to track the connection between KPIs:
 
