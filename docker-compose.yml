@@ -37,7 +37,7 @@ services:
       - ./docker/secrets.env
     depends_on:
       - dps-python
-    command: watchmedo auto-restart --patterns="*.py" --recursive -d /usr/src python -- docker.py      
+    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py
 
   dps-batch-processor-2:
     build:
@@ -47,7 +47,7 @@ services:
       - ./docker/secrets.env
     depends_on:
       - dps-python
-    command: watchmedo auto-restart --patterns="*.py" --recursive -d /usr/src python -- docker.py
+    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py      
 
   dps-relay:
     build:
