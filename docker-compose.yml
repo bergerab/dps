@@ -37,7 +37,7 @@ services:
       - ./docker/secrets.env
     depends_on:
       - dps-python
-    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py
+    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py --debug-force-polling
 
   dps-batch-processor-2:
     build:
@@ -47,7 +47,8 @@ services:
       - ./docker/secrets.env
     depends_on:
       - dps-python
-    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py      
+    # This watchmedo command is a mess with docker. It worked fine in macOS on Docker without --debug-force-polling, but on Windows with Docker I had to add it or watchmedo wouldn't pick up on file system changes via a volume.
+    command: watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" --recursive -d /usr/src python -- docker.py --debug-force-polling
 
   dps-relay:
     build:
