@@ -1,7 +1,7 @@
 import React from 'react';
 
 import TextField from '@material-ui/core/TextField';
-import CheckBox from '@material-ui/core/CheckBox';
+import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import FormLabel from '@material-ui/core/FormLabel';
@@ -262,10 +262,10 @@ export default class BatchProcessPage extends React.Component {
 
     const rows = this.state.system.kpis.filter(kpi => !kpi.hidden).map(kpi => {
       return [
-        <CheckBox color="primary"
-                  className="kpi-cb"
-                  checked={this.state.kpis.has(kpi.name)}
-                  onChange={e => {
+        <Checkbox color="primary"
+        className="kpi-cb"
+        checked={this.state.kpis.has(kpi.name)}
+        onChange={e => {
                     const checked = e.target.checked
                     handleKPICheck(kpi, checked);
                   }}/>,
@@ -283,39 +283,39 @@ export default class BatchProcessPage extends React.Component {
     const checked = util.arrayEqual(allKpis, selectedKpis);
     const indeterminate = selectedKpis.length > 0 && !util.arrayEqual(allKpis, selectedKpis);
 
-    const makeKPITableHeader = loading => [loading ? <CheckBox checked={false}
-                                                           indeterminate={false}
-                                                           color="primary"/> :
-                                           <CheckBox color="primary"
-                                                     checked={checked}
-                                                     indeterminate={indeterminate}                                             
-                                                     onChange={e => {
-                                                       const checked = e.target.checked;
-                                                       if (checked) {
-                                                         const s = new Set();
-                                                         for (const kpi of this.state.system.kpis) {
-                                                           const name = kpi.name;
-                                                           if (!kpi.hidden) {
-                                                             s.add(name);
-                                                           }
-                                                         }
-                                                         this.setState({ kpis: s }, () => {
-                                                           this.updateMappings();
-                                                         });
-                                                       } else {
-                                                         this.setState({ kpis: new Set() }, () => {
-                                                           this.updateMappings();
-                                                         });
-                                                       }
-                                                     }}
+	const makeKPITableHeader = loading => [loading ? <Checkbox checked={false}
+        indeterminate={false}
+        color="primary"/> :
+        <Checkbox color="primary"
+        checked={checked}
+        indeterminate={indeterminate}                                             
+        onChange={e => {
+        const checked = e.target.checked;
+        if (checked) {
+        const s = new Set();
+        for (const kpi of this.state.system.kpis) {
+        const name = kpi.name;
+        if (!kpi.hidden) {
+        s.add(name);
+        }
+        }
+        this.setState({ kpis: s }, () => {
+        this.updateMappings();
+        });
+        } else {
+        this.setState({ kpis: new Set() }, () => {
+        this.updateMappings();
+        });
+        }
+        }}
                                            />, 'KPI', 'Description'];
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
              header={makeKPITableHeader(true)}
              rows={[1,2,3,4,5].map((_, i) => [
-               <CheckBox checked={false} color="primary" key={'cb' + i} />,
-               <Skeleton key={'s1' + i} />,
+        <Checkbox checked={false} color="primary" key={'cb' + i} />,
+        <Skeleton key={'s1' + i} />,
                <Skeleton key={'s2' + i} />,
              ])}/>) :
           (<PrettyTable

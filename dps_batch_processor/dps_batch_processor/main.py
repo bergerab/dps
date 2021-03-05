@@ -33,8 +33,12 @@ exceptions = (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exc
 @click.option('--interval',             default=5,      help='The number of seconds to wait between checking for jobs.')
 @click.option('--verbose',                              help='Show the progress of jobs in the command line.')
 def cli(dps_manager_url, database_manager_url, api_key, polling_interval, max_batch_size, interval=5, verbose=False):
+    do_cli(*args, **kwargs)
+
+def do_cli(dps_manager_url, database_manager_url, api_key, polling_interval, max_batch_size, interval=5, verbose=False):    
     logger = Logger(verbose)
     loop = asyncio.get_event_loop()
+
     # `main` is written as a `asyncio` co-routine, so that if multiple batch processors
     # are supported (running multiple batch processes at once), this capability could be added,
     # by spawning another instance of the `main` co-routine.
@@ -43,6 +47,7 @@ def cli(dps_manager_url, database_manager_url, api_key, polling_interval, max_ba
     # process signals for SIGINT/SIGTERM (for Ctrl-C to quit).
     loop.add_signal_handler(SIGINT, main_task.cancel)
     loop.add_signal_handler(SIGTERM, main_task.cancel)
+    return loop
 
 async def main(dps_manager_url, database_manager_url, api_key, max_batch_size, logger, interval=5):
     api = DPSManagerAPIClient(dps_manager_url, api_key)
@@ -308,4 +313,3 @@ async def send_result(status, logger, api, session, batch_process_id, result, in
 
     logger.log(resp)
     return resp
-

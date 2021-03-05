@@ -13,4 +13,5 @@ WORKDIR /usr/src/dps_batch_processor
 RUN pip install --upgrade pip
 RUN pip install --editable .
 
-ENTRYPOINT ["/usr/src/docker/dps_batch_processor/dev.sh"]
+RUN apt-get install -y libyaml-dev
+RUN pip install "watchdog[watchmedo]"

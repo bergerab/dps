@@ -1,5 +1,5 @@
 {
-    "name": "kpi-dashboard",
+    "name": "dps_ui",
     "version": "0.1.0",
     "private": true,
     "devDependencies": {
@@ -43,10 +43,10 @@
 	"yarn": "^1.22.10"
     },
     "scripts": {
-	"start": "npx react-scripts start",
-	"build": "npx react-scripts build",
-	"test": "npx react-scripts test",
-	"eject": "npx react-scripts eject"
+	"start": "react-scripts start",
+	"build": "react-scripts build",
+	"test": "react-scripts test",
+	"eject": "react-scripts eject"
     },
     "eslintConfig": {
 	"extends": "react-app"

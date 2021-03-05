@@ -35,6 +35,9 @@ services:
       dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
     env_file:
       - ./docker/secrets.env
+    depends_on:
+      - dps-python
+    command: watchmedo auto-restart --patterns="*.py" --recursive -d /usr/src python -- docker.py      
 
   dps-batch-processor-2:
     build:
@@ -42,6 +45,9 @@ services:
       dockerfile: ./docker/dps_batch_processor/dev.Dockerfile
     env_file:
       - ./docker/secrets.env
+    depends_on:
+      - dps-python
+    command: watchmedo auto-restart --patterns="*.py" --recursive -d /usr/src python -- docker.py
 
   dps-relay:
     build:
@@ -69,7 +75,7 @@ services:
       - 3005:3005
     environment:
       - PORT=3005
-      - CHOKIDAR_USEPOLLING=true      
+      - CHOKIDAR_USEPOLLING=true
 
   dps-database-manager:
     build:

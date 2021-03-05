@@ -7,6 +7,8 @@ WORKDIR /usr/src/dps_ui
 # add `/dps_ui/node_modules/.bin` to $PATH
 ENV PATH /usr/src/dps_ui/node_modules/.bin:$PATH
 
+COPY ./dps_ui .
+
 RUN yarn install
 
 # start app
