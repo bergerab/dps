@@ -43,6 +43,11 @@ docker-compose -f docker-compose.yml -f docker-compose.production.yml up
 
 ** Development FAQ
 
+*** What are the default credentials?
+
+When setting up a new environment with Docker, the DPS UI will ask you for credentials. To make the setup process easier, we created default credentials. It is expected that the administrator should change their password once logged in.
+To perform the initial login use the username: ~admin~ and the password: ~password~.
+
 *** How do I get Docker to update when I change DPS UI's package.json (the dependencies)?
 Docker with Node projects is a mess at the moment. The node_modules directory causes caching issues. To get around this I've mounted dps_ui/src and dps_ui/public as volumes to the Docker container, but not the top-level directory dps_ui.
 As a consequence, whenever you change the dependencies of DPS UI (in package.json) you have to rebuild the entire container. Here is how you can do this:
