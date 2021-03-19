@@ -25,6 +25,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "foo_changeme")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
+DPS_HOST = os.environ.get("DPS_HOST", "localhost")
+
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", 'localhost 127.0.0.1 [::1]').split(" ")
@@ -129,6 +131,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3004",
     "http://127.0.0.1:3005",
     "http://127.0.0.1:3006",
+    f"http://{DPS_HOST}",
 ]
 
 # Internationalization

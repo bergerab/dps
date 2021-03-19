@@ -28,3 +28,5 @@ docker/secrets.env
 dps_manager/db.sqlite3
 
 dps_ui/.env
+
+docker/dps_manager/prod.override.env
