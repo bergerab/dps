@@ -26,10 +26,13 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "foo_changeme")
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
 DPS_HOST = os.environ.get("DPS_HOST", "localhost")
+print('DPS_HOST = ', DPS_HOST)
 
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", 'localhost 127.0.0.1 [::1]').split(" ")
+ALLOWED_HOSTS.append(f'{DPS_HOST}')
+ALLOWED_HOSTS.append(f'{DPS_HOST}:8000')
 
 ADMINS = ['admin'] # the name of the default superuser (see management/initadmin.py)
 
@@ -132,6 +135,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3005",
     "http://127.0.0.1:3006",
     f"http://{DPS_HOST}",
+    f"http://{DPS_HOST}:8000",    
 ]
 
 # Internationalization
