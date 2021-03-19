@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   dps-python:
@@ -22,9 +22,13 @@ services:
       - dps-manager-database 
      
   dps-manager-database:
-    image: postgres:12.0-alpine
+    build:
+      context: .
+      dockerfile: ./docker/dps_manager_database/dev.Dockerfile
     env_file:
       - ./docker/dps_manager_database/dev.env
+    volumes:
+      - dps_manager_database:/var/lib/dps_manager_database/data/
 
   # Configure two batch processors
   # I created one config here, and just copied it, because there
@@ -101,6 +105,8 @@ services:
       dockerfile: ./docker/dps_database_manager_database/Dockerfile
     env_file:
       - ./docker/dps_database_manager_database/dev.env
+    volumes:
+      - dps_database_manager_database:/var/lib/dps_database_manager_database/data
 
 volumes:
   dps_manager_database:

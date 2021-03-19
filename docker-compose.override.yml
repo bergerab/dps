@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 # All volume definitions are in this override file
 # to make it easier for production to not use volumes
@@ -10,10 +10,6 @@ services:
       - ./dplib/:/usr/src/dplib/
       - ./dps_services/:/usr/src/dps_services/
       - ./dps_client/:/usr/src/dps_client/
-     
-  dps-manager-database:
-    volumes:
-      - dps_manager_database:/var/lib/dps_manager_database/data/
 
   dps-batch-processor-1:
     volumes:
@@ -46,7 +42,3 @@ services:
       - ./dplib/:/usr/src/dplib/
       - ./dps_services/:/usr/src/dps_services/
       - ./dps_client/:/usr/src/dps_client/
-
-  dps-database-manager-database:
-    volumes:
-      - dps_database_manager_database:/var/lib/dps_database_manager_database/data

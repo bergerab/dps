@@ -89,3 +89,23 @@ docker-compose exec dps_manager python manage.py migrate --noinput
 docker-compose exec dps_manager python manage.py loaddata objects.json
 #+END_SRC
 
+*** Containers are not able to resolve DNS when deploy via Docker on Linux
+I had this issue. I followed these steps (assuming Ubuntu):
+
+#+BEGIN_SRC sh
+apt-get install bridge-utils
+pkill docker
+iptables -t nat -F
+ifconfig docker0 down
+brctl delbr docker0
+service docker restart
+#+END_SRC
+
+It seemed to be a configuration issue with Docker rather than how DPS's docker scripts are defined.
+*** Containers are not updating after docker-compose down and up on Linux
+You have to give Docker a flag to build. Here's an example (for production):
+
+#+BEGIN_SRC sh
+docker-compose down
+docker-compose -f docker-compose.yml -f docker-compose.production.yml up --build
+#+END_SRC

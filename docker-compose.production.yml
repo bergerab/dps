@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   dps-python:
@@ -16,6 +16,9 @@ services:
       - ./docker/dps_manager/prod.env
 
   dps-manager-database:
+    build:
+      context: .
+      dockerfile: ./docker/dps_manager_database/prod.Dockerfile
     env_file:
       - ./docker/dps_manager_database/prod.env
 
@@ -29,3 +32,4 @@ services:
   dps-database-manager-database:
     env_file:
       - ./docker/dps_database_manager_database/prod.env
+
