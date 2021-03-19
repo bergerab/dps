@@ -16,15 +16,15 @@ from django.core.management import call_command
 import django
 django.setup()
 
-# from dps_manager_api.models import Object
-# from dps_manager_api.views import SystemAPI
+from dps_manager_api.models import Object
+from dps_manager_api.views import SystemAPI
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dps_manager.settings')
 
 # If there are no systems, initialize the default objects
 # This is a bit hacky, should probably put some object into the
 # database when this is loaded, and check a version on that object.
-# if not Object.objects.filter(kind=SystemAPI.kind).first():
-#     call_command('loaddata', 'objects')
+if not Object.objects.filter(kind=SystemAPI.kind).first():
+    call_command('loaddata', 'objects')
 
 application = get_wsgi_application()
