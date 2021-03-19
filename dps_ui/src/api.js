@@ -1,16 +1,16 @@
-require('dotenv').config();
-const HOST = process.env.DPS_HOST || 'localhost';
+const HOST = process.env.REACT_APP_DPS_HOST || 'localhost';
+console.log(process.env);
 
 export const API_PREFIX = `http://${HOST}:8000/api/v1/`;
 
 function handle(r) {
-  if (r.status === 403) {
-    window.location = '/login';
+    if (r.status === 403) {
+      window.location = '/login';
+    }
+    return r;
   }
-  return r;
-}
 
-export function list(entityUrl) {
+  export function list(entityUrl) {
   return fetch(API_PREFIX + entityUrl, {
     method: 'GET',
     headers: {
@@ -25,7 +25,7 @@ export function list(entityUrl) {
       return data[entityName];
     })
   });
-}
+  }
 
 export function put(entityUrl, id, entity) {
   return fetch(API_PREFIX + entityUrl + '/' + id, {

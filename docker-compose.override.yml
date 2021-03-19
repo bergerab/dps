@@ -30,6 +30,7 @@ services:
       - ./dps_ui/src/:/usr/src/dps_ui/src
       - ./dps_ui/public/:/usr/src/dps_ui/public
       - ./dps_ui/package.json:/usr/src/dps_ui/package.json
+      - ./dps_ui/.env:/usr/src/dps_ui/.env 
       - ./dps_ui/yarn.lock:/usr/src/dps_ui/yarn.lock
 
   dps-relay:

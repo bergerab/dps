@@ -39,10 +39,10 @@ echo API_KEY=mysecret > docker/secrets.env
 
 *Note that this text cannot contain spaces.*
 
-Next, create a ~.env~ file in: ~dps_ui/.env~ that contains the URL that is publicly available for DPS. Assign the name ~DPS_HOST~ to our value using an equals sign. For example, when deploying to a server called "tianpar.cs.uwm.edu", I created a file with the following contents:
+Next, create a ~.env~ file in: ~dps_ui/.env~ that contains the URL that is publicly available for DPS. Assign the name ~REACT_APP_DPS_HOST~ to our value using an equals sign. For example, when deploying to a server called "tianpar.cs.uwm.edu", I created a file with the following contents:
 
 #+BEGIN_SRC sh
-DPS_HOST=tianpar.cs.uwm.edu
+REACT_APP_DPS_HOST=tianpar.cs.uwm.edu
 #+END_SRC
 
 To build all images and start containers run:
