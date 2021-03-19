@@ -1,4 +1,7 @@
-export const API_PREFIX = 'http://127.0.0.1:8000/api/v1/';
+require('dotenv').config();
+const HOST = process.env.DPS_HOST || 'localhost';
+
+export const API_PREFIX = `http://${HOST}:8000/api/v1/`;
 
 function handle(r) {
   if (r.status === 403) {

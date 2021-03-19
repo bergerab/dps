@@ -26,3 +26,5 @@ package-lock.json
 docker/secrets.env
 
 dps_manager/db.sqlite3
+
+dps_ui/.env

@@ -33,3 +33,9 @@ services:
     env_file:
       - ./docker/dps_database_manager_database/prod.env
 
+  dps-ui:
+    ports:
+      - 80:3005
+    environment:
+      - PORT=3005
+      - CHOKIDAR_USEPOLLING=true
