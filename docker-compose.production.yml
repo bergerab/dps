@@ -11,7 +11,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/dps_manager/prod.Dockerfile
-    command: gunicorn dps_manager.wsgi:application --bind 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
+#   command: gunicorn dps_manager.wsgi:application --bind 0.0.0.0:8000
     env_file:
       - ./docker/dps_manager/prod.env
       - ./docker/dps_manager/prod.override.env
