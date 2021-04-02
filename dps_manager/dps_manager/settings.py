@@ -136,6 +136,8 @@ CORS_ALLOWED_ORIGINS = [
     f"http://{DPS_HOST}",
     f"http://{DPS_HOST}:3005",
     f"http://{DPS_HOST}:8000",    
+    f"http://{DPS_HOST}:4280",    
+    f"https://{DPS_HOST}:4280",    
 ]
 
 # Internationalization

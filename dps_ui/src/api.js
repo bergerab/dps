@@ -1,7 +1,8 @@
 const HOST = process.env.REACT_APP_DPS_HOST || 'localhost';
-console.log(process.env);
+const PORT = process.env.REACT_APP_DPS_MANAGER_PORT || 8000;
+const SCHEME = process.env.REACT_APP_SCHEME || 'http';
 
-export const API_PREFIX = `http://${HOST}:8000/api/v1/`;
+export const API_PREFIX = `${SCHEME}://${HOST}:${PORT}/api/v1/`;
 
 function handle(r) {
     if (r.status === 403) {
