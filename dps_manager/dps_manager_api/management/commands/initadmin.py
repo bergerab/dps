@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Command(BaseCommand):
     def handle(self, *args, **options):
         if User.objects.count() == 0:
-            for username in settings.ADMINS:
+            for username in ['admin']:
                 email = f'{username}@localhost'
                 password = 'password'
                 print(f'Creating account for {username} ({email})')
