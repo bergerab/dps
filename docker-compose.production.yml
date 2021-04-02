@@ -16,6 +16,7 @@ services:
     env_file:
       - ./docker/dps_manager/prod.env
       - ./docker/dps_manager/prod.override.env
+    restart: always      
 
   dps-manager-database:
     build:
@@ -23,6 +24,7 @@ services:
       dockerfile: ./docker/dps_manager_database/prod.Dockerfile
     env_file:
       - ./docker/dps_manager_database/prod.env
+    restart: always      
 
   dps-database-manager:
     build:
@@ -30,14 +32,17 @@ services:
       dockerfile: ./docker/dps_database_manager/prod.Dockerfile
     env_file:
       - ./docker/dps_database_manager/prod.env
+    restart: always            
 
   dps-database-manager-database:
     env_file:
       - ./docker/dps_database_manager_database/prod.env
+    restart: always      
 
   dps-ui:
     ports:
-      - 80:3005
+      - 3005:3005
     environment:
       - PORT=3005
       - CHOKIDAR_USEPOLLING=true
+    restart: always      

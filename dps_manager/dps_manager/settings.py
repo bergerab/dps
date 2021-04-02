@@ -134,6 +134,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3005",
     "http://127.0.0.1:3006",
     f"http://{DPS_HOST}",
+    f"http://{DPS_HOST}:3005",
     f"http://{DPS_HOST}:8000",    
 ]
 
