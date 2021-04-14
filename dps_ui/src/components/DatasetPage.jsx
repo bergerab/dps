@@ -70,7 +70,7 @@ export default class DatasetPage extends React.Component {
       );
     }
     
-    let name = this.props.name;
+    let name = this.props.match.params.name;
     if (name) {
       name = decodeURIComponent(name);
       return (
