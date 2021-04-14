@@ -980,7 +980,6 @@ def upload(request):
             return util.format_datetime(dateutil.parser.parse(t))
 
     def flush():
-        print('FLUSSSSHHH')
         resp = dbm_post('insert',
                  { 'inserts': [{
                      'dataset': dataset,
