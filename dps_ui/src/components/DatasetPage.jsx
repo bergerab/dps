@@ -88,7 +88,12 @@ export default class DatasetPage extends React.Component {
             <Grid item xs={12}>
               <Link to={'/admin/dataset/add'} style={{ color: 'white' }}>              
                 <Button variant="contained" color="primary">
-                  Add Dataset
+                  Initialize a Dataset
+                </Button>
+              </Link>
+              <Link to={'/admin/dataset/upload'} style={{ color: 'white', marginLeft: '0.5em', }}>              
+                <Button variant="contained" color="primary">
+                  Upload CSV
                 </Button>
               </Link>
             </Grid>

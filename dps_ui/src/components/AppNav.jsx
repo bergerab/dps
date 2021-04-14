@@ -50,6 +50,7 @@ import TableChartIcon from '@material-ui/icons/TableChart';
 import SystemEdit from './SystemEdit';
 import BatchProcessPage from './BatchProcessPage';
 import DatasetPage from './DatasetPage';
+import DatasetUploadPage from './DatasetUploadPage';
 import SchedulePage from './SchedulePage';
 import UsersPage from './UsersPage';
 import AuthTokenPage from './AuthTokenPage';
@@ -313,6 +314,7 @@ class MiniDrawer extends React.Component {
               <Route exact path="/" > <Home/> </Route>
               <Route exact path="/batch-process/:id" 		component={BatchProcessViewPage}/>
               <Route exact path="/admin/dataset" 		component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
+              <Route exact path="/admin/dataset/upload"         component={props => userRedirect( (<DatasetUploadPage {...props}/>) )}/>
               <Route exact path="/admin/view-dataset/:name" 	component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
               <Route exact path="/admin/dataset/add" 		component={props => userRedirect( (<DatasetPage add={true} {...props}/>) )}/> 
               <Route exact path="/admin/schedule/:action?/:id?"

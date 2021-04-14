@@ -30,5 +30,6 @@ urlpatterns = router.get_urls() + [
     path('api/v1/add_dataset', views.add_dataset),
     path('api/v1/get_chart_data', views.get_chart_data),
     path('api/v1/authenticate_api_key', views.authenticate_api_key),
-    path('api/v1/export_dataset', views.export_dataset),            
+    path('api/v1/export_dataset', views.export_dataset),
+    path('api/v1/upload', views.upload),                
 ]

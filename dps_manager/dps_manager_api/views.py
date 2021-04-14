@@ -1,3 +1,5 @@
+from io import StringIO
+import csv
 import json
 from threading import Lock
 import uuid
@@ -11,6 +13,8 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import authenticate
 from django.utils import timezone
+
+import dateutil.parser
 
 import requests
 from dateutil.relativedelta import relativedelta
@@ -951,3 +955,57 @@ def get_sample_ranges(start_time, end_time, offset, pad=False):
         # Add an extra interval to the end, so that the chart doesn't end abruptly
         ranges.append((t1, t1 + step))
     return ranges
+
+
+# An endpoint to receive uploaded CSV data
+@require_auth
+def upload(request):
+    dataset = request.POST['dataset']
+    uses_relative_time = request.POST['uses_relative_time']
+    start_time = None
+    if uses_relative_time:
+        start_time = dateutil.parser.parse(request.POST['start_time'])
+    fileStream = request.FILES['file']
+
+    file = fileStream.read().decode('utf-8')
+
+    signals = []
+    samples = []
+    times = []
+
+    def convert_time(t):
+        if uses_relative_time:
+            return util.format_datetime(start_time + timedelta(seconds=float(t)))
+        else:
+            return util.format_datetime(dateutil.parser.parse(t))
+
+    def flush():
+        print('FLUSSSSHHH')
+        resp = dbm_post('insert',
+                 { 'inserts': [{
+                     'dataset': dataset,
+                     'signals': signals,
+                     'samples': samples,
+                     'times':   times,
+                 }]})
+        samples.clear()
+        times.clear()
+        return resp
+
+    reader = csv.DictReader(StringIO(file))
+    for row in reader:
+        times.append(convert_time(row['Time']))
+        del row['Time']
+        if not signals:
+            signals = list(row.keys())
+        samples.append([float(x) for x in row.values()])
+
+        if len(samples) >= 100000:
+            resp = flush()
+            if resp.status_code >= 400:
+                return HttpResponse(resp.text, status=500)
+    flush()
+    if resp.status_code >= 400:    
+        return HttpResponse(resp.text, status=500)
+    return JsonResponse({})    
+

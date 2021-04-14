@@ -64,6 +64,23 @@ export function post(entityUrl, entity) {
   });
 }
 
+export function postFormData(postfix, formData) {
+  return fetch(API_PREFIX + postfix, {
+    method: 'POST',
+    headers: {
+      'Authorization': makeAuth(),      
+    },
+    body: formData,
+  }).then(r => {
+    const jo = handle(r).json();
+    if (r.status >= 400 || r.status < 200) {
+      throw jo;
+    } else {
+      return jo;
+    }
+  });
+}
+
 export function rawPost(entityUrl, entity) {
   return fetch(API_PREFIX + entityUrl, {
     method: 'POST',
@@ -226,4 +243,5 @@ export default {
   getIsAdmin,
   setUsername,
   getUsername,
+  postFormData,
 };
