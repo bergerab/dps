@@ -1,10 +1,14 @@
 import os
+import csv
+import io
 
-from flask import Flask, request, jsonify
+import asyncio
+from aiohttp import web
+
+from signal import SIGINT, SIGTERM
 
 import dps_client
-
-app = Flask(__name__)
+from dateutil.parser import parse
 
 DBM_URL = os.getenv('DBM_URL')
 if not DBM_URL:
@@ -16,7 +20,7 @@ API_KEY = os.getenv('API_KEY')
 if not API_KEY:
     raise Exception('An API key is required (set via API_KEY environment variable).')
 DEBUG = bool(os.getenv('DPS_RELAY_DEBUG', False))
-SEND_THRESHOLD = int(os.getenv('SEND_THRESHOLD', 10000))
+SEND_THRESHOLD = int(os.getenv('DPS_RELAY_SEND_THRESHOLD', 100000))
 
 print('Using DPS database manager URL: ' + DBM_URL)
 print('Using DPS manager manager URL: ' + DPSMANURL)
@@ -24,50 +28,90 @@ print('Using threshold of: ' + str(SEND_THRESHOLD))
 
 clients = {}
 
-@app.route('/', methods=['GET'])
-def info():
+cache = {}
+
+# The body of the request should be a CSV file where the header has signal names
+# and each column has the signal value
+#
+# There MUST be a time column called "Time" with a time format readable by python's "dateutil" module
+async def http(request):
+    dataset_name = request.rel_url.query['dataset']
+    
+    # if dataset_name in clients:
+    #     client = clients[dataset_name]
+    # else:
+    #     client = clients[dataset_name] = dps_client.connect(DBM_URL, dataset_name, API_KEY)
+
+    dataset_cache = []
+    if dataset_name in cache:
+        dataset_cache = cache[dataset_name]
+    else:
+        dataset_cache = cache[dataset_name] = []
+
+    data = await request.text()
+
+    reader = csv.DictReader(io.StringIO(data))
+    dataset_cache.extend(reader)
+        # time = parse(row['Time'])
+        # dataset_cache
+        # batch = client.make_batch(time)        
+        # del row['Time'] # remove the Time value so we don't send it twice
+        # for signal_name in row.keys():
+        #     batch.add(signal_name, row[signal_name])
+    print(len(dataset_cache))
+        
+    return web.Response(text="OK")
+
+async def ws(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    async for msg in ws:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.data == 'close':
+                await ws.close()
+            else:
+                await ws.send_str(msg.data + '/answer')
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            print('ws connection closed with exception %s' %
+                  ws.exception())
+    return ws
+
+async def info():
     return jsonify({
-        'dbm_url': DBM_URL,
+        'dbm_url':         DBM_URL,
         'dps_manager_url': DPSMANURL,
-        'send_threshold': SEND_THRESHOLD,
-        'type': 'dps_relay',
-        'debug': DEBUG,
+        'send_threshold':  SEND_THRESHOLD,
+        'type':           'dps_relay',
+        'debug':           DEBUG,
     })
 
-# TODO: add timer that runs every minute or so
-# that will call client.send()
-# add a mutex around client.send() for both
-# the ingest endpoint and this timer
+# TODO: do this in a separate task
+# on some interval, send all cached values
+# if len(client.batches) >= SEND_THRESHOLD:
+#     response = client.send()
+#     if response.status_code != 500:
+#         print(response.text)
 
-# The timer should also pull down the schedules
-# on a regular interval
+app = web.Application(client_max_size=4096**2)
+app.add_routes([web.get('/ws', ws)])
+app.add_routes([web.post('/http', http)])
+app.add_routes([web.get('/info', info)])
 
-@app.route('/ingest', methods=['GET', 'POST'])
-def ingest():
-    if request.method == 'GET':
-        data = request.args.get('data')
-    else:
-        data = request.data.decode()
-
-    data = data.split(';')
-    device_name = data[0]
-    signal_sample_pairs = data[1:]
-        
-    if device_name in clients: client = clients[device_name]
-    else: client = clients[device_name] = dps_client.connect(DBM_URL, device_name, API_KEY)
-        
-    batch = client.make_batch()
-    for x in range(0, len(signal_sample_pairs)//2):
-        x = x*2
-        batch.add(signal_sample_pairs[x], float(signal_sample_pairs[x+1]))
-
-    # only send after a certain amount of data is buffered
-    if len(client.batches) >= SEND_THRESHOLD:
-        response = client.send()
-        if response.status_code != 500:
-            print(response.text)
-
-    return 'OK'
+# Hack for Windows, so that SIGINT is respected
+def wakeup():
+    loop.call_later(0.1, wakeup)
 
 if __name__ == '__main__':
-   app.run(debug=DEBUG)
+    loop = asyncio.get_event_loop()
+    loop.call_later(0.1, wakeup)
+    asyncio.set_event_loop(loop)
+    web.run_app(app, handle_signals=True)
+
+# # TODO: add timer that runs every minute or so
+# # that will call client.send()
+# # add a mutex around client.send() for both
+# # the ingest endpoint and this timer
+
+# # The timer should also pull down the schedules
+# # on a regular interval
