@@ -313,6 +313,7 @@ class MiniDrawer extends React.Component {
               <Route exact path="/home" > <Home/> </Route>
               <Route exact path="/" > <Home/> </Route>
               <Route exact path="/batch-process/:id" 		component={BatchProcessViewPage}/>
+              <Route exact path="/batch-process/:id/input"      component={BatchProcessViewPage}/>              
               <Route exact path="/admin/dataset" 		component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
               <Route exact path="/admin/dataset/upload"         component={props => userRedirect( (<DatasetUploadPage {...props}/>) )}/>
               <Route exact path="/admin/view-dataset/:name" 	component={props => userRedirect( (<DatasetPage {...props}/>) )}/>

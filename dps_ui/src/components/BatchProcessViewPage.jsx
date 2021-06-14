@@ -258,135 +258,151 @@ export default class BatchProcessViewPage extends React.Component {
  </Grid>);
         }
       })
-    return (
-      <div>
-        <Box header={this.state.result.batch_process.name + " Results"}
-             loading={this.state.loading}>
-          <Grid container spacing={2}
-                style={{maxWidth: '1500px'}}>
-            <Grid item xs={12}>
-              <TextField
-                label="Dataset"
-                InputProps={{
-                  readOnly: true,
-                }}              
-                value={bp.dataset}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <InputLabel>KPIs</InputLabel>
-              <PrettyTable
-                header={kpiHeaders}
-                rows={formattedKpiRows}
-              />
-            </Grid>
 
-            <Grid item xs={6}>
-              <InputLabel>Signals</InputLabel>
-              <PrettyTable
-                header={['KPI Input', 'Signal Name']}
-                rows={signalMappings}
-              />
-            </Grid>
-
-            <Grid item xs={6}>
-              <InputLabel>Parameters</InputLabel>          
-              <PrettyTable
-                header={['Name', 'Value']}
-                rows={parameterMappings}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <InputLabel>Date Range</InputLabel>
-              {/* Hack to get moment to parse datetime as UTC: */}
-              <TextField
-                label="Start Time"
-                InputProps={{
-                  readOnly: true,
-                }}              
-                value={moment(bp.interval.start + 'Z').format('LL LTS')}
-                style={{ marginRight: '10px', width: '20em' }}/>
-              <TextField
-                InputProps={{
-                  readOnly: true,
-                }}              
-                label="End Time"
-                value={moment(bp.interval.end + 'Z').format('LL LTS')}
-                style={{ width: '20em' }}/>              
-            </Grid>
-
-            <Grid item xs={12}>
-              <CSVLink
-                data={[kpiHeaders].concat(kpiRows.map(x => [x[0], x[1],
-                                                            x[2] === undefined ? '' :
-                                                            (x[2].value === undefined ? x[2].object_value : x[2].value)]))}
-                target="_blank"
-      style={{ textDecoration: 'none' }}
-                filename={this.state.result.batch_process.name + " Results.csv"}
-              >
-                <Button style={{ margin: '1em 0 0 0' }}
-                        variant="contained"
-                        color="primary">
-                  Download Summary
-                </Button>
-              </CSVLink>                      
-            </Grid>
-
-          </Grid>
-        </Box>
-
-        <Loader
-          text="Exporting data..."
-          loading={this.state.loadingExport}>
-          
-          <Box
-            header="Output Signals">
-            <Grid container spacing={2}>
-              {charts}
-              <Grid item xs={12}>
-                <Button style={{ margin: '1em 0 0 0' }}
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                          this.setState({ loadingExport: true });
-                          api.rawPost('export_dataset', {
-                            'dataset': 'batch_process' + result.batch_process_id,
-                            /* Only export signals that are line charts */
-                            'signals': kpiRows.filter(x => !resultHasObject(x[2])).map(x => x[0]),                              
-                            'start':   bp.interval.start,
-                            'end':     bp.interval.end,                              
-                          }).then(resp => {
-                            resp.blob().then(blob => {
-                              download(blob, bp.name + '.csv', 'application/octet-stream');
-                              this.setState({ loadingExport: false });
-                            });
-                          });
-                        }}>
-                  Export
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-        </Loader>
-        <Box
-          header="Input Signals">
-          <SignalTable
-            dataset={bp.dataset}
-	    startTime={startTime}
-	    endTime={endTime}
-          />
-        </Box>
-            
-        <Box
-          header="Stats">
+    if (window.location.href.endsWith('input')) {
+      return (<Box
+                header={`Input Signals for Batch Process "${this.state.result.batch_process.name}"`}>
+                <SignalTable
+                  dataset={bp.dataset}
+	          startTime={startTime}
+	          endTime={endTime}
+                />
+                <Link to={`/batch-process/${this.state.result.batch_process_id}`}>
+                  <Button style={{ margin: '1em 0 0 0' }}
+                          variant="contained"
+                          color="primary">
+                    Back
+                  </Button>
+                </Link>
+              </Box>);
+  }
+  return (
+    <div>
+      <Box header={this.state.result.batch_process.name + " Results"}
+           loading={this.state.loading}>
+        <Grid container spacing={2}
+              style={{maxWidth: '1500px'}}>
           <Grid item xs={12}>
-            {processStats}
+            <TextField
+              label="Dataset"
+              InputProps={{
+                readOnly: true,
+              }}              
+              value={bp.dataset}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <InputLabel>KPIs</InputLabel>
+            <PrettyTable
+              header={kpiHeaders}
+              rows={formattedKpiRows}
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <InputLabel>Signals</InputLabel>
+            <PrettyTable
+              header={['KPI Input', 'Signal Name']}
+              rows={signalMappings}
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <InputLabel>Parameters</InputLabel>          
+            <PrettyTable
+              header={['Name', 'Value']}
+              rows={parameterMappings}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <InputLabel>Date Range</InputLabel>
+            {/* Hack to get moment to parse datetime as UTC: */}
+            <TextField
+              label="Start Time"
+              InputProps={{
+                readOnly: true,
+              }}              
+              value={moment(bp.interval.start + 'Z').format('LL LTS')}
+              style={{ marginRight: '10px', width: '20em' }}/>
+            <TextField
+              InputProps={{
+                readOnly: true,
+              }}              
+              label="End Time"
+              value={moment(bp.interval.end + 'Z').format('LL LTS')}
+              style={{ width: '20em' }}/>              
+          </Grid>
+
+          <Grid item xs={12}>
+            <CSVLink
+              data={[kpiHeaders].concat(kpiRows.map(x => [x[0], x[1],
+                                                          x[2] === undefined ? '' :
+                                                          (x[2].value === undefined ? x[2].object_value : x[2].value)]))}
+              target="_blank"
+              style={{ textDecoration: 'none' }}
+              filename={this.state.result.batch_process.name + " Results.csv"}
+            >
+              <Button style={{ margin: '1em 0 0 0' }}
+                      variant="contained"
+                      color="primary">
+                Download Summary
+              </Button>
+            </CSVLink>
+            
+            <Link style={{ paddingLeft: '1em', }} to={`${this.state.result.batch_process_id}/input`}>
+              <Button style={{ margin: '1em 0 0 0' }}
+                      variant="contained"
+                      color="primary">
+                View Input Signals
+              </Button>
+            </Link>
+          </Grid>
+        </Grid>
+      </Box>
+
+      <Loader
+        text="Exporting data..."
+        loading={this.state.loadingExport}>
+        
+        <Box
+          header="KPI Signals">
+          <Grid container spacing={2}>
+            {charts}
+            <Grid item xs={12}>
+              <Button style={{ margin: '1em 0 0 0' }}
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        this.setState({ loadingExport: true });
+                        api.rawPost('export_dataset', {
+                          'dataset': 'batch_process' + result.batch_process_id,
+                          /* Only export signals that are line charts */
+                          'signals': kpiRows.filter(x => !resultHasObject(x[2])).map(x => x[0]),                              
+                          'start':   bp.interval.start,
+                          'end':     bp.interval.end,                              
+                        }).then(resp => {
+                          resp.blob().then(blob => {
+                            download(blob, bp.name + '.csv', 'application/octet-stream');
+                            this.setState({ loadingExport: false });
+                          });
+                        });
+                      }}>
+                Export
+              </Button>
+            </Grid>
           </Grid>
         </Box>
-          </div>
-        );
+      </Loader>
+      <Box
+        header="Stats">
+        <Grid item xs={12}>
+          {processStats}
+        </Grid>
+      </Box>
+    </div>
+  );
   }
 }
 
