@@ -62,6 +62,8 @@ import EntityPage from './EntityPage';
 import EndUserSystemPage from './EndUserSystemPage';
 import BatchProcessViewPage from './BatchProcessViewPage';
 
+import DplPage from './DplPage';
+
 import { list } from '../api';
 import api from '../api';
 import util from '../util';
@@ -312,6 +314,7 @@ class MiniDrawer extends React.Component {
             <Switch>
               <Route exact path="/home" > <Home/> </Route>
               <Route exact path="/" > <Home/> </Route>
+              <Route exact path="/dpl"                          component={DplPage}/>                            
               <Route exact path="/batch-process/:id" 		component={BatchProcessViewPage}/>
               <Route exact path="/batch-process/:id/input"      component={BatchProcessViewPage}/>              
               <Route exact path="/admin/dataset" 		component={props => userRedirect( (<DatasetPage {...props}/>) )}/>
