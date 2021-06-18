@@ -11,6 +11,7 @@ import download from 'downloadjs';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
+import Checkbox from '@material-ui/core/Checkbox';
 
 import Box from './Box';
 import Row from './Row';
@@ -277,7 +278,7 @@ export default class BatchProcessViewPage extends React.Component {
                   </Button>
                 </Link>
               </Box>);
-  }
+      }
   return (
     <div>
       <Box header={this.state.result.batch_process.name + " Results"}
@@ -318,16 +319,17 @@ export default class BatchProcessViewPage extends React.Component {
             />
           </Grid>
 
-          <Grid item xs={12}>
-            <InputLabel>Date Range</InputLabel>
-            {/* Hack to get moment to parse datetime as UTC: */}
-            <TextField
-              label="Start Time"
-              InputProps={{
-                readOnly: true,
-              }}              
-              value={moment(bp.interval.start + 'Z').format('LL LTS')}
-              style={{ marginRight: '10px', width: '20em' }}/>
+          {!bp.use_date_range ? null :
+           <Grid item xs={12}>
+             <InputLabel>Date Range</InputLabel>
+             {/* Hack to get moment to parse datetime as UTC: */}
+             <TextField
+               label="Start Time"
+               InputProps={{
+                 readOnly: true,
+               }}              
+               value={moment(bp.interval.start + 'Z').format('LL LTS')}
+               style={{ marginRight: '10px', width: '20em' }}/>
             <TextField
               InputProps={{
                 readOnly: true,
@@ -335,7 +337,7 @@ export default class BatchProcessViewPage extends React.Component {
               label="End Time"
               value={moment(bp.interval.end + 'Z').format('LL LTS')}
               style={{ width: '20em' }}/>              
-          </Grid>
+           </Grid>}
 
           <Grid item xs={12}>
             <CSVLink

@@ -78,6 +78,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     dataset          = batch_process['dataset']
     start_time       = ddt.parse_datetime(interval['start'])
     end_time         = ddt.parse_datetime(interval['end'])
+    use_date_range   = batch_process['use_date_range']
 
     # Extract the signal/parameter mappings from the `batch_process`.
     # Then, evaluate the parameter strings as DPL (Python) source code
@@ -110,10 +111,25 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     total_samples      = 0 # A counter to keep track of the number of samples to process    
     processed_samples  = 0 # A counter to keep track of the number of samples that we have processed
 
+    if not use_date_range:
+        try:
+            logger.log('Getting range (because no date range was specified).')
+            # This isn't great -- assuming the entire dataset's time range by the first signal.
+            # Better to add a function in DBM just for this
+            resp = await dbc.get_range(session, dataset, signals[0])
+            interval = resp['results'][0]
+            start_time       = ddt.parse_datetime(interval['first'])
+            end_time         = ddt.parse_datetime(interval['last'])
+        except exceptions:
+            await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
+                             logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+
+            logger.log(f'Sent error that occured when getting sample count from Database Manager.')
+            return
+
     try:
         logger.log('Getting sample count.')
         data = await dbc.get_count(session, dataset, mapped_signals, current_start_time, end_time)
-
     except exceptions:
         await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
                          logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
