@@ -18,6 +18,7 @@ class KPISerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     computation = serializers.CharField()
     hidden = serializers.BooleanField(required=False)
+    units = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
 
     def validate(self, data):
         # TODO: Make sure it doesn't reference itself

@@ -60,7 +60,8 @@ export default class KPIEdit extends React.Component {
       kpiDescription: '',
       kpiIdentifier: '',
       kpiHidden: false,
-      kpiComputation: '',                  
+      kpiComputation: '',
+      kpiUnits: '',                        
     });
   }    
 
@@ -133,6 +134,7 @@ export default class KPIEdit extends React.Component {
       description: this.state.kpiDescription,
       hidden: this.state.kpiHidden,
       computation: this.state.kpiComputation,
+      units: this.state.kpiUnits,      
     };
 
     // Add
@@ -281,7 +283,7 @@ render () {
           <Grid item xs={12}>
             <InputLabel>KPIs</InputLabel>            
             <PrettyTable
-              header={['Name', 'Identifier', 'Computation', 'Description', 'Hidden', '']}
+              header={['Name', 'Identifier', 'Computation', 'Description', 'Units', 'Hidden', '']}
               rows={this.state.kpis.map((kpi, i) => {
                 const hasError =
                       this.state.kpiErrors !== null &&
@@ -331,21 +333,23 @@ render () {
                        value={kpi.computation}/>),
                   
                   <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
+                  kpi.units,
                   kpi.hidden ? 'Yes' : 'No',
                   (<EditAndDeleteLocal
                            entityName={kpi.name}
                               entityType="KPI"
-                           onClickEdit={() => {
-                             this.setState({
-                               kpiDialogOpen: true,
-                               
-                               kpiId: i,
-                               kpiName: kpi.name,
-                               kpiIdentifier: kpi.identifier,
-                               kpiDescription: kpi.description,
-                               kpiHidden: kpi.hidden,
-                               kpiComputation: kpi.computation,
-                             });
+                     onClickEdit={() => {
+                       this.setState({
+                         kpiDialogOpen: true,
+                         
+                         kpiId: i,
+                         kpiName: kpi.name,
+                         kpiIdentifier: kpi.identifier,
+                         kpiDescription: kpi.description,
+                         kpiHidden: kpi.hidden,
+                         kpiComputation: kpi.computation,
+                         kpiUnits: kpi.units,
+                       });
                            }}
                                onClickDelete={x => {
                                  this.setState({ kpis: this.state.kpis.filter((x, j) => i !== j) }, () => {
@@ -447,28 +451,28 @@ render () {
                   parameter.hidden ? 'Yes' : 'No',
                   
                   (<EditAndDeleteLocal
-                                  entityName={parameter.name}
-                                  entityType="parameter"
-                                  onClickEdit={() => {
-                                    this.setState({
-                                      paramDialogOpen: true,
-                                      
-                                      paramId: i,
-                                      paramName: parameter.name,
-                                      paramIdentifier: parameter.identifier,
-                                      paramDefault: parameter.default,                                                                        
-                                      paramDescription: parameter.description,
-                                      paramHidden: parameter.hidden,
-                                      paramComputation: parameter.computation,
-                                    });
-                                  }}
-                                    onClickDelete={x => {
-                                      this.setState({
-                                        parameters: this.state.parameters.filter((x, j) => i !== j)
-                                      }, () => {
-                                        this.save();
-                                      });
-                                      
+                     entityName={parameter.name}
+                     entityType="parameter"
+                     onClickEdit={() => {
+                       this.setState({
+                         paramDialogOpen: true,
+                         
+                         paramId: i,
+                         paramName: parameter.name,
+                         paramIdentifier: parameter.identifier,
+                         paramDefault: parameter.default,                                                                        
+                         paramDescription: parameter.description,
+                         paramHidden: parameter.hidden,
+                         paramComputation: parameter.computation,
+                       });
+                     }}
+                     onClickDelete={x => {
+                       this.setState({
+                         parameters: this.state.parameters.filter((x, j) => i !== j)
+                       }, () => {
+                         this.save();
+                       });
+                       
                                     }}
                                                                  />)];
                                              })}              
@@ -505,6 +509,8 @@ render () {
             handleHidden={hidden => this.setState({ kpiHidden: hidden })}
             computation={this.state.kpiComputation}
             handleComputation={computation => this.setState({ kpiComputation: computation })}
+            handleUnits={units => this.setState({ kpiUnits: units })}
+            units={this.state.kpiUnits}
           />
 
           <input name="parameters"

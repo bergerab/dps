@@ -194,7 +194,7 @@ export default class BatchProcessViewPage extends React.Component {
                       </div>)
     }
 
-    let kpiHeaders = ['KPI', 'Description', 'Value'];
+    let kpiHeaders = ['KPI', 'Description', 'Units', 'Value'];
     let kpiResults = {};
     result.results.map(x => { kpiResults[x.key] = x; });
     let kpiRows = system.kpis.filter(kpi => {
@@ -202,15 +202,17 @@ export default class BatchProcessViewPage extends React.Component {
     }).map(kpi => {
       return [kpi.name,
               kpi.description,
+              kpi.units,
               kpiResults[kpi.name]];
                 });
 
     // Filter out any KPIs that have no values. 
-    let formattedKpiRows = kpiRows.filter(x => x[2] !== undefined ).map(row => {
+    let formattedKpiRows = kpiRows.filter(x => x[3] !== undefined ).map(row => {
       return [
         row[0],
         (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[1] }}></div>),
-        (<div style={{whiteSpace: 'pre'}} >{resultToString(row[2])}</div>)
+        row[2],
+        (<div style={{whiteSpace: 'pre'}} >{resultToString(row[3])}</div>)
       ];
     });
 
@@ -225,7 +227,7 @@ export default class BatchProcessViewPage extends React.Component {
 
     let charts;
     charts =
-      kpiRows.map(([kpiName, kpiDescription, kpiResults]) => {
+      kpiRows.map(([kpiName, kpiDescription, kpiUnits, kpiResults]) => {
 	// Don't check the show_chart flag.
 	      
         // if (resultDontChart(kpiResults) || kpiResults === undefined) {

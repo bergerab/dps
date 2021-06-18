@@ -115,6 +115,19 @@ export default class KPIDialog extends React.Component {
             </Grid>
 
             <Grid item xs={12}>
+              <TextField
+                id="units"
+                label="Units"
+                type="text"
+                value={this.props.units}                    
+                onChange={event => {
+                  this.props.handleUnits(event.target.value);
+                }}
+                fullWidth
+              />
+            </Grid>
+
+            <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox
