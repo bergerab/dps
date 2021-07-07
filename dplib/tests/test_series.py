@@ -226,6 +226,16 @@ class TestSeries(TestCase, SeriesAssertions):
             'a': Series([1])
         }))
 
+    def test_aggregate(self):
+        xs = [1, 2, 3, 4, 5]
+        self.assertEqual(Series(xs).average_aggregation().get_value(),
+                         sum(xs) / len(xs))
+
+        xs = [1, 2, 3, 4, 5]
+        ys = [9, 12, 33, -3]
+        self.assertEqual(Series(xs).average_aggregation().merge(Series(ys).average_aggregation()).get_value(),
+                         sum(xs + ys) / len(xs + ys))
+
     def test_is_windowed(self):
         times = make_times(10)
         values = range(10)

@@ -468,7 +468,7 @@ export default class BatchProcessPage extends React.Component {
               <InputLabel>Date Range</InputLabel>            
               <DateTimePicker value={this.state.startDate}
                               onChange={date => this.setState({ startDate: date })
-			      }
+			               }
                               label="Start Time"
                               error={hasStartTimeError}
                               helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
