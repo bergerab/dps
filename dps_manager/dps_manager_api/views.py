@@ -1003,7 +1003,7 @@ def upload(request):
             resp = flush()
             if resp.status_code >= 400:
                 return HttpResponse(resp.text, status=500)
-    flush()
+    resp = flush()
     if resp.status_code >= 400:    
         return HttpResponse(resp.text, status=500)
     return JsonResponse({})    

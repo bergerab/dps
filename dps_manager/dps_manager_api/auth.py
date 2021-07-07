@@ -18,14 +18,14 @@ def require_auth(f):
         if type == 'API':
             if Object.objects.filter(kind='APIKey', name=token).first():
                 return f(request, *args, **kwargs)
-            raise PermissionDenied()            
+            raise PermissionDenied('Invalid API token.' + token) 
         elif type == 'Bearer':
             token = AuthToken.objects.filter(uid=token).first()
             if not token:
-                raise PermissionDenied()
+                raise PermissionDenied('Invalid bearer token.')
             # Token has expired
             if timezone.now() >= token.expires_at:
-                raise PermissionDenied()
+                raise PermissionDenied('Bearer token expired.')
             # Update the expires at
             token.expires_at = timezone.now() + timedelta(hours=1)
             token.save()
