@@ -18,6 +18,7 @@ class KPISerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     computation = serializers.CharField()
     hidden = serializers.BooleanField(required=False)
+    units = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
 
     def validate(self, data):
         # TODO: Make sure it doesn't reference itself
@@ -156,7 +157,7 @@ class IntervalSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'start': f'Start time is not in the correct format ({util.DATETIME_FORMAT_STRING}).'
             })
-        
+
         end = util.validate_datetime(data['end'])
         if not end:
             raise serializers.ValidationError({
@@ -188,7 +189,8 @@ class BatchProcessSerializer(serializers.Serializer):
     system = SystemSerializer()
     mappings = MappingSerializer(many=True, required=False)
     kpis = serializers.ListField(child=serializers.CharField())
-    interval = IntervalSerializer()
+    use_date_range = serializers.BooleanField(required=True)
+    interval = IntervalSerializer(required=False)
 
     def validate(self, data):
         if not data['mappings']:

@@ -58,7 +58,7 @@ export default class APIKeyPage extends React.Component {
           Aggregations are single value results which summarize some information about a signal. Aggregations are created by calling built-in functions such as "avg", "min", or "max" which take signals and produce aggregations. They are shown on the batch process view page in a table and serve as the final KPI value. When defining a system, ensure that any values that should be displayed on the final KPI table is an Aggregation. Otherwise, the values will not be shown on the table (because there is no single value to show -- only a signal of values).
         </p>
         <p>
-          Aggregations propagate the signal values that they are aggregating on in a hidden signal. This value is shown on charts in the batch process view page. These charts show the aggregation's input signal value (and not the intermediate aggregation values). This is contrary to intuition (e.g. the chart for "min(A * B)" will show "A * B" over time -- and not the minimum of A * B over time). This is because aggregations do not save their intermediate aggregation values, only their intermediate input signal values. It was implemented this way because no KPIs we needed required behavior. The values must be propagated in order to allow composing aggregations with series, and aggregations with other aggregations. If needed, this behavior could be implemented to match the user's intuition.
+          Aggregations propagate the signal values that they are aggregating on in a hidden signal. This value is shown on charts in the batch process view page. These charts show the aggregation's input signal value (and not the intermediate aggregation values). This is contrary to intuition (e.g. the chart for "min(A * B)" will show "A * B" over time -- and not the minimum of A * B over time). This is because aggregations do not save their intermediate aggregation values, only their intermediate input signal values. It was implemented this way because no KPIs we needed required behavior. The values must be propagated in order to allow composing aggregations with Signals, and aggregations with other aggregations. If needed, this behavior could be implemented to match the user's intuition.
         </p>
         <p>
           There is one special type of Aggregation that is created by the "values" builtin-in function. This Aggregation is special, as it produces several nested Aggregations. Instead of producing a typical line chart, it will produce a bar chart.
@@ -98,7 +98,7 @@ export default class APIKeyPage extends React.Component {
             ['//', 'Aggregation, Number',      'Signal',      'Same as row 4, but floor-divides.'],                        
             ['//', 'Aggregation, Aggregation', 'Aggregation', 'Same as row 5, but floor-divides.'],
             
-            ['-', 'Series', 'Series', 'Negates each datapoint in the series (e.g. a value of 1 becomes -1, a value of -23 becomes 23.).'],
+            ['-', 'Signal', 'Signal', 'Negates each datapoint in the signals (e.g. a value of 1 becomes -1, a value of -23 becomes 23.).'],
 
             ['>', 'Signal, Signal', 'Signal', 'Same as row 1, but checks if the first argument is greater than the second and yields a Signal with boolean values.'],
             ['>', 'Signal, Aggregation', 'Signal', 'Same as row 2, but checks if the first argument is greater than the second and yields a Signal with boolean values.'],
@@ -128,15 +128,39 @@ export default class APIKeyPage extends React.Component {
           ]}>
         </PrettyTable>
 
+        <h2>Built-in Expressions</h2>
+        <PrettyTable
+          header={['Expression', 'Input Types', 'Yielded Type', 'Description']}
+          rows={[
+            ['and', 'Signal, Signals',       ''],
+            ['and', 'Signals, Number',       ''],
+            ['and', 'Signals, Aggregation',  ''],
+            ['or',  'Signals, Signals', 'Signals', ''],
+            ['or',  'Signals, Number', 'Signals', ''],
+            ['or',  'Signals, Aggregation', 'Signals',  ''],
+            ['if',  'Series, Series, Series', 'Series',  ''],                                    
+            ['if',  'Expression, Expression, Expression', 'Any',  'If the first expression evaluates to a truthy value (True, 1, etc...), evaluate the second expression. Otherwise evaluate the third. The final value is whichever value was last evaluated.'],
+          ]}>
+        </PrettyTable>
+
         <h2>Built-in Functions</h2>
         <PrettyTable
           header={['Function Signature', 'Return Type', 'Description']}
           rows={[
-            ['window()', 'Signal', 'wioejfweoifjweoifwjeofij'],
-            ['avg(Aggregation)', 'Signal', 'wioejfweoifjweoifwjeofij'],
-            ['avg(Signal)', 'Signal', 'wioejfweoifjweoifwjeofij'],
-            ['cumsum(Signal)', 'Signal', 'wioejfweoifjweoifwjeofij'],
-            ['cumsum(Signal)', 'Signal', 'wioejfweoifjweoifwjeofij'],                                                
+            ['cumsum(Signal)',                 'Aggregation',       ''],
+            ['values((String, Aggregation)*)', 'Aggregation',       ''],
+            ['window(Signal, Duration)',       'Signal of Signals', 'wioejfweoifjweoifwjeofij'],
+            ['abs(Signal)',                    'Signal',            'wioejfweoifjweoifwjeofij'],
+            ['abs(Aggregation)',               'Signal',            'wioejfweoifjweoifwjeofij'],
+            ['avg(Signal of Signal)',          'Signal',            'wioejfweoifjweoifwjeofij'],            
+            ['avg(Signal)',                    'Aggregation',       'wioejfweoifjweoifwjeofij'],
+            ['sum(Signal of Signal)',          'Signal',            'wioejfweoifjweoifwjeofij'],            
+            ['sum(Signal)',                    'Aggregation',       'wioejfweoifjweoifwjeofij'],
+            ['min(Signal of Signal)',          'Signal',            'wioejfweoifjweoifwjeofij'],            
+            ['min(Signal)',                    'Aggregation',       'wioejfweoifjweoifwjeofij'],
+            ['max(Signal of Signal)',          'Signal',            'wioejfweoifjweoifwjeofij'],            
+            ['max(Signal)',                    'Aggregation',       'wioejfweoifjweoifwjeofij'],
+            ['thd(Series, Number)',            'Aggregation',       'wioejfweoifjweoifwjeofij'],
           ]}>
         </PrettyTable>
         

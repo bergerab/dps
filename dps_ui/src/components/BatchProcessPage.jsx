@@ -61,6 +61,7 @@ export default class BatchProcessPage extends React.Component {
       nameErrors: null,
 
       intervalErrors: null,
+      useDateRange: false,
       startDate: defaultStartDate,
       endDate: new Date(),
 
@@ -117,7 +118,8 @@ export default class BatchProcessPage extends React.Component {
       interval: {
         start: startDate,
         end: endDate,
-      }
+      },
+      use_date_range: this.state.useDateRange,
     };
   }
 
@@ -314,8 +316,8 @@ export default class BatchProcessPage extends React.Component {
           (<PrettyTable
              header={makeKPITableHeader(true)}
              rows={[1,2,3,4,5].map((_, i) => [
-        <Checkbox checked={false} color="primary" key={'cb' + i} />,
-        <Skeleton key={'s1' + i} />,
+               <Checkbox checked={false} color="primary" key={'cb' + i} />,
+               <Skeleton key={'s1' + i} />,
                <Skeleton key={'s2' + i} />,
              ])}/>) :
           (<PrettyTable
@@ -465,22 +467,31 @@ export default class BatchProcessPage extends React.Component {
             {/*           </Grid> */}
 
             <Grid item xs={12}>
-              <InputLabel>Date Range</InputLabel>            
-              <DateTimePicker value={this.state.startDate}
-                              onChange={date => this.setState({ startDate: date })
-			               }
-                              label="Start Time"
-                              error={hasStartTimeError}
-                              helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
-                              style={{marginRight: '20px'}}
-                              required />
-              <DateTimePicker value={this.state.endDate}
+              <label>Use Date Range</label>
+              <Checkbox
+                color="primary"
+                checked={this.state.useDateRange}
+                onChange={e => this.setState({ useDateRange: e.target.checked })}
+              />
+            </Grid>
+
+            {!this.state.useDateRange ? null :
+             <Grid item xs={12} >
+               <InputLabel>Date Range</InputLabel>            
+               <DateTimePicker value={this.state.startDate}
+                               onChange={date => this.setState({ startDate: date })             }
+                               label="Start Time"
+                               error={hasStartTimeError}
+                               helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
+                               style={{marginRight: '20px'}}
+                               required />
+               <DateTimePicker value={this.state.endDate}
                               onChange={date => this.setState({ endDate: date })}
                               error={hasEndTimeError}
                               helperText={hasEndTimeError ? this.state.intervalErrors.end : ''}
                               label="End Time"
                               required />
-            </Grid>
+             </Grid>}
 
             <Grid item xs={12} sm={6}>
               <Button style={{'marginRight': '10px'}}
