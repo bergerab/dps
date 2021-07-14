@@ -125,7 +125,7 @@ def thd(series, base_harmonic=None):
     # Even more than this are needed to do an FFT as well, but
     # that will return 0 as well, just not error like have under 2 datapoints would.
     if len(series) < 2:
-        return None
+        raise Exception(f'Insufficient number of samples (was given {len(series)}) to compute THD.')
     
     fft_vals = np.abs(np.fft.fft(series))
 
@@ -150,7 +150,7 @@ def thd(series, base_harmonic=None):
     # TODO: add warning if this happens
     # Returning None skips the result (returns nothing)
     if fund_freq == 0:
-        return None
+        raise Exception(f'Insufficient number of samples (was given {len(series)}) to derive fundamental frequency for THD.')
 
     sum = 0 
     harmonic = 2*base_harmonic
