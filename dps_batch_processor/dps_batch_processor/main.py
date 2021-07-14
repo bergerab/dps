@@ -272,8 +272,6 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             
             try:
                 print('mappings', mappings)
-                if result:
-                    logger.log('Before!!!!!', result.get_aggregations())
                 result       = component.run(df, kpis, mappings, previous_result=result)
                 values       = result.get_intermidiate_values()
                 aggregations = result.get_aggregations()
@@ -292,6 +290,8 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
         ires = await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
         if ires == 404: 
+            await send_error(f'Failed to send intermediate results to DPS Database Manager',
+                       logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
             return
 
         inter_results = dp.Dataset()
