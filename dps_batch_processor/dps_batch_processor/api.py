@@ -92,6 +92,7 @@ class DatabaseManagerAPIClient(APIClient):
     INSERT_POSTFIX  = 'api/v1/insert'
     QUERY_POSTFIX   = 'api/v1/query'
     GET_RANGE_POSTFIX   = 'api/v1/get_range'    
+    GET_SIGNAL_NAMES_POSTFIX   = 'api/v1/get_signal_names'    
 
     async def get_data(self, session, dataset, signals, start_time, end_time, limit=None):
         data = {
@@ -110,6 +111,19 @@ class DatabaseManagerAPIClient(APIClient):
         if limit:
             data['queries'][0]['limit'] = limit
         result = await self.post(session, self.QUERY_POSTFIX, data)
+        return result
+
+    async def get_signal_names(self, session, dataset):
+        '''
+        Returns all the signals in the given dataset.
+        '''
+        data = {
+            "dataset": dataset,
+            "query": "",
+            "limit": 1000, # assuming we will never reach this number of signals in a dataset -- `crosses fingers`
+            "offset": 0,
+        }
+        result = await self.post(session, self.GET_SIGNAL_NAMES_POSTFIX, data)
         return result
 
     async def get_count(self, session, dataset, signals, start_time, end_time):

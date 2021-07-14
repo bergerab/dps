@@ -70,8 +70,8 @@ async def main(dps_manager_url, database_manager_url, api_key, max_batch_size, l
 
 async def process_job(api, logger, session, job, dbc, max_batch_size):
     async def handle_unexpected_exception():
-        await send_error(e, logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
-        logger.log(f'Sent error that occured during batch process: {e}')
+        await send_error(f'{e}\n\nStack trace:\n {traceback.format_exc()}', logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+        logger.log(f'Sent error that occured during batch process:  {e}\n\nStack trace:\n {traceback.format_exc()}')
     # Extract values from response.
     batch_process    = job['batch_process']
     batch_process_id = job['batch_process_id']
@@ -117,15 +117,31 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     if not use_date_range:
         try:
             logger.log('Getting range (because no date range was specified).')
-            # This isn't great -- assuming the entire dataset's time range by the first signal.
-            # Better to add a function in DBM just for this
-            resp = await dbc.get_range(session, dataset, signals[0])
-            interval = resp['results'][0]
-            if not interval['first'] or interval['last']:
+            resp = await dbc.get_signal_names(session, dataset)
+            if 'results' not in resp:
+                await send_error(f'Dataset {dataset} has no signals. Try the batch process again after adding data, or select a different dataset.',
+                                 logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+            all_signals_in_dataset = resp['results'][0]['values']
+            logger.log('Determining interval for dataset... All signals in the dataset: ')
+            logger.log(all_signals_in_dataset)
+
+            start_times = []
+            end_times = []
+            for s in all_signals_in_dataset:
+                resp = await dbc.get_range(session, dataset, s)
+                if 'results' in resp:
+                    interval = resp['results'][0]
+                    start_times.append(ddt.parse_datetime(interval['first']))
+                    end_times.append(ddt.parse_datetime(interval['last']))
+
+            start_time       = min(start_times)
+            end_time         = max(end_times)
+
+            logger.log(f'Found longest interval of {start_time} to {end_time}.')
+
+            if not start_time or not end_time:
                 await send_error(f'Dataset {dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
                                  logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
-            start_time       = ddt.parse_datetime(interval['first'])
-            end_time         = ddt.parse_datetime(interval['last'])
         except exceptions:
             await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
                              logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
