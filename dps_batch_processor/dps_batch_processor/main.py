@@ -134,14 +134,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                     start_times.append(ddt.parse_datetime(interval['first']))
                     end_times.append(ddt.parse_datetime(interval['last']))
 
+            if not start_times or not end_times:
+                await send_error(f'Dataset {dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
+                                 logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+
             start_time       = min(start_times)
             end_time         = max(end_times)
 
             logger.log(f'Found longest interval of {start_time} to {end_time}.')
-
-            if not start_time or not end_time:
-                await send_error(f'Dataset {dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
-                                 logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
         except exceptions:
             await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
                              logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
