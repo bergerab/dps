@@ -69,6 +69,9 @@ async def main(dps_manager_url, database_manager_url, api_key, max_batch_size, l
         await asyncio.sleep(interval)
 
 async def process_job(api, logger, session, job, dbc, max_batch_size):
+    async def handle_unexpected_exception():
+        await send_error(e, logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+        logger.log(f'Sent error that occured during batch process: {e}')
     # Extract values from response.
     batch_process    = job['batch_process']
     batch_process_id = job['batch_process_id']
@@ -118,14 +121,19 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             # Better to add a function in DBM just for this
             resp = await dbc.get_range(session, dataset, signals[0])
             interval = resp['results'][0]
+            if not interval['first'] or interval['last']:
+                await send_error(f'Dataset ${dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
+                                 logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
             start_time       = ddt.parse_datetime(interval['first'])
             end_time         = ddt.parse_datetime(interval['last'])
         except exceptions:
             await send_error("Failed to connect to DPS Database Manager server when getting sample count.",
                              logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
-
             logger.log(f'Sent error that occured when getting sample count from Database Manager.')
             return
+        except Exception as e:
+            await handle_unexpected_exception();
+            return;
 
     try:
         logger.log('Getting sample count.')
@@ -135,6 +143,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                          logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
 
         logger.log(f'Sent error that occured when getting sample count from Database Manager.')
+        return
+    except Exception as e:
+        await handle_unexpected_exception()
         return
 
     if 'results' in data:
@@ -170,6 +181,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         except exceptions:            
             await send_error("Failed to connect to DPS Database Manager server when sending results.",
                              logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+            return
+        except Exception as e:
+            await handle_unexpected_exception()
             return
         # If no results are returned, print it as an error and return.
         if 'results' not in data:
@@ -280,6 +294,10 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
     except exceptions:                                                        
         await send_error("Failed to connect to DPS Database Manager server when sending intermediate results.",
                          logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+    except Exception as e:
+        await send_error(e, logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+        logger.log(f'Sent error that occured during batch process: {e}')
+        return
 
     resp = await send_result(STATUS_RUNNING, 
                              logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
