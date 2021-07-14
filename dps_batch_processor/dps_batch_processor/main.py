@@ -326,7 +326,7 @@ async def send_error(message, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     results.get_aggregations() if result is not None else {},
+                                     result.get_aggregations() if result is not None else {},
                                      inter_results,
                                      chartables,
                                      STATUS_ERROR,
@@ -348,7 +348,7 @@ async def send_result(status, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     results.get_aggregations() if results is not None else {},
+                                     result.get_aggregations() if result is not None else {},
                                      inter_results,
                                      chartables,
                                      status,
