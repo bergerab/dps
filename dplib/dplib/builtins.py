@@ -147,8 +147,6 @@ def thd(series, base_harmonic=None):
                 fund_freq = value
                 base_harmonic = frequency
 
-    # TODO: add warning if this happens
-    # Returning None skips the result (returns nothing)
     if fund_freq == 0:
         raise Exception(f'Insufficient number of samples (was given {len(series)}) to derive fundamental frequency for THD.')
 
