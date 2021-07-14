@@ -122,7 +122,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             resp = await dbc.get_range(session, dataset, signals[0])
             interval = resp['results'][0]
             if not interval['first'] or interval['last']:
-                await send_error(f'Dataset ${dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
+                await send_error(f'Dataset {dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
                                  logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
             start_time       = ddt.parse_datetime(interval['first'])
             end_time         = ddt.parse_datetime(interval['last'])
