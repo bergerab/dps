@@ -272,10 +272,12 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             
             try:
                 print('mappings', mappings)
+                if result:
+                    logger.log('Before!!!!!', result.get_aggregations())
                 result       = component.run(df, kpis, mappings, previous_result=result)
                 values       = result.get_intermidiate_values()
                 aggregations = result.get_aggregations()
-                logger.log('Aggregations', aggregations)
+                logger.log('Aggregations for this step: ', aggregations)
 
                 # After every batch is run, send the intermediate results
                 inter_results = inter_results.merge(values)
@@ -324,7 +326,7 @@ async def send_error(message, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
+                                     results.get_aggregations() if result is not None else {},
                                      inter_results,
                                      chartables,
                                      STATUS_ERROR,
@@ -346,7 +348,7 @@ async def send_result(status, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
+                                     results.get_aggregations() if results is not None else {},
                                      inter_results,
                                      chartables,
                                      status,

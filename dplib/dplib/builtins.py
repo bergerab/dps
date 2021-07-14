@@ -125,7 +125,8 @@ def thd(series, base_harmonic=None):
     # Even more than this are needed to do an FFT as well, but
     # that will return 0 as well, just not error like have under 2 datapoints would.
     if len(series) < 2:
-        raise Exception(f'Insufficient number of samples (was given {len(series)}) to compute THD.')
+        return None
+        #raise Exception(f'Insufficient number of samples (was given {len(series)}) to compute THD.')
     
     fft_vals = np.abs(np.fft.fft(series))
 
