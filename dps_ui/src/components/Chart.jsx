@@ -24,7 +24,7 @@ class SignalChart extends React.Component {
     super(props);
     this.chartRef = React.createRef();
     this.state = {
-      data: [],
+      data: { datasets: [], labels: [], },
       loading: true,
     };
   }
@@ -45,8 +45,8 @@ class SignalChart extends React.Component {
               infer,
               pad
              ).then(series => {
-               this.setState({ data: series });
-               this.setState({ loading: false });                                
+                 this.setState({ data: series });
+                 this.setState({ loading: false });
               });
   }, 500);
 
