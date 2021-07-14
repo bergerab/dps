@@ -186,7 +186,10 @@ class Series:
         values = []
         times = []
         for series in self.series:
-            values.append(f(series))
+            val = f(series)
+            if val == None:
+                continue
+            values.append(val)
             times.append(series.index[0])
         return Series(values,
                       times,
