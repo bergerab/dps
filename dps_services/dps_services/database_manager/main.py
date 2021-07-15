@@ -94,6 +94,14 @@ def init_app(app, AppDataStore, debug=False):
             return ret
         return AppDataStore.execute_get_signal_names(jo)
 
+    @app.route('/' + util.make_api_url('get_dataset_range'), methods=['POST'])
+    @util.json_api
+    def get_dataset_range(jo):
+        ret = authenticate()
+        if ret != True:
+            return ret
+        return AppDataStore.execute_get_dataset_range(jo)
+
     @app.route('/' + util.make_api_url('get_dataset_names'), methods=['POST'])
     @util.json_api
     def get_dataset_names(jo):

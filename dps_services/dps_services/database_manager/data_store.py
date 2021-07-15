@@ -50,6 +50,13 @@ class DataStore:
         ds.get_range(results, request['dataset'], request['signal'])
         return DataStore.to_results_response([results])
 
+    @classmethod
+    def execute_get_dataset_range(DataStoreClass, request):
+        ds = DataStoreClass()
+        results = GetRangeResult()
+        ds.get_dataset_range(results, request['dataset'])
+        return DataStore.to_results_response([results])
+
     def execute_delete(self, delete):
         self.delete_dataset(delete.dataset)
 
@@ -104,6 +111,26 @@ class DataStore:
         Writes the results of the query to the `GetRangeResult` object (using `results.set_first(time)` and `results.set_last(time)`)
         '''
         raise Exception('DataStore.get_range not implemented.')
+
+    def get_dataset_range(self, result, dataset_name):
+        '''
+        Writes the results of the query to the `GetRangeResult` object (using `results.set_first(time)` and `results.set_last(time)`)
+        '''
+        raise Exception('DataStore.aggregate_signals not implemented.')
+#        signal_names_result = GetNamesResult()
+#        self.get_signal_names(signal_names_result, dataset_name, '', 10000, 0) # hopefully there are not more than 10,000 signals in the dataset. if so, this is still a good guess
+#        t0s = []
+#        t1s = []
+#        for signal_name in signal_names_result.results:
+#            print(signal_name)
+#            range_result = GetRangeResult()
+#            self.get_range(range_result, dataset_name, signal_name)
+#            if range_result.first:
+#                t0s.append(range_result.first)
+#            if range_result.last:
+#                t1s.append(range_result.last)
+#        result.set_first(min(t0s) if t0s else None)
+#        result.set_last(max(t1s) if t1s else None)
 
     def aggregate_signals(self, result, dataset_name, signal_names, interval, aggregation):
         '''

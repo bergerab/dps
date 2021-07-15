@@ -15,13 +15,17 @@ CREATE TABLE signals(
 CREATE TABLE signal_data(
     signal_id  INT NOT NULL,
     value      DOUBLE PRECISION NOT NULL,
-    time       TIMESTAMPTZ NOT NULL
+    time       TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY (signal_id) REFERENCES signals(signal_id)
 );
 
 SELECT create_hypertable('signal_data', 'time');
 CREATE INDEX idx_signal_id ON signal_data(signal_id);
 
--- No foreign key constraint on `signal_data`, because without it
--- insert speed was faster by ~40% (for 100,000 records).
+CREATE INDEX ON signal_data (signal_id, time DESC);
+CREATE INDEX ON signal_data (signal_id, time ASC);
+
+-- Skipping the foreign key constraint on `signal_data`,
+-- improved insert speed by ~40% (for 100,000 records).
 -- The best solution is to keep the foreign key constraint, and before
 -- a bulk insert, drop the constraint, and add it back after the bulk insert is done.
