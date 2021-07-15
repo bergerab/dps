@@ -325,18 +325,28 @@ export default class BatchProcessViewPage extends React.Component {
                 {/* Hack to get moment to parse datetime as UTC: */}
                 <TextField
                   label="Start Time"
+                  type="datetime-local"
                   InputProps={{
                     readOnly: true,
+                    step: 1,
                   }}
-                  value={moment(bp.interval.start + 'Z').format('LL LTS')}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  value={moment(bp.interval.start + 'Z').format('yyyy-MM-DDThh:mm:ss')}
                   style={{ marginRight: '10px', width: '20em' }} />
                 <TextField
+                  label="End Time"
+                  type="datetime-local"
                   InputProps={{
                     readOnly: true,
+                    step: 1,
                   }}
-                  label="End Time"
-                  value={moment(bp.interval.end + 'Z').format('LL LTS')}
-                  style={{ width: '20em' }} />
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  value={moment(bp.interval.end + 'Z').format('yyyy-MM-DDThh:mm:ss')}
+                  style={{ marginRight: '10px', width: '20em' }} />
               </Grid>}
             <Grid item xs={12}>
               <CSVLink

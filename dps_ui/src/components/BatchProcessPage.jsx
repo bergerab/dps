@@ -477,20 +477,35 @@ export default class BatchProcessPage extends React.Component {
 
             {!this.state.useDateRange ? null :
              <Grid item xs={12} >
-               <InputLabel>Date Range</InputLabel>            
-               <DateTimePicker value={this.state.startDate}
-                               onChange={date => this.setState({ startDate: date })             }
-                               label="Start Time"
-                               error={hasStartTimeError}
-                               helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
-                               style={{marginRight: '20px'}}
-                               required />
-               <DateTimePicker value={this.state.endDate}
-                              onChange={date => this.setState({ endDate: date })}
-                              error={hasEndTimeError}
-                              helperText={hasEndTimeError ? this.state.intervalErrors.end : ''}
-                              label="End Time"
-                              required />
+                <InputLabel>Date Range</InputLabel>
+                <TextField type="datetime-local"
+                  value={moment(this.state.startDate).format('yyyy-MM-DDThh:mm:ss')}
+                  onChange={e => this.setState({ startDate: moment(e.target.value) })}
+                  label="Start Time"
+                  error={hasStartTimeError}
+                  helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}
+                  style={{ marginRight: '20px' }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps ={{
+                    step: 1,
+                  }}
+                  required />
+                <TextField type="datetime-local"
+                  value={moment(this.state.endDate).format('yyyy-MM-DDThh:mm:ss')}
+                  onChange={e => this.setState({ endDate: moment(e.target.value) })}
+                  label="End Time"
+                  error={hasEndTimeError}
+                  helperText={hasEndTimeError ? this.state.intervalErrors.start : ''}
+                  style={{ marginRight: '20px' }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps ={{
+                    step: 1,
+                  }}
+                  required />
              </Grid>}
 
             <Grid item xs={12} sm={6}>
