@@ -208,18 +208,16 @@ class AverageAggregation(Aggregation):
 
     def merge(self, other):
         count = self.count + other.count
-        average = None
-        if self.count == 0:
-            average = other.average
-        elif other.average is None:
-            average = (self.average * self.count) / count
+        if other.average is None:
+            return AverageAggregation(other.series, self.average, self.count)
+        elif self.average is None:
+            return AverageAggregation(other.series, other.average, other.count)
         else:
-            average = ((self.average * self.count) + (other.average * other.count)) / count
-        # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
-        # We take the other.series because it should be the newer one
-        return AverageAggregation(other.series,
-                                  average,
-                                  count)
+            # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
+            # We take the other.series because it should be the newer one
+            return AverageAggregation(other.series,
+                                      ((self.average * self.count) + (other.average * other.count)) / count,
+                                      count)
 
     def get_value(self):
         return self.average

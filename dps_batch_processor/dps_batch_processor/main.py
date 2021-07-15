@@ -117,17 +117,12 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     if not use_date_range:
         try:
             logger.log('Getting range (because no date range was specified).')
-            resp = await dbc.get_signal_names(session, dataset)
-            if 'results' not in resp:
-                await send_error(f'Dataset {dataset} has no signals. Try the batch process again after adding data, or select a different dataset.',
-                                 logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
-            all_signals_in_dataset = resp['results'][0]['values']
             logger.log('Determining interval for dataset... All signals in the dataset: ')
-            logger.log(all_signals_in_dataset)
+            logger.log(mapped_signals)
 
             start_times = []
             end_times = []
-            for s in all_signals_in_dataset:
+            for s in mapped_signals:
                 resp = await dbc.get_range(session, dataset, s)
                 if 'results' in resp:
                     interval = resp['results'][0]
@@ -272,14 +267,16 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             
             try:
                 print('mappings', mappings)
-                result       = component.run(df, kpis, mappings, previous_result=result)
-                values       = result.get_intermidiate_values()
-                aggregations = result.get_aggregations()
-                logger.log('Aggregations for this step: ', aggregations)
+                next_result       = component.run(df, kpis, mappings, previous_result=result)
+                if result:
+                    next_result.aggregations = result.get_merged_aggregations(next_result)
+                result = next_result
 
                 # After every batch is run, send the intermediate results
-                inter_results = inter_results.merge(values)
+                inter_results = inter_results.merge(result.get_intermidiate_values())
 
+                aggregations = result.get_aggregations()
+                logger.log('Aggregations for this step: ', aggregations)
             except Exception as e:
                 # Send the error message to the server.
                 await send_error(f'Error occured when running KPI computation: {e}\n\nStack trace:\n {traceback.format_exc()}',

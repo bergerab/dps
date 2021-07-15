@@ -8,16 +8,22 @@ class Result:
         self.dataset = dataset
         self.aggregations = {} if aggregations is None else aggregations
 
-    def _merge_aggregations(self, agg):
+    def get_merged_aggregations(self, other):
         aggregations = {}
         for key in self.aggregations:
-            aggregations[key] = self.aggregations[key]
-        for key in agg:
-            aggregations[key] = agg[key]
+            if self.aggregations[key]:
+                aggregations[key] = self.aggregations[key]
+        for key in other.aggregations:
+            if not other.aggregations[key]: 
+                continue
+            if key in aggregations:
+                aggregations[key] = aggregations[key].merge(other.aggregations[key])
+            else:
+                aggregations[key] = other.aggregations[key]
         return aggregations
 
     def merge(self, other):
-        aggregations = self._merge_aggregations(other.aggregations)
+        aggregations = self.get_merged_aggregations(other)
         if other.dataset is None and self.dataset is None:
             return Result(aggregations=aggregations)
         if other.dataset is None and self.dataset is not None:

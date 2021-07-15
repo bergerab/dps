@@ -1,5 +1,4 @@
 from unittest import TestCase
-from datetime import datetime, timedelta
 
 import dplib.aggregation as agg
 from dplib import Series
@@ -51,6 +50,16 @@ class TestAggregation(TestCase):
                         .merge(agg.AverageAggregation.from_series(Series(v3)))
                         .merge(agg.AverageAggregation.from_series(Series(v4))).get_value(),
                          sum(v1 + v2 + v3 + v4) / len(v1 + v2 + v3 + v4))
+
+        v1 = [1, 2, 3, 4]
+        v2 = [3, 19, 2]
+        v3 = [1.2, 3]
+        v4 = [5.3, 23, 4, 2]
+        self.assertEqual(agg.AverageAggregation.from_series(Series(v1))
+                        .merge(agg.AverageAggregation.from_series(Series(v2)))
+                        .merge(agg.AverageAggregation.from_series(Series(v3)))
+                        .merge(agg.AverageAggregation(v4, None, 1)).get_value(),
+                         sum(v1 + v2 + v3) / len(v1 + v2 + v3))
 
         self.assertEqual(agg.AddAggregation(None, 1, 2)
                         .merge(agg.AddAggregation(None, 3, 4))

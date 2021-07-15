@@ -148,7 +148,7 @@ def thd(series, base_harmonic=None):
                 fund_freq = value
                 base_harmonic = frequency
 
-    if fund_freq == 0:
+    if fund_freq == 0 or base_harmonic == 0:
         return None
         #raise Exception(f'Insufficient number of samples (was given {len(series)}) to derive fundamental frequency for THD.')
 
@@ -157,8 +157,10 @@ def thd(series, base_harmonic=None):
     offset = int(base_harmonic/2)
 
     while harmonic < len(fft_vals)/2:
-        peak = np.max(fft_vals[harmonic - offset : harmonic + offset])
-        sum += peak * peak
+        segment = fft_vals[harmonic - offset : harmonic + offset]
+        if segment.any(): # if there are no values from the fft for this section (something has gone horribly wrong) -- skip it
+            peak = np.max(segment)
+            sum += peak * peak
         harmonic += base_harmonic
     square_sum = np.sqrt(sum)
     return 100 * (square_sum / fund_freq)

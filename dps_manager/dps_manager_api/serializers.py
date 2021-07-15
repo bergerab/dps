@@ -139,7 +139,7 @@ class MappingSerializer(serializers.Serializer):
     # You can either send a string value or an object
     # If the value is a string, there will be a value in `value`
     # Otherwise if the value is an object it will be stored in `object_value`
-    value = serializers.CharField(max_length=200, required=False)
+    value = serializers.CharField(max_length=200, required=False, allow_null=True)
     object_value = serializers.CharField(required=False)
     
     # Whether or not this item has a chart available
