@@ -12,13 +12,26 @@ export default class Errors extends React.Component {
   }
 
   render() {
-    const nonFieldErrors = 'non_field_errors' in this.props.errors ? util.objectPop(this.props.errors, 'non_field_errors') : [];
+    let errors = [];
+    for (const key in this.props.errors) {
+      if (key === 'non_field_errors')
+          errors = errors.concat(`${this.props.errors[key]}`);
+        else if (Array.isArray(this.props.errors[key]))
+          errors = errors.concat(`${key}: ${this.props.errors[key]}`);
+    }
+    let intervalErrors = 'interval' in this.props.errors ? util.objectPop(this.props.errors, 'interval') : [];
+    if (intervalErrors.start) {
+      errors.push(intervalErrors.start);
+    }
+    if (intervalErrors.end) {
+      errors.push(intervalErrors.end);
+    }
     
     return (
       <Alert severity="error">
         <AlertTitle>Error</AlertTitle>
         <ul style={{ marginTop: 0, paddingTop: 0 }}>
-          {nonFieldErrors.map((x, i) => {
+          {errors.map((x, i) => {
             return (
               <li key={i}>
                 {x}

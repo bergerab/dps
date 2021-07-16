@@ -33,7 +33,7 @@ function objectIsEmpty(obj) {
 
 function objectPop(obj, key, _default=null) {
   const temp = obj[key];
-  delete obj[key];
+  //delete obj[key];
   return temp === undefined ? _default : temp;
 }
 
@@ -42,10 +42,14 @@ function arrayEqual(a1, a2) {
 }
 
 function dateToString(dt) {
+  try {
   if (!(dt instanceof Date)) { // if it is a moment object
     dt = dt.toDate();
   }
   return `${dt.getUTCFullYear()}-${numPad2(dt.getUTCMonth() + 1)}-${numPad2(dt.getUTCDate())} ${numPad2(dt.getUTCHours())}:${numPad2(dt.getUTCMinutes())}:${numPad2(dt.getUTCSeconds())}.${dt.getUTCMilliseconds()}`    
+  } catch {
+    return '';
+  }
 }
 
 function dateToPrettyDate(dt) {

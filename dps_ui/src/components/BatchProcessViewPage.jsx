@@ -23,6 +23,8 @@ import InputLabel from './InputLabel';
 import PrettyTable from './PrettyTable';
 import Loader from './Loader';
 
+import Datetime from 'react-datetime';
+
 import api from '../api';
 
 export default class BatchProcessViewPage extends React.Component {
@@ -322,31 +324,30 @@ export default class BatchProcessViewPage extends React.Component {
             {!bp.use_date_range ? null :
               <Grid item xs={12}>
                 <InputLabel>Date Range</InputLabel>
-                {/* Hack to get moment to parse datetime as UTC: */}
+                <div style={{ margin: '0 0 0 1em', }}>
+                <h3
+                  style={{
+                    fontSize: '10pt',
+                    margin: '0',
+                    color: 'gray',
+                  }}
+                >Start Time</h3>
                 <TextField
-                  label="Start Time"
-                  type="datetime-local"
-                  InputProps={{
-                    readOnly: true,
-                    step: 1,
-                  }}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  value={moment(bp.interval.start + 'Z').format('yyyy-MM-DDThh:mm:ss')}
+                readOnly={true}
+                  value={moment(bp.interval.start + 'Z').format('yyyy-MM-DDThh:mm:ss.SSS')}
                   style={{ marginRight: '10px', width: '20em' }} />
+                <h3
+                  style={{
+                    fontSize: '10pt',
+                    margin: '0',
+                    color: 'gray',
+                  }}
+                >End Time</h3>
                 <TextField
-                  label="End Time"
-                  type="datetime-local"
-                  InputProps={{
-                    readOnly: true,
-                    step: 1,
-                  }}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  value={moment(bp.interval.end + 'Z').format('yyyy-MM-DDThh:mm:ss')}
+                readOnly={true}
+                  value={moment(bp.interval.end + 'Z').format('yyyy-MM-DDThh:mm:ss.SSS')}
                   style={{ marginRight: '10px', width: '20em' }} />
+                </div>
               </Grid>}
             <Grid item xs={12}>
               <CSVLink

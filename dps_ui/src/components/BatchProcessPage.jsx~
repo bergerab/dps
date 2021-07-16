@@ -9,8 +9,6 @@ import { useHistory } from "react-router-dom";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
-import Datetime from 'react-datetime';
-
 import Skeleton from '@material-ui/lab/Skeleton';
 
 import {
@@ -108,16 +106,8 @@ export default class BatchProcessPage extends React.Component {
     let startDate = this.state.startDate, endDate = this.state.endDate;
     if(startDate.toDate) startDate = startDate.toDate();
     if(endDate.toDate) endDate = endDate.toDate();
-    try {
     startDate = util.dateToString(util.dateToUTCDate(startDate));
-    } catch {
-      console.warn('Invalid startdate, sending to server anyway (expecting to get an error).');
-    }
-    try {
-      endDate = util.dateToString(util.dateToUTCDate(endDate));
-    } catch {
-      console.warn('Invalid startdate, sending to server anyway (expecting to get an error).');
-    }
+    endDate = util.dateToString(util.dateToUTCDate(endDate));
     return {
       name: this.state.name,
       dataset: this.state.dataset.value,
@@ -344,6 +334,13 @@ export default class BatchProcessPage extends React.Component {
            </Grid>) :
           null;
 
+    const hasStartTimeError = this.state.intervalErrors !== null &&
+          'start' in this.state.intervalErrors &&
+          !util.objectIsEmpty(this.state.intervalErrors.start);
+    const hasEndTimeError = this.state.intervalErrors !== null &&
+          'end' in this.state.intervalErrors &&
+          !util.objectIsEmpty(this.state.intervalErrors.end);
+
     return (
       <Grid container>
         {this.state.errors !== null && !util.objectIsEmpty(this.state.errors) ?
@@ -480,57 +477,20 @@ export default class BatchProcessPage extends React.Component {
 
             {!this.state.useDateRange ? null :
              <Grid item xs={12} >
-                <InputLabel>Date Range</InputLabel>
-                <div style={{ margin: '0 0 0 1em', }}>
-                <h3
-                  style={{
-                    fontSize: '11pt',
-                    margin: '0',
-                    color: 'gray',
-                  }}
-                >Start Time</h3>
-                <Datetime
-                  inputProps={{
-                    style: {
-                      width: '15em', 
-                      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                      borderRadius: '5px',
-                      border: '1px solid lightgray',
-                      padding: '0.5em',
-                    fontSize: '11pt',
-                    } 
-                  }} 
-                  value={moment(this.state.startDate)}
-                  dateFormat="yyyy-MM-DD"
-                  timeFormat="hh:mm:ss.SSS"
-                  onChange={m => this.setState({ startDate: m, })}
-                  label="Start Time"
-                  required />
-                <h3
-                  style={{
-                    fontSize: '11pt',
-                    margin: '0',
-                    color: 'gray',
-                  }}
-                >End Time</h3>
-                <Datetime
-                  inputProps={{
-                    style: {
-                      width: '15em', 
-                      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                      borderRadius: '5px',
-                      border: '1px solid lightgray',
-                      padding: '0.5em',
-                    fontSize: '11pt',
-                    } 
-                  }} 
-                  value={moment(this.state.endDate)}
-                  onChange={m => this.setState({ endDate: m, })}
-                  dateFormat="yyyy-MM-DD"
-                  timeFormat="hh:mm:ss.SSS"
-                  label="End Time"
-                  required />
-                </div>
+               <InputLabel>Date Range</InputLabel>            
+               <DateTimePicker value={this.state.startDate}
+                               onChange={date => this.setState({ startDate: date })             }
+                               label="Start Time"
+                               error={hasStartTimeError}
+                               helperText={hasStartTimeError ? this.state.intervalErrors.start : ''}                                           
+                               style={{marginRight: '20px'}}
+                               required />
+               <DateTimePicker value={this.state.endDate}
+                              onChange={date => this.setState({ endDate: date })}
+                              error={hasEndTimeError}
+                              helperText={hasEndTimeError ? this.state.intervalErrors.end : ''}
+                              label="End Time"
+                              required />
              </Grid>}
 
             <Grid item xs={12} sm={6}>
@@ -549,14 +509,15 @@ export default class BatchProcessPage extends React.Component {
                           });
                           this.props.history.push('/system/' + this.props.system_id);
                         }).catch(e => {
+                          console.log(e);
                           e.then(errors => {
                             const mappingErrors = util.objectPop(errors, 'mappings');
-                            //const intervalErrors = util.objectPop(errors, 'interval');
+                            const intervalErrors = util.objectPop(errors, 'interval');
                             const nameErrors = util.objectPop(errors, 'name');                            
                             this.setState({
                               errors,
                               mappingErrors,
-                              //intervalErrors,
+                              intervalErrors,
                               nameErrors,
                             });
                           });
