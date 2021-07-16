@@ -334,7 +334,7 @@ export default class BatchProcessViewPage extends React.Component {
                 >Start Time</h3>
                 <TextField
                 readOnly={true}
-                  value={moment(bp.interval.start + 'Z').format('yyyy-MM-DDThh:mm:ss.SSS')}
+                  value={moment(bp.interval.start + 'Z').format('yyyy-MM-DDThh:mm:ss')}
                   style={{ marginRight: '10px', width: '20em' }} />
                 <h3
                   style={{
@@ -345,7 +345,7 @@ export default class BatchProcessViewPage extends React.Component {
                 >End Time</h3>
                 <TextField
                 readOnly={true}
-                  value={moment(bp.interval.end + 'Z').format('yyyy-MM-DDThh:mm:ss.SSS')}
+                  value={moment(bp.interval.end + 'Z').format('yyyy-MM-DDThh:mm:ss')}
                   style={{ marginRight: '10px', width: '20em' }} />
                 </div>
               </Grid>}
