@@ -92,6 +92,7 @@ class DatabaseManagerAPIClient(APIClient):
     INSERT_POSTFIX  = 'api/v1/insert'
     QUERY_POSTFIX   = 'api/v1/query'
     GET_RANGE_POSTFIX   = 'api/v1/get_range'    
+    GET_DATASET_RANGE_POSTFIX   = 'api/v1/get_dataset_range'    
     GET_SIGNAL_NAMES_POSTFIX   = 'api/v1/get_signal_names'    
 
     async def get_data(self, session, dataset, signals, start_time, end_time, limit=None):
@@ -149,6 +150,13 @@ class DatabaseManagerAPIClient(APIClient):
             "signal": signal,
         }
         result = await self.post(session, self.GET_RANGE_POSTFIX, data)
+        return result
+
+    async def get_dataset_range(self, session, dataset):
+        data = {
+            "dataset": dataset,
+        }
+        result = await self.post(session, self.GET_DATASET_RANGE_POSTFIX, data)
         return result
 
     async def send_data(self, session, dataset_name, dataset):

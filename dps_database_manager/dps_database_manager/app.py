@@ -105,24 +105,20 @@ class TimescaleDBDataStore(dbm.DataStore):
             q = session.query(Signal)
             if dataset_name is not None:
                 q = q.filter_by(dataset_id=dataset.dataset_id)
-            q = q.order_by(Signal.name)            
+            q = q.order_by(Signal.name)
             for signal in q.all():
                 if dataset_name == None or signal.dataset_id == dataset.dataset_id:
                     signal_names.append(signal.name)
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset.dataset_id).signal_id, signal_names))
 
-        print('BEFORE')
         firstQ = self.time_filter(session.query(SignalData.time), None, signal_ids).order_by(SignalData.time.asc()).limit(1)
         first = firstQ.all()[0]
-        print('AFTER')
         if not first: # If there are no records, quit early.
             return
-        print('BEFORE2')
         lastQ = session.query(SignalData.time).filter(SignalData.signal_id.in_(signal_ids)).order_by(SignalData.time.desc()).limit(1)
         last = lastQ.all()[0]
         result.set_first(first.time)
         result.set_last(last.time)
-        print('AFTER2')
 
     def get_dataset_names(self, result, query, limit, offset):
         with dbc.scope() as session:
@@ -150,12 +146,12 @@ class TimescaleDBDataStore(dbm.DataStore):
         # Get all signal_data within the time interval ordered by time (ascending).
         # We have to take this data and batch all values that share a timestamp together (in increasing time order).
         with dbc.scope() as session:
-            firstQ = self.time_filter(session.query(SignalData.time), None, [signal_id]).order_by(SignalData.time.asc())
+            firstQ = self.time_filter(session.query(SignalData.time), None, [signal_id]).order_by(SignalData.time.asc()).limit(1)
             first = firstQ.all()[0]
             if not first: # If there are no records, quit early.
                 return
             
-            lastQ = self.time_filter(session.query(SignalData.time), None, [signal_id]).order_by(SignalData.time.desc())
+            lastQ = self.time_filter(session.query(SignalData.time), None, [signal_id]).order_by(SignalData.time.desc()).limit(1)
             last = lastQ.all()[0]
             
             result.set_first(first.time)

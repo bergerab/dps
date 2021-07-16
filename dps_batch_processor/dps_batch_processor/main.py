@@ -119,22 +119,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             logger.log('Getting range (because no date range was specified).')
             logger.log('Determining interval for dataset... All signals in the dataset: ')
             logger.log(mapped_signals)
+            resp = await dbc.get_dataset_range(session, dataset)
 
-            start_times = []
-            end_times = []
-            for s in mapped_signals:
-                resp = await dbc.get_range(session, dataset, s)
-                if 'results' in resp:
-                    interval = resp['results'][0]
-                    start_times.append(ddt.parse_datetime(interval['first']))
-                    end_times.append(ddt.parse_datetime(interval['last']))
-
-            if not start_times or not end_times:
+            if 'results' not in resp:
                 await send_error(f'Dataset {dataset} has no samples. Try the batch process again after adding data, or select a different dataset.',
                                  logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
-
-            start_time       = min(start_times)
-            end_time         = max(end_times)
+                        
+            start_time = ddt.parse_datetime(resp['results'][0]['first'])
+            end_time = ddt.parse_datetime(resp['results'][0]['last'])
 
             logger.log(f'Found longest interval of {start_time} to {end_time}.')
         except exceptions:
