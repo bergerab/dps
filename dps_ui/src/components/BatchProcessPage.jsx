@@ -502,7 +502,7 @@ export default class BatchProcessPage extends React.Component {
                   }} 
                   value={moment(this.state.startDate)}
                   dateFormat="yyyy-MM-DD"
-                  timeFormat="hh:mm:ss.SSS"
+                  timeFormat="hh:mm:ss"
                   onChange={m => this.setState({ startDate: m, })}
                   label="Start Time"
                   required />
@@ -527,7 +527,7 @@ export default class BatchProcessPage extends React.Component {
                   value={moment(this.state.endDate)}
                   onChange={m => this.setState({ endDate: m, })}
                   dateFormat="yyyy-MM-DD"
-                  timeFormat="hh:mm:ss.SSS"
+                  timeFormat="hh:mm:ss"
                   label="End Time"
                   required />
                 </div>
