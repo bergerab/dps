@@ -18,7 +18,7 @@ def require_auth(f):
         if type == 'API':
             if Object.objects.filter(kind='APIKey', name=token).first():
                 return f(request, *args, **kwargs)
-            raise PermissionDenied('Invalid API token.' + token) 
+            raise PermissionDenied('Invalid API token. (' + token + ')') 
         elif type == 'Bearer':
             token = AuthToken.objects.filter(uid=token).first()
             if not token:
