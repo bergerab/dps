@@ -342,30 +342,37 @@ class MiniDrawer extends React.Component {
               <Route exact path="/admin/system/:action?/:id?" 
 	                    render={props => userRedirect( (
 			     <EntityPage key={'System'}
-		                         {...props}
-		                         fields={[['Name', x => x.name],
-			                          ['KPIs', system => {
-                                                    return (<span>{
-							    system.kpis.filter(kpi => !kpi.hidden).map(kpi => 
-								    <Chip key={kpi.name} label={kpi.name} style={{ margin: '5px' }}/>
-							    )}</span>)
-                                       
-						  }],
-			               
-						  ['Parameters', system => { 
-						    return (<span>{
-							    system.parameters.filter(param => !param.hidden).map(parameter => 
-								    <Chip key={parameter.name} label={parameter.name} style={{ margin: '5px' }}/>
-							    )}</span>)                                       
-                                       
-						  }]
-					 ]}
-		              		 entityUrl="system"
-		              		 entityName="System"
-		             		 editComponent={SystemEdit}
-                   	     />
-			    ) )}
-	      />
+                          {...props}
+                          fields={[['Name', x => x.name],
+                          ['Signals', system => {
+                            return (<span>{
+                              system.signals === undefined || system.signals === null ? null : system.signals.map(signal =>
+                                (<Chip key={signal.name} label={signal.name} style={{ margin: '5px' }} />)
+                              )}</span>)
+
+                          }],
+                          ['Parameters', system => {
+                            return (<span>{
+                              system.parameters.filter(param => !param.hidden).map(parameter =>
+                                <Chip key={parameter.name} label={parameter.name} style={{ margin: '5px' }} />
+                              )}</span>)
+
+                          }],
+                          ['KPIs', system => {
+                            return (<span>{
+                              system.kpis.filter(kpi => !kpi.hidden).map(kpi =>
+                                <Chip key={kpi.name} label={kpi.name} style={{ margin: '5px' }} />
+                              )}</span>)
+
+                          }],
+
+                          ]}
+                          entityUrl="system"
+                          entityName="System"
+                          editComponent={SystemEdit}
+                        />
+                      ))}
+              />
               /* Add batch process pages. */
               {this.state.systems.map(system => (
                 <Route

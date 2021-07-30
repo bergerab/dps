@@ -197,15 +197,15 @@ export default class BatchProcessViewPage extends React.Component {
       </div>)
     }
 
-    let kpiHeaders = ['KPI', 'Description', 'Units', 'Value'];
+    let kpiHeaders = ['KPI', 'Units', 'Description', 'Value'];
     let kpiResults = {};
     result.results.map(x => { kpiResults[x.key] = x; });
     let kpiRows = system.kpis.filter(kpi => {
       return bp.kpis.includes(kpi.name);
     }).map(kpi => {
       return [kpi.name,
-      kpi.description,
       kpi.units,
+      kpi.description,
       kpiResults[kpi.name]];
     });
 
@@ -223,10 +223,34 @@ export default class BatchProcessViewPage extends React.Component {
     system.parameters.map(p => { parameterIdentifiersToNames[(p.identifier === undefined || p.identifier === null || p.identifier === '') ? p.name : p.identifier] = p.name });
     let parameterMappings = bp.mappings
       .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
-      .map(x => [parameterIdentifiersToNames[x.key], formatNumber(x.value)]);
+      .map(x => {
+        const name = parameterIdentifiersToNames[x.key];
+        const parameter = bp.system.parameters.filter(x => x.name === name)[0];
+        return [
+          name,
+          parameter.units,
+          parameter.description,
+          formatNumber(x.value)
+        ];
+      });
     let signalMappings = bp.mappings
       .filter(x => !Object.keys(parameterIdentifiersToNames).includes(x.key))
-      .map(x => [x.key, x.value]);
+      .map(x => {
+        let signalConfig = {};
+        let signalName = x.key;
+        const matchingSignals = bp.system.signals.filter(y => y.identifier === x.key);
+        if (matchingSignals.length > 0) {
+          signalConfig = matchingSignals[0];
+          signalName = signalConfig.name;
+        }
+        
+        return [
+          signalName,
+          signalConfig.units,
+          signalConfig.description,
+          x.value
+        ];
+      });
 
     let charts;
     charts =
@@ -305,18 +329,18 @@ export default class BatchProcessViewPage extends React.Component {
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <InputLabel>Signals</InputLabel>
               <PrettyTable
-                header={['KPI Input', 'Signal Name']}
+                header={['Name', 'Units', 'Description', 'Input Signal']}
                 rows={signalMappings}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <InputLabel>Parameters</InputLabel>
               <PrettyTable
-                header={['Name', 'Value']}
+                header={['Name', 'Units', 'Description', 'Value']}
                 rows={parameterMappings}
               />
             </Grid>
