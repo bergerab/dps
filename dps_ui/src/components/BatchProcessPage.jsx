@@ -282,6 +282,7 @@ export default class BatchProcessPage extends React.Component {
                     handleKPICheck(kpi, checked);
                   }}/>,
         kpi.name,
+        kpi.units,
         <div dangerouslySetInnerHTML={{ __html: kpi.description }}></div>,
       ]
     });
@@ -320,7 +321,7 @@ export default class BatchProcessPage extends React.Component {
         });
         }
         }}
-                                           />, 'KPI', 'Description'];
+                                           />, 'KPI', 'Units', 'Description'];
 
     const kpiTable = this.state.loading ?
           (<PrettyTable
@@ -395,18 +396,28 @@ export default class BatchProcessPage extends React.Component {
               {kpiTable}
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <InputLabel>Signals</InputLabel>
               <PrettyTable
                 key={this.state.dataset.value}
-                header={['KPI Input', 'Signal Name']}
+                header={['Name', 'Units', 'Description', 'Input Signal']}
                 rows={this.state.signals.map((signal, i) => {
                   const hasError = this.state.mappingErrors !== null &&
                         i in this.state.mappingErrors &&
                         !util.objectIsEmpty(this.state.mappingErrors[i]);
                   const signalValue = signal in this.state.signalInputs ? this.state.signalInputs[signal] : '';
+                  let signalConfig = {};
+                  let signalName = signal;
+                  const matchingSignals = this.state.system.signals.filter(x => x.identifier === signal);
+                  if (matchingSignals.length > 0) {
+                    signalConfig = matchingSignals[0];
+                    signalName = signalConfig.name;
+                  }
+                  
                   return [
-                    signal,
+                    signalName,
+                    signalConfig.units,
+                    signalConfig.description,
                     (<SignalSelect
                        dataset={this.state.dataset.value}
                        value={signalValue}
@@ -424,19 +435,22 @@ export default class BatchProcessPage extends React.Component {
               />
             </Grid>
             
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <InputLabel>Parameters</InputLabel>
               <PrettyTable
-                header={['Name', 'Value']}
+                header={['Name', 'Units', 'Description', 'Value']}
                 rows={this.state.parameters.map((parameter, i) => {
                   const mappingIndex = i + this.state.signals.length;
                   
                   const hasError = this.state.mappingErrors !== null &&
                         mappingIndex in this.state.mappingErrors &&
                         !util.objectIsEmpty(this.state.mappingErrors[mappingIndex]);
-                  
+                  const parameterConfig = this.state.system.parameters.filter(x => x.name === parameter)[0];
+                  console.log(parameterConfig);
                   return [
                     parameter,
+                    parameterConfig.units,
+                    parameterConfig.description,
                     (<TextField
                        fullWidth={true}
                        name="name"

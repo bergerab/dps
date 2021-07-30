@@ -48,10 +48,11 @@ export default class ParameterDialog extends React.Component {
             </Grid>);
 
     const addOrEdit = this.props.id > -1 ? 'Edit' : 'Add';
+    const header = this.props.header || 'Parameter';
 
     return (
       <Dialog open={this.props.open} onClose={this.props.handleClose} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">{addOrEdit} Parameter</DialogTitle>
+        <DialogTitle id="form-dialog-title">{addOrEdit} {header}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -75,6 +76,23 @@ export default class ParameterDialog extends React.Component {
 
             <Grid item xs={12}>
               <TextField
+                id="units"
+                label="Units"
+                type="text"
+                value={this.props.units}
+                fullWidth
+                multiline
+                onChange={event => {
+                  this.props.handleUnits(event.target.value);
+                }}
+                rows={2}
+                rowsMax={4}
+              />
+            </Grid>
+
+
+            <Grid item xs={12}>
+              <TextField
                 id="description"
                 label="Description"
                 type="text"
@@ -89,7 +107,7 @@ export default class ParameterDialog extends React.Component {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            {this.props._default === undefined ? null : (<Grid item xs={12}>
               <FormLabel>Default</FormLabel>              
               <KPIEditor
               	value={this.props._default}
@@ -97,9 +115,9 @@ export default class ParameterDialog extends React.Component {
                   this.props.handleDefault(value);
 	        }}
               />
-            </Grid>
+            </Grid>)}
             
-            <Grid item xs={12}>
+            {this.props.hidden === undefined ? null : (<Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -112,7 +130,7 @@ export default class ParameterDialog extends React.Component {
                 }
                 label="Hidden"
               />              
-            </Grid>
+            </Grid>)}
           </Grid>
         </DialogContent>
         <DialogActions>

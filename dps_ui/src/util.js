@@ -16,7 +16,7 @@ function nameNeedsIdentifier(name) {
 }
 
 function getIdentifier(kpiName, kpiIdentifier) {
-  if (kpiIdentifier) {
+  if (kpiIdentifier || kpiName === undefined || kpiName === null) {
     return kpiIdentifier;
   }
   if (nameNeedsIdentifier(kpiName)) {

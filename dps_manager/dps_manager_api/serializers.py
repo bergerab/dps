@@ -35,10 +35,30 @@ class KPISerializer(serializers.Serializer):
         
         return data
 
+class SignalSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=200)
+    identifier = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    units = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, data):
+        if data['identifier']:
+            if not data['identifier'].isidentifier():
+                raise serializers.ValidationError({
+                    'identifier': 'Illegal identifier (must be a valid Python identifier).',
+                })
+        else:
+            if not data['name'].isidentifier():
+                raise serializers.ValidationError({
+                    'name': 'Illegal identifier (the name is used as an identifier when no identifier is given).\nMust be a valid Python identifier.',
+                })
+        return data
+
 class ParameterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
     identifier = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
+    units = serializers.CharField(required=False, allow_blank=True)
     hidden = serializers.BooleanField(required=False)
     default = serializers.CharField(max_length=200, required=False, allow_blank=True)
 
@@ -60,6 +80,7 @@ class SystemSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)    
     kpis = KPISerializer(many=True, default=[])
     parameters = ParameterSerializer(many=True, default=[])
+    signals = SignalSerializer(many=True, default=[]) # for informational purposes, not used in DPLIB only in the UI
     
     def validate(self, data):
         parameter_names = []
@@ -70,6 +91,15 @@ class SystemSerializer(serializers.Serializer):
             else:
                 name = parameter['name']
             parameter_names.append(name)
+
+        signal_names = []
+        for signal in data.get('signals', []):
+            name = None
+            if signal['identifier']:
+                name = signal['identifier']
+            else:
+                name = signal['name']
+            signal_names.append(name)
 
         c = Component('Temp', parameters=parameter_names)
         for kpi in data['kpis']:
