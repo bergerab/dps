@@ -47,7 +47,25 @@ class Aggregation:
     def __rfloordiv__(self, other):
         return FloorDivAggregation(None, other, self)
 
+    def __gt__(self, other):
+        return GreaterThanAggregation(None, self, other)
+
+    def __lt__(self, other):
+        return LessThanAggregation(None, self, other)
+
+    def __ge__(self, other):
+        return GreaterThanOrEqualAggregation(None, self, other)
+
+    def __le__(self, other):
+        return LessThanOrEqualAggregation(None, self, other)
+
     def __eq__(self, other):
+        return EqualAggregation(None, self, other)
+
+    def __ne__(self, other):
+        return NotEqualAggregation(None, self, other)
+
+    def equals(self, other):
         return isinstance(other, type(self)) and \
                self.value == other.value
 
@@ -114,8 +132,73 @@ class Aggregation:
             return FloorDivAggregation(None,
                                        Aggregation.from_dict(d['lhs']),
                                        Aggregation.from_dict(d['rhs']))
+        elif name == GreaterThanAggregation.name:
+            return GreaterThanAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == GreaterThanOrEqualAggregation.name:
+            return GreaterThanOrEqualAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == LessThanAggregation.name:
+            return LessThanAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == LessThanOrEqualAggregation.name:
+            return LessThanOrEqualAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == EqualAggregation.name:
+            return EqualAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == NotEqualAggregation.name:
+            return NotEqualAggregation(None,
+                                       Aggregation.from_dict(d['lhs']),
+                                       Aggregation.from_dict(d['rhs']))
+        elif name == IfAggregation.name:
+            return IfAggregation(None,
+                                 Aggregation.from_dict(d['body']),
+                                 Aggregation.from_dict(d['test']),
+                                 Aggregation.from_dict(d['orelse']))
         else:
             raise Exception('Invalid aggregation dictionary.')
+
+class IfAggregation(Aggregation):
+    name = 'if'
+    def __init__(self, series, body, test, orelse):
+        self.series = series
+        self.body = body
+        self.test = test
+        self.orelse = orelse
+
+    def merge(self, other):
+        return self.__class__(None, self.body.merge(other.body), self.test.merge(other.test), self.orelse.merge(other.orelse))
+
+    def equals(self, other):
+        return isinstance(other, type(self)) and \
+               self.body.equals(other.body) and \
+               self.test.equals(other.rhs) and \
+                   self.orelse.equals(other.orelse)
+
+    def __repr__(self):
+        return f'If({self.body} if {self.test} else {self.orelse})'
+
+    def get_value(self):
+        body = self.body.get_value()
+        test = self.test.get_value()
+        orelse = self.orelse.get_value()
+        if test:
+            return body
+        return orelse
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'body': self.body.to_dict(),
+            'test': self.test.to_dict(),
+            'orelse': self.orelse.to_dict(),
+        }
 
 class OperatorAggregation(Aggregation):
     def __init__(self, series, lhs, rhs):
@@ -129,7 +212,7 @@ class OperatorAggregation(Aggregation):
     def merge(self, other):
         return self.__class__(None, self.lhs.merge(other.lhs), self.rhs.merge(other.rhs))
 
-    def __eq__(self, other):
+    def equals(self, other):
         return isinstance(other, type(self)) and \
                self.lhs == other.lhs and \
                self.rhs == other.rhs
@@ -167,6 +250,36 @@ class MulAggregation(OperatorAggregation):
         if x is None or y is None:
             return 0
         return x * y
+
+class GreaterThanAggregation(OperatorAggregation):
+    name = 'gt'
+    def op(self, x, y):
+        return x > y
+
+class LessThanAggregation(OperatorAggregation):
+    name = 'lt'
+    def op(self, x, y):
+        return x < y
+
+class LessThanOrEqualAggregation(OperatorAggregation):
+    name = 'lte'
+    def op(self, x, y):
+        return x <= y
+
+class GreaterThanOrEqualAggregation(OperatorAggregation):
+    name = 'gte'
+    def op(self, x, y):
+        return x >= y
+
+class EqualAggregation(OperatorAggregation):
+    name = 'eq'
+    def op(self, x, y):
+        return x == y
+
+class NotEqualAggregation(OperatorAggregation):
+    name = 'ne'
+    def op(self, x, y):
+        return x != y
 
 class DivAggregation(OperatorAggregation):
     name = 'div'

@@ -1,7 +1,8 @@
 from .decorators import make_builtin_decorator
 
 from .series import Series
-from .aggregation import Aggregation, ValuesAggregation, AbsAggregation, CumSumAggregation
+from .aggregation import Aggregation, ValuesAggregation, AbsAggregation, \
+                         CumSumAggregation, IfAggregation
 
 import numpy as np
 import math
@@ -96,6 +97,14 @@ def _if(test, body, orelse, env):
     # If using series, the if expression behaves as a call to `Series.when`.
     if isinstance(test_value, Series):
         return test_value.when(body.compile().run(env), orelse.compile().run(env))
+    elif isinstance(test_value, Aggregation):
+        body_value = body.compile().run(env)
+        orelse_value = orelse.compile().run(env)
+        if not isinstance(body_value, Aggregation):
+            body_value = Aggregation(None, body_value)
+        if not isinstance(orelse_value, Aggregation):
+            orelse_value = Aggregation(None, orelse_value)
+        return IfAggregation(None, body_value, test_value, orelse_value)
     # Otherwise, it is the same as a normal if expression.
     if test_value:
         return body.compile().run(env)

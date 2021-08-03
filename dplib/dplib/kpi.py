@@ -25,15 +25,16 @@ class MappedKPI:
     def _to_result(self, x, previous_result):
         if isinstance(x, Series):
             return Result(dataset=x.to_dataset(self.name))
-        elif isinstance(x, Aggregation):
-            if previous_result and self.name in previous_result.aggregations:
-                y = previous_result.aggregations[self.name]
-                x = y.merge(x)
-            return Result.lift({
-                self.name: x,
-            })
-        else:
-            raise Exception(f'KPI has invalid output type {type(x)}')
+
+        if not isinstance(x, Aggregation):
+            x = Aggregation(None, x)
+
+        if previous_result and self.name in previous_result.aggregations:
+            y = previous_result.aggregations[self.name]
+            x = y.merge(x)
+        return Result.lift({
+            self.name: x,
+        })
 
 class KPI:
     '''
