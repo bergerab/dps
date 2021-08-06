@@ -161,8 +161,64 @@ class Aggregation:
                                  Aggregation.from_dict(d['body']),
                                  Aggregation.from_dict(d['test']),
                                  Aggregation.from_dict(d['orelse']))
+        elif name == TableAggregation.name:
+            return TableAggregation(None, d['sub_aggregation'], d['table'])
         else:
             raise Exception('Invalid aggregation dictionary.')
+
+class TableAggregation(Aggregation):
+    name = 'table'
+    def __init__(self, series, sub_aggregation='avg', table=None): # row counts must be the same between table aggregations that are merged
+        self.series = series
+        self.sub_aggregation = sub_aggregation # can only be 'min', 'max', or 'avg'
+        self.value = self.table = table if table != None else {}
+        self.lift_table() # ensure all values in the table are aggregations
+
+    def lift_agg(self, x):
+        if isinstance(x, Aggregation):
+            return x
+        if self.sub_aggregation == 'avg':
+            return AverageAggregation.from_sum_and_count(None, x, 1)
+        elif self.sub_aggregation == 'min':
+            return MinAggregation(None, x)
+        elif self.sub_aggregation == 'max':
+            return MaxAggregation(None, x)
+        raise Exception(f'TableAggregation: invalid sub aggregation {self.sub_aggregation}')
+
+    def lift_table(self):
+        for col in self.table:
+            self.table[col] = list(map(lambda x: self.lift_agg(x), self.table[col]))
+
+    def append(self, row):
+        for key in row:
+            if key in self.table:
+                self.table[key].append(self.lift_agg(row[key]))
+            else:
+                self.table[key] = [self.lift_agg(row[key])]
+
+    def merge(self, other):
+        table = {}
+        for col in self.table:
+            table[col] = []
+            for i, cell in enumerate(self.table[col]):
+                table[col].append(cell.merge(other.table[col][i]))
+        return TableAggregation(self.series, self.sub_aggregation, table)
+
+    def get_value(self):
+        table = {}
+        for col in self.table:
+            table[col] = list(map(lambda x: x.get_value(), self.table[col]))
+        return table
+
+    def to_dict(self):
+        table = {}
+        for col in self.table:
+            table[col] = list(map(lambda x: x.to_dict(), self.table[col]))
+        return {
+            'name': self.name,
+            'sub_aggregation': self.sub_aggregation,
+            'table': table,
+        }
 
 class IfAggregation(Aggregation):
     name = 'if'

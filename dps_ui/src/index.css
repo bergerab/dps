@@ -11,3 +11,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.table-kpi thead {
+    background: lightgray;
+}
+table.table-kpi {
+  border-collapse: collapse;
+}
+table.table-kpi, .table-kpi td, .table-kpi th {
+  border: 1px solid gray;
+}
+.table-kpi tbody tr:nth-child(even) {background-color: #f2f2f2;}

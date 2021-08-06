@@ -215,7 +215,7 @@ export default class BatchProcessViewPage extends React.Component {
         row[0],
         (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[1] }}></div>),
         row[2],
-        (<div style={{ whiteSpace: 'pre' }} >{resultToString(row[3])}</div>)
+        (<div style={{ whiteSpace: 'pre' }} >{resultToString(row[3], row[0])}</div>)
       ];
     });
 
@@ -255,13 +255,16 @@ export default class BatchProcessViewPage extends React.Component {
     let charts;
     charts =
       kpiRows.map(([kpiName, kpiDescription, kpiUnits, kpiResults]) => {
-        // Don't check the show_chart flag.
-
-        // if (resultDontChart(kpiResults) || kpiResults === undefined) {
-        //   return (<span key={kpiName}/>);
-        // }
+        if (resultDontChart(kpiResults) || kpiResults === undefined) {
+          return (<span key={kpiName} />);
+        }
 
         if (resultHasObject(kpiResults)) {
+          const isTable = Object.values(kpiResults).length > 0 && Array.isArray(Object.values(kpiResults)[0]);
+          if (isTable) { // don't show a chart if using table output
+            return (<span key={kpiName}></span>)
+          }
+
           const o = JSON.parse(kpiResults.object_value);
           return (<Grid item sm={12} md={6} xl={3} key={kpiName}>
             <BarChart
@@ -459,21 +462,67 @@ function formatNumber(s) {
   return n.toLocaleString();
 }
 
-function formatObjectValue(s) {
+function formatObjectValue(s, kpiName) {
   const o = JSON.parse(s);
-  const lines = [];
-  for (const key of Object.keys(o)) {
-    lines.push(key + ': ' + (o[key] === null ? 'No Data' : formatNumber(o[key])));
+  const keys = Object.keys(o);
+  const values = Object.values(o);
+  const isTable = values.length > 0 && Array.isArray(values[0]);
+  if (isTable) {
+    const maxLength = values.reduce((a, b) => Math.max(a, b.length), 0);
+    const rows = [];
+    for (let i=0; i<maxLength; ++i) {
+      rows.push((<tr key={i}>
+        {keys.map(col => (<td>{o[col][i]}</td>))}
+      </tr>));
+    }
+    const csvRows = [keys];
+    for (let i=0; i<maxLength; ++i) {
+      csvRows.push(keys.map(col => o[col][i]));
+    }
+    return (
+      <div>
+        <div>
+      <table class="table-kpi">
+        <thead>
+          <tr>
+            {Object.keys(o).map((x, i) => (<th key={i}>{x}</th>))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows}
+        </tbody>
+      </table>
+      </div>
+      <div>
+          <CSVLink
+            data={csvRows}
+            target="_blank"
+            style={{ textDecoration: 'none' }}
+            filename={kpiName + " Results.csv"}
+          >
+            <Button style={{ margin: '1em 0 0 0' }}
+              variant="contained" >
+              Export
+            </Button>
+          </CSVLink>
+      </div>
+      </div>
+    );
+  } else {
+    const lines = [];
+    for (const key of Object.keys(o)) {
+      lines.push(key + ': ' + (o[key] === null ? 'No Data' : formatNumber(o[key])));
+    }
+    return lines.join('\n');
   }
-  return lines.join('\n');
 }
 
-function resultToString(x) {
+function resultToString(x, kpiName) {
   if (x === undefined) return '';
-  return resultHasObject(x) ? formatObjectValue(x.object_value) : formatNumber(x.value);
+  return resultHasObject(x, kpiName) ? formatObjectValue(x.object_value, kpiName) : formatNumber(x.value, kpiName);
 }
 
-function resultHasObject(x) {
+function resultHasObject(x, kpiName) {
   if (x === undefined) return false;
   return x.value === undefined;
 }

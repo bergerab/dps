@@ -2,7 +2,8 @@ from .decorators import make_builtin_decorator
 
 from .series import Series
 from .aggregation import Aggregation, ValuesAggregation, AbsAggregation, \
-                         CumSumAggregation, IfAggregation
+    CumSumAggregation, IfAggregation, TableAggregation, \
+    MinAggregation, MaxAggregation, AverageAggregation
 
 import numpy as np
 import math
@@ -218,3 +219,59 @@ def rms(series):
 
     return math.sqrt(ret/size)
 
+@builtin('analyze_freqs', aggregate=True)
+def analyze_freqs(series, num_harm=None, base_harmonic=None):
+    L = len(series)
+    if L < 2:
+        return None
+
+    fs = 1 / (series.index[1] - series.index[0]).total_seconds()
+
+    vf = np.abs(np.fft.fft(series, L))
+    f = fs * np.arange(0, (L / 2) + 1) / L
+    vf = vf[:L // 2 + 1]
+    fund_ind = np.argmax(vf[1:])
+    fund_ind = fund_ind + 1
+    f_fund = f[fund_ind]
+    p_fund = vf[fund_ind]
+
+    if base_harmonic:
+        harmonic = base_harmonic
+    else:
+        harmonic = f_fund
+
+    if num_harm:
+        nh = num_harm
+    else:
+        nh = (f[-1] - 2 * harmonic) / harmonic
+
+    # look for harmonic bin around the true harmonic
+    f_hrm = f_fund + harmonic
+    v_rms_harmonics = 0
+
+    harm_table = TableAggregation(None, 'avg')
+    harm_table.append({'Harmonic': f_fund, 'Power': p_fund ** 0.5, 'Percent%': 0, 'P/F': MinAggregation(None, 1)})
+
+    while nh > 1:
+       nh = nh - 1
+       harm_ind = ((f <= f_hrm * 1.1) & (f >= f_hrm * 0.9)).nonzero()[0]
+       hrm = np.argmax(vf[harm_ind])
+       hrm = harm_ind[hrm]
+       hrm_pwr = vf[hrm]
+       prcnt = (1 - (p_fund - hrm_pwr) / p_fund) * 100
+       if prcnt <= 2:
+           pf = 1
+       else:
+           pf = 0
+
+       f_hrm = f_hrm + harmonic
+       v_rms_harmonics = v_rms_harmonics + (hrm_pwr ** 2)
+       hrm_frq = f[hrm]
+
+       harm_table.append({'Harmonic': hrm_frq, 'Power': hrm_pwr ** 0.5, 'Percent%': prcnt, 'P/F': MinAggregation(None, pf)})
+   
+    wave_harmoni_test_result = 'Fail' if harm_table['P/F'].sum() < num_harm else 'Pass'
+    thd = 100 * np.sqrt(v_rms_harmonics) / p_fund
+    wave_deviation_test_result = 'Fail' if thd > 5 else 'Pass'
+
+    return harm_table
