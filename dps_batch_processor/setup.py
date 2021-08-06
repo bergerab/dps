@@ -15,5 +15,5 @@ setup(
     },
     test_suite='nose.collector',
     tests_require=['nose', 'requests'],
-    install_requires=['click', 'numpy', 'pandas', 'asyncio', 'aiohttp'],
+    install_requires=['click', 'numpy', 'pandas', 'asyncio', 'aiohttp', 'simplejson'],
 )

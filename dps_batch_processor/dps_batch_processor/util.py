@@ -1,6 +1,6 @@
 import re
 
-import json
+import simplejson as json
 import dplib as dp
 
 def url_is_valid(url):
@@ -85,7 +85,7 @@ def dict_to_mappings(d, ds, chartables):
             result['show_chart'] = True
             
         if isinstance(value, dict):
-            result['object_value'] = json.dumps(d[key])
+            result['object_value'] = json.dumps(d[key], ignore_nan=True)
         else:
             result['value'] = d[key]
         results.append(result)

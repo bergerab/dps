@@ -3,7 +3,8 @@ from .decorators import make_builtin_decorator
 from .series import Series
 from .aggregation import Aggregation, ValuesAggregation, AbsAggregation, \
     CumSumAggregation, IfAggregation, TableAggregation, \
-    MinAggregation, MaxAggregation, AverageAggregation
+    MinAggregation, MaxAggregation, AverageAggregation, \
+    GreaterThanAggregation, LessThanAggregation
 
 import numpy as np
 import math
@@ -221,62 +222,84 @@ def rms(series):
 
 @builtin('analyze_freqs')
 def analyze_freqs(series, num_harm=None, base_harmonic=None):
-    series = series.series # use the pandas series not the dplib.Series
+    agg = None
+    for series in series.series:
+        L = len(series)
+        if L < 2:
+            return None
 
-    L = len(series)
-    if L < 2:
-        return None
+        fs = 1 / (series.index[1] - series.index[0]).total_seconds()
 
-    fs = 1 / (series.index[1] - series.index[0]).total_seconds()
+        vf = np.abs(np.fft.fft(series, L))
+        f = fs * np.arange(0, (L / 2) + 1) / L
+        vf = vf[:L // 2 + 1]
+        fund_ind = np.argmax(vf[1:])
+        fund_ind = fund_ind + 1
+        f_fund = f[fund_ind]
+        p_fund = vf[fund_ind]
 
-    vf = np.abs(np.fft.fft(series, L))
-    f = fs * np.arange(0, (L / 2) + 1) / L
-    vf = vf[:L // 2 + 1]
-    fund_ind = np.argmax(vf[1:])
-    fund_ind = fund_ind + 1
-    f_fund = f[fund_ind]
-    p_fund = vf[fund_ind]
+        if base_harmonic:
+            harmonic = base_harmonic
+        else:
+            harmonic = f_fund
 
-    if base_harmonic:
-        harmonic = base_harmonic
-    else:
-        harmonic = f_fund
+        if num_harm:
+            nh = num_harm
+        else:
+            nh = (f[-1] - 2 * harmonic) / harmonic
 
-    if num_harm:
-        nh = num_harm
-    else:
-        nh = (f[-1] - 2 * harmonic) / harmonic
+        # look for harmonic bin around the true harmonic
+        f_hrm = f_fund + harmonic
+        v_rms_harmonics = 0
 
-    # look for harmonic bin around the true harmonic
-    f_hrm = f_fund + harmonic
-    v_rms_harmonics = 0
+        harm_table = TableAggregation(None, 'avg')
+        harm_table.append({
+            'Harmonic': Aggregation(None, f_fund),
+            'Power':    MaxAggregation(None, p_fund ** 0.5),
+            'Percent%': MaxAggregation(None, 0),
+            # All aggregations in the table must have the exact same structure (this is why this is not simply just "Aggregation('Pass')")
+            'P/F':      IfAggregation(None,
+                                      Aggregation(None, 'Fail'), 
+                                      GreaterThanAggregation(None, MaxAggregation(None, 0), Aggregation(None, 2)),
+                                      Aggregation(None, 'Pass'))
+        })
 
-    harm_table = TableAggregation(None, 'avg')
-    harm_table.append({'Harmonic': f_fund, 'Power': p_fund ** 0.5, 'Percent%': 0, 'P/F': MinAggregation(None, 1)})
+        pfs = [] # store this outside of the TableAggregation so it can be accessed directly
 
-    pfs = [] # store this outside of the TableAggregation so it can be accessed directly
+        while nh > 1:
+           nh = nh - 1
+           harm_ind = ((f <= f_hrm * 1.1) & (f >= f_hrm * 0.9)).nonzero()[0]
+           hrm = np.argmax(vf[harm_ind])
+           hrm = harm_ind[hrm]
+           hrm_pwr = vf[hrm]
+           prcnt = (1 - (p_fund - hrm_pwr) / p_fund) * 100
+           if prcnt <= 2:
+               pf = 1
+           else:
+               pf = 0
 
-    while nh > 1:
-       nh = nh - 1
-       harm_ind = ((f <= f_hrm * 1.1) & (f >= f_hrm * 0.9)).nonzero()[0]
-       hrm = np.argmax(vf[harm_ind])
-       hrm = harm_ind[hrm]
-       hrm_pwr = vf[hrm]
-       prcnt = (1 - (p_fund - hrm_pwr) / p_fund) * 100
-       if prcnt <= 2:
-           pf = 1
-       else:
-           pf = 0
+           f_hrm = f_hrm + harmonic
+           v_rms_harmonics = v_rms_harmonics + (hrm_pwr ** 2)
+           hrm_frq = f[hrm]
 
-       f_hrm = f_hrm + harmonic
-       v_rms_harmonics = v_rms_harmonics + (hrm_pwr ** 2)
-       hrm_frq = f[hrm]
-
-       harm_table.append({'Harmonic': hrm_frq, 'Power': hrm_pwr ** 0.5, 'Percent%': prcnt, 'P/F': MinAggregation(None, pf)})
-       pfs.append(pf)
+           prcnt_agg = MaxAggregation(None, prcnt) if not math.isnan(prcnt) else MaxAggregation(None, 0)
+           harm_table.append({
+               'Harmonic': Aggregation(None, hrm_frq),
+               'Power':    MaxAggregation(None, hrm_pwr ** 0.5),
+               'Percent%': prcnt_agg,
+               'P/F':      IfAggregation(None,
+                                        Aggregation(None, 'Fail'), 
+                                        GreaterThanAggregation(None, prcnt_agg, Aggregation(None, 2)),
+                                        Aggregation(None, 'Pass'))
+           })
+           pfs.append(pf)
    
-    wave_harmoni_test_result = 'Fail' if sum(pfs) < num_harm else 'Pass'
-    thd = 100 * np.sqrt(v_rms_harmonics) / p_fund
-    wave_deviation_test_result = 'Fail' if thd > 5 else 'Pass'
+        wave_harmoni_test_result = 'Fail' if sum(pfs) < num_harm else 'Pass'
+        thd = 100 * np.sqrt(v_rms_harmonics) / p_fund
+        wave_deviation_test_result = 'Fail' if thd > 5 else 'Pass'
 
-    return harm_table
+        if agg == None:
+            agg = harm_table
+        else:
+            agg = agg.merge(harm_table)
+    return agg
