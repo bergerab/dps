@@ -219,8 +219,10 @@ def rms(series):
 
     return math.sqrt(ret/size)
 
-@builtin('analyze_freqs', aggregate=True)
+@builtin('analyze_freqs')
 def analyze_freqs(series, num_harm=None, base_harmonic=None):
+    series = series.series # use the pandas series not the dplib.Series
+
     L = len(series)
     if L < 2:
         return None
@@ -252,6 +254,8 @@ def analyze_freqs(series, num_harm=None, base_harmonic=None):
     harm_table = TableAggregation(None, 'avg')
     harm_table.append({'Harmonic': f_fund, 'Power': p_fund ** 0.5, 'Percent%': 0, 'P/F': MinAggregation(None, 1)})
 
+    pfs = [] # store this outside of the TableAggregation so it can be accessed directly
+
     while nh > 1:
        nh = nh - 1
        harm_ind = ((f <= f_hrm * 1.1) & (f >= f_hrm * 0.9)).nonzero()[0]
@@ -269,8 +273,9 @@ def analyze_freqs(series, num_harm=None, base_harmonic=None):
        hrm_frq = f[hrm]
 
        harm_table.append({'Harmonic': hrm_frq, 'Power': hrm_pwr ** 0.5, 'Percent%': prcnt, 'P/F': MinAggregation(None, pf)})
+       pfs.append(pf)
    
-    wave_harmoni_test_result = 'Fail' if harm_table['P/F'].sum() < num_harm else 'Pass'
+    wave_harmoni_test_result = 'Fail' if sum(pfs) < num_harm else 'Pass'
     thd = 100 * np.sqrt(v_rms_harmonics) / p_fund
     wave_deviation_test_result = 'Fail' if thd > 5 else 'Pass'
 
