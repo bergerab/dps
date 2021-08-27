@@ -472,7 +472,12 @@ function formatObjectValue(s, kpiName) {
     const rows = [];
     for (let i=0; i<maxLength; ++i) {
       rows.push((<tr key={i}>
-        {keys.map(col => (<td>{o[col][i]}</td>))}
+        {keys.map(col => {
+          let val = o[col][i];
+          if (typeof val === 'number')
+            val = val.toFixed(3);
+          return (<td>{val}</td>);
+        })}
       </tr>));
     }
     const csvRows = [keys];
