@@ -81,7 +81,7 @@ class BatchProcess:
         except CyclicGraphException:
             raise CyclicGraphException('Batch Processes cannot contain recursive KPI computations.')
 
-    def run(self, dataset, parameters=[], previous_result=None):
+    def run(self, dataset, parameters=[], previous_result=None, additional_builtins=None):
         '''
         Runs the batch process on the entire DataFrame (without reporting progress, one column at a time)
         '''
@@ -99,7 +99,8 @@ class BatchProcess:
             mapping = bpkpi.mapping
             kpi_result = kpi.run(kpi_name, input.merge(result), mapping,
                                  parameters=parameters,
-                                 previous_result=previous_result)
+                                 previous_result=previous_result,
+                                 additional_builtins=additional_builtins)
             result = kpi_result.merge(result)
         if previous_result:
             result = previous_result.merge(result)

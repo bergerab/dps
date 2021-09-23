@@ -82,6 +82,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     start_time       = ddt.parse_datetime(interval['start'])
     end_time         = ddt.parse_datetime(interval['end'])
     use_date_range   = batch_process['use_date_range']
+    frame_counter   = 0 # how many frames of samples have we seen
 
     # Extract the signal/parameter mappings from the `batch_process`.
     # Then, evaluate the parameter strings as DPL (Python) source code
@@ -259,7 +260,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             
             try:
                 print('mappings', mappings)
-                next_result       = component.run(df, kpis, mappings, previous_result=result)
+                next_result       = component.run(df, kpis, mappings, previous_result=result, additional_builtins={ 'GET_FRAME_COUNT': lambda: frame_counter })
                 if result:
                     next_result.aggregations = result.get_merged_aggregations(next_result)
                 result = next_result
@@ -269,6 +270,10 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
                 aggregations = result.get_aggregations()
                 logger.log('Aggregations for this step: ', aggregations)
+
+                for batch in window:
+                    frame_counter += len(batch)
+                logger.log('Updated frame counter: ', frame_counter)
             except Exception as e:
                 # Send the error message to the server.
                 await send_error(f'Error occured when running KPI computation: {e}\n\nStack trace:\n {traceback.format_exc()}',

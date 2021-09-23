@@ -25,6 +25,9 @@ class DPL:
         self.compiled_ast = self.ast.compile()
         return self
 
+    def override_builtins(self, builtins):
+        self.mpy.builtins.update(builtins)
+
     def get_windows(self, mapping={}):
         self.require_ast()
         sexprs = self.ast.get_sexprs()

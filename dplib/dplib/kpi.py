@@ -18,7 +18,9 @@ class MappedKPI:
         self.env = env
         self.dpl = dpl
 
-    def run(self, previous_result):
+    def run(self, previous_result, additional_builtins=None):
+        if additional_builtins:
+            self.dpl.override_builtins(additional_builtins)
         x = self.dpl.run(self.env)
         return self._to_result(x, previous_result)
 
@@ -45,12 +47,12 @@ class KPI:
         self.dpl = DPL()
         self.dpl.compile(code)
 
-    def run(self, name, input, mapping={}, parameters=[], previous_result=None, cout=None):
+    def run(self, name, input, mapping={}, parameters=[], previous_result=None, cout=None, additional_builtins=None):
         '''
         Create a mapping from KPI inputs to Dataset column names, then execute the KPI immediately.
         '''
         mapped_kpi = self.map(name, Result.lift(input), mapping, parameters)
-        return mapped_kpi.run(previous_result)
+        return mapped_kpi.run(previous_result, additional_builtins=additional_builtins)
 
     def map(self, name, input, mapping={}, parameters=[]):
         env = self._make_environment_from_mapping(input, mapping, parameters)

@@ -57,7 +57,7 @@ class Component:
 
         return bp
         
-    def run(self, dataset, kpi_names=[], mapping={}, previous_result=None):
+    def run(self, dataset, kpi_names=[], mapping={}, previous_result=None, additional_builtins=None):
         if isinstance(kpi_names, str):
             kpi_names = [kpi_names]
 
@@ -66,7 +66,8 @@ class Component:
 
         result = bp.run(Dataset.lift(dataset),
                         parameters=self.parameters,
-                        previous_result=previous_result)
+                        previous_result=previous_result,
+                        additional_builtins=additional_builtins)
         
         rename_map = {}
         kpis_in_dataset = list(filter(lambda x: self.kpis[x].id not in result.aggregations, kpi_names))

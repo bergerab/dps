@@ -142,10 +142,10 @@ class SExpr(Expression):
         return Reader(get_value)
 
     def get_identifiers(self):
-        return flatten(map(lambda x: x.get_identifiers(), self.exprs))
+        return flatten(list(map(lambda x: x.get_identifiers(), self.exprs)))
 
     def get_sexprs(self):
-        return [self] + flatten(map(lambda expr: expr.get_sexprs(), self.exprs))
+        return [self] + flatten(list(map(lambda expr: expr.get_sexprs(), self.exprs)))
 
 class FExpr(SExpr):
     '''
@@ -297,5 +297,7 @@ class MiniPyVisitor(ast.NodeVisitor):
         return SExpr(node.func.id.upper(), list(map(lambda arg: self.visit(arg), node.args)), self.mpy.builtins)
 
 def flatten(xs):
+    if not xs:
+        return xs
     return functools.reduce(
         lambda a, b: a + b, xs)
