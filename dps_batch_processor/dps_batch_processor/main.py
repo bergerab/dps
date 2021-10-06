@@ -105,7 +105,6 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     # in batches of `max_batch_size`.
     signals            = get_signal_identifiers(component, batch_process, parameters)
     max_window         = bp._get_max_window(mappings)
-    current_start_time = start_time
     dbm_has_data       = True
     samples            = []
     times              = []
@@ -138,6 +137,9 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         except Exception as e:
             await handle_unexpected_exception();
             return;
+
+    # set below the use_date_range check, because start_time may have been updated
+    current_start_time = start_time
 
     try:
         logger.log('Getting sample count.')
