@@ -15,6 +15,8 @@ dps_client --input=PVAndWind.csv                     ^
 	   --time-offset=3600
 ECHO PV and wind data sent.
 
+:: dps_client --input=PV_Inverter_Data_Weather_2021_08_26_17_07_52_CDT_1.csv --dbm-url=http://localhost:3002/ --dataset=asdf --api-key=win35o --time-column=Time
+:: dps_client --input=PV_Inverter_Test_5k_Run1.csv --dbm-url=http://localhost:3002/ --dataset=PV_Inverter_Test_5k_Run1.csv --api-key=win35o --time-column=Time --absolute-time=true
 GOTO End
 
 :MissingStartTime

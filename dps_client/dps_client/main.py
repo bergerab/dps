@@ -42,7 +42,7 @@ class Client:
         self.batches.append(batch)
         return batch
 
-    def send_csv(self, filepath, time_column, batch_size=100000, start_time=None, timestep_units='s', verbose=False, columns=None, include_time_column=False):
+    def send_csv(self, filepath, time_column, batch_size=100000, start_time=None, timestep_units='s', verbose=False, columns=None, include_time_column=False, absolute_time=False):
         '''
         Sends the CSV to the client's URL in batches.
 
@@ -57,15 +57,15 @@ class Client:
 
         `include_time_column` of `True` means to send the time step as a signal value as well as the being the timestamp.
         '''
-        if start_time is None and timestep_units is not None:
+        if not absolute_time and (start_time is None and timestep_units is not None):
             raise Exception('`start_time` is required when specifying `timestep_units`.')
 
         if verbose:
             print(f'send_csv: reading CSV...')        
         if start_time is None:
-            df = pd.read_csv(filepath, parse_dates=[time_column], dtype='float64')
+            df = pd.read_csv(filepath, parse_dates=[time_column], dtype='float64', thousands=r',')
         else:
-            df = pd.read_csv(filepath, dtype='float64')
+            df = pd.read_csv(filepath, dtype='float64', thousands=r',')
         if verbose:
             print(f'send_csv: CSV read successfully.')
 
