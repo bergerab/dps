@@ -202,7 +202,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         processed_samples += len(results['samples']) * len(signals)
 
         # If there is no more data after this, end the process after this batch completes.
-        if len(signals) * len(samples) < max_batch_size:
+        if len(signals) * len(samples) < max_batch_size or current_start_time == end_time:
             dbm_has_data = False
         else:
             # Start the next batch of data at the last time we got from this batch.
