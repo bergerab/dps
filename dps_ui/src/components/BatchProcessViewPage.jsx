@@ -205,7 +205,7 @@ export default class BatchProcessViewPage extends React.Component {
     }).map(kpi => {
       return [kpi.name,
       kpi.units,
-      kpi.description,
+      (<div className="system-description" dangerouslySetInnerHTML={{ __html: kpi.description }}></div>),
       kpiResults[kpi.name]];
     });
 
@@ -229,7 +229,7 @@ export default class BatchProcessViewPage extends React.Component {
         return [
           name,
           parameter.units,
-          parameter.description,
+          (<div className="system-description" dangerouslySetInnerHTML={{ __html: parameter.description }}></div>),
           formatNumber(x.value)
         ];
       });
@@ -247,7 +247,7 @@ export default class BatchProcessViewPage extends React.Component {
         return [
           signalName,
           signalConfig.units,
-          signalConfig.description,
+          (<div className="system-description" dangerouslySetInnerHTML={{ __html: signalConfig.description }}></div>),
           x.value
         ];
       });
