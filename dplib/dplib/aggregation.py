@@ -291,6 +291,9 @@ class OperatorAggregation(Aggregation):
     def get_value(self):
         x = self.lhs.get_value()
         y = self.rhs.get_value()
+        # If either are None this means we have an average aggregation or something that didn't provide a value. So we cannot provide a value either
+        if x is None or y is None:
+            return None
         value = self.op(x, y)
         return value
 
