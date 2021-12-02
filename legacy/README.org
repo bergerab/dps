@@ -1,5 +1,0 @@
-* DPS UWM
-
-Components for integrating DPS into the UWM system.
-
-This includes a database manage implementation for TimescaleDB (found in ~./database_manager~), and a web-server for integrating with LabVIEW.
