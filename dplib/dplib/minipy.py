@@ -33,6 +33,8 @@ Python.
 import ast
 import functools
 
+from dplib.aggregation import Aggregation
+
 from .exceptions import InvalidOperationException
 
 class MiniPy:
@@ -179,7 +181,11 @@ class Environment:
             self.environment[key.upper()] = value
 
     def lookup(self, name):
-        return self.environment[name.upper()]
+        val = self.environment[name.upper()]
+        if isinstance(val, Aggregation): # HACK :( was a quick way to fix a bad bug where aggregations got merged too often. If you had an agg that used another agg and you had more than one batch, you got a double merge.
+            val = val.clone()
+            val.skip_merge = True
+        return val
 
     @staticmethod
     def lift(x):

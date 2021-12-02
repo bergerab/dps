@@ -34,9 +34,9 @@ class MappedKPI:
         if previous_result and self.name in previous_result.aggregations:
             y = previous_result.aggregations[self.name]
             x = y.merge(x)
-        return Result.lift({
-            self.name: x,
-        })
+        res = Result()
+        res.aggregations = { self.name: x }
+        return res
 
 class KPI:
     '''

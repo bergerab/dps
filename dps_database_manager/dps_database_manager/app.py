@@ -239,7 +239,7 @@ def flush_buffer(result, buffer, previous_time, signal_ids):
     for signal_id in signal_ids:
         # Search if the signal is present in the buffer, if it is, that
         # means there is a value we must send for that signal.
-        # Otherwise if the signal isn't present, send a 0.
+        # Otherwise if the signal isn't present, send a None.
         signal_existed = False
         for signal in buffer: # If the signal is in the buffer (there was data for this signal at this time)
             if signal.signal_id == signal_id:
@@ -247,7 +247,7 @@ def flush_buffer(result, buffer, previous_time, signal_ids):
                 signal_existed = True 
                 break
         if not signal_existed:
-            frame.append(0)
+            frame.append(None) # Add None to indicate that this signal had no sample for this time
     result.add(frame, previous_time)
 
 def make_app():

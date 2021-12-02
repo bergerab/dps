@@ -4,22 +4,22 @@ from .series import Series
 from .dataset import Dataset
 
 class Result:
-    def __init__(self, dataset=None, aggregations=None):
+    def __init__(self, dataset=None, aggregations=None, aggregations_for_ui=None):
         self.dataset = dataset
         self.aggregations = {} if aggregations is None else aggregations
+        self.aggregations_for_ui = {} if aggregations_for_ui is None else aggregations_for_ui
 
     def get_merged_aggregations(self, other):
         aggregations = {}
         for key in self.aggregations:
-            if self.aggregations[key]:
-                aggregations[key] = self.aggregations[key]
+            aggregations[key] = self.aggregations[key]
         for key in other.aggregations:
-            if not other.aggregations[key]: 
-                continue
-            if key in aggregations:
-                aggregations[key] = aggregations[key].merge(other.aggregations[key])
-            else:
-                aggregations[key] = other.aggregations[key]
+            aggregations[key] = other.aggregations[key]
+            # The below code is commented out because it would cause an extra merge that would throw some aggregations off
+            #if key in aggregations:
+            #    aggregations[key] = aggregations[key].merge(other.aggregations[key])
+            #else:
+            #    aggregations[key] = other.aggregations[key]
         return aggregations
 
     def merge(self, other):
@@ -45,6 +45,11 @@ class Result:
     def equals(self, other):
         return self.dataset.equals(other.dataset) and \
                self.aggregations == other.aggregations
+
+    def get_aggregations_for_ui(self):
+        return {
+            key: value.get_value() for key, value in self.aggregations_for_ui.items()
+        }
 
     def get_aggregations(self):
         return {
@@ -78,7 +83,9 @@ class Result:
         elif isinstance(x, Series):
             return Result(dataset=x.to_dataset(None)) # TODO: pass a name for the dataset?
         elif isinstance(x, dict):
-            return Result(aggregations=x)
+            res = Result()
+            res.aggregations_for_ui = x
+            return res
         elif isinstance(x, Result):
             return x
         raise Exception(f'Invalid type to lift into a Result type {type(x)}.')

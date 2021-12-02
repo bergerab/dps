@@ -36,7 +36,7 @@ class ResultAssertions(DatasetAssertions, SeriesAssertions):
         result2 = Result.lift(result2)
         if result1.dataset is not None and result2.dataset is not None:
             self.assertDatasetEqual(result1.dataset, result2.dataset)
-        self.assertEqual(result1.aggregations, result2.aggregations)
+        self.assertEqual(result1.aggregations_for_ui, result2.aggregations_for_ui)
 
 class WaveGenerator:
     def __init__(self):

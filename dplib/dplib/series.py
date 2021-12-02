@@ -178,9 +178,10 @@ class Series:
 
     def average_aggregation(self):
         xs = self.series.sum()
-        return AverageAggregation.from_sum_and_count(self,
+        ret = AverageAggregation.from_sum_and_count(self,
                                                      xs,
                                                      self.series.size)
+        return ret
 
     def aggregate(self, f):
         values = []

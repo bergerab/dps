@@ -262,15 +262,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             
             try:
                 print('mappings', mappings)
-                next_result       = component.run(df, kpis, mappings, previous_result=result, additional_builtins={ 'GET_FRAME_COUNT': lambda: frame_counter })
-                if result:
-                    next_result.aggregations = result.get_merged_aggregations(next_result)
-                result = next_result
+                result       = component.run(df, kpis, mappings, previous_result=result, additional_builtins={ 'GET_FRAME_COUNT': lambda: frame_counter })
+                # if result: this merging is already being done withing component.run
+                #     next_result.aggregations = result.get_merged_aggregations(next_result)
 
                 # After every batch is run, send the intermediate results
                 inter_results = inter_results.merge(result.get_intermidiate_values())
 
-                aggregations = result.get_aggregations()
+                aggregations = result.get_aggregations_for_ui()
                 logger.log('Aggregations for this step: ', aggregations)
 
                 for batch in window:
@@ -322,7 +321,7 @@ async def send_error(message, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
+                                     result.get_aggregations_for_ui() if result is not None else {},
                                      inter_results,
                                      chartables,
                                      STATUS_ERROR,
@@ -344,7 +343,7 @@ async def send_result(status, logger, api, session, batch_process_id, result, in
     try:
         resp = await api.send_result(session,
                                      batch_process_id,
-                                     result.get_aggregations() if result is not None else {},
+                                     result.get_aggregations_for_ui() if result is not None else {},
                                      inter_results,
                                      chartables,
                                      status,

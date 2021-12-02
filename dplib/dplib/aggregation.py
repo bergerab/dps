@@ -2,9 +2,13 @@ import numpy as np
 
 class Aggregation:
     name = 'constant'
-    def __init__(self, series, value):
+    def __init__(self, series, value, skip_merge=False):
         self.series = series
         self.value = value
+        self.skip_merge = skip_merge # used when referencing aggregations from other aggregations - the sub aggregations have already been merged so the parent should skip
+
+    def clone(self):
+        return Aggregation(self.series, self.value, self.skip_merge)
         
     def __add__(self, other):
         if not isinstance(other, Aggregation):
@@ -73,6 +77,8 @@ class Aggregation:
         return f'Aggregation({self.name}, {self.value})'
 
     def merge(self, other):
+        if self.skip_merge:
+            return other
         return other
     
     def get_value(self):
@@ -257,16 +263,22 @@ class IfAggregation(Aggregation):
         }
 
 class OperatorAggregation(Aggregation):
-    def __init__(self, series, lhs, rhs):
+    def __init__(self, series, lhs, rhs, skip_merge=False):
         self.series = series
         self.lhs = Aggregation.lift(lhs)
         self.rhs = Aggregation.lift(rhs)
+        self.skip_merge = skip_merge
 
     def op(self, x, y):
         raise Exception('Unimplemented `op` for OperatorAggregation.')
 
     def merge(self, other):
+        if self.skip_merge:
+            return other
         return self.__class__(None, self.lhs.merge(other.lhs), self.rhs.merge(other.rhs))
+    
+    def clone(self):
+        return self.__class__(None, self.lhs, self.rhs, self.skip_merge)
 
     def equals(self, other):
         return isinstance(other, type(self)) and \
@@ -302,9 +314,6 @@ class SubAggregation(OperatorAggregation):
 class MulAggregation(OperatorAggregation):
     name = 'mul'
     def op(self, x, y):
-        # Important for weighted average where an operand could be null
-        if x is None or y is None:
-            return 0
         return x * y
 
 class GreaterThanAggregation(OperatorAggregation):
@@ -349,10 +358,11 @@ class FloorDivAggregation(OperatorAggregation):
 
 class AverageAggregation(Aggregation):
     name = 'average'        
-    def __init__(self, series, average, count):
+    def __init__(self, series, average, count, skip_merge=False):
         self.series = series
         self.average = average
         self.count = count
+        self.skip_merge = skip_merge
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
@@ -361,6 +371,9 @@ class AverageAggregation(Aggregation):
 
     def __repr__(self):
         return f'AverageAggregation({self.average}, {self.count})'
+
+    def clone(self):
+        return AverageAggregation(self.series, self.average, self.count, self.skip_merge)
 
     @staticmethod
     def from_series(series):
@@ -376,17 +389,20 @@ class AverageAggregation(Aggregation):
         return agg
 
     def merge(self, other):
+        if self.skip_merge:
+            return other
         count = self.count + other.count
         if other.average is None:
-            return AverageAggregation(other.series, self.average, self.count)
+            ret = AverageAggregation(other.series, self.average, self.count)
         elif self.average is None:
-            return AverageAggregation(other.series, other.average, other.count)
+            ret = AverageAggregation(other.series, other.average, other.count)
         else:
             # Take the other Series, it would be pricy to keep a copy of all Series (by combining them)
             # We take the other.series because it should be the newer one
-            return AverageAggregation(other.series,
+            ret = AverageAggregation(other.series,
                                       ((self.average * self.count) + (other.average * other.count)) / count,
                                       count)
+        return ret
 
     def get_value(self):
         return self.average

@@ -82,11 +82,13 @@ class Component:
             result.dataset = result.dataset.rename(rename_map).select(kpis_in_dataset)
 
         # Filter the aggregation dictionary so only KPIs in `kpi_names` are included
+        # we have to keep all aggregations around in the result for use between batches
+        # but we should provide an "aggregations_for_ui" that is the final list of aggregations to be shown on the dashboard
         d = {}
         for kpi_name in kpi_names:
             kpi_id = self.kpis[kpi_name].id
             if kpi_id in result.aggregations:
                 d[kpi_name] = result.aggregations[kpi_id]
-        result.aggregations = d
+        result.aggregations_for_ui = d
 
         return result

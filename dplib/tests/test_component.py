@@ -7,8 +7,10 @@ import pandas as pd
 from dplib.component import Component
 from dplib.result import Result
 from dplib.testing import ResultAssertions
-from dplib.aggregation import AverageAggregation, AddAggregation
+from dplib.aggregation import AverageAggregation, AddAggregation, MulAggregation
 from dplib import Series, Dataset
+
+from dplib.aggregation import Aggregation
 
 NOW = datetime.now()
 
@@ -82,6 +84,36 @@ D2_RESULT = Dataset({
     'KPI Three': Series([4 + 10, 5 + 11, 6 + 12], TIME2),
 })
 
+D3_MISSING_PART1_TIME = [
+    NOW + timedelta(seconds=0),
+    NOW + timedelta(seconds=1),
+    NOW + timedelta(seconds=2)
+]
+D3_MISSING_PART1 = Dataset({
+    'A': Series([1, 2, 3], D3_MISSING_PART1_TIME),
+    'B': Series([10, 11, 12], D3_MISSING_PART1_TIME),
+})
+
+D3_MISSING_PART2_TIME = [
+    NOW + timedelta(seconds=3),
+    NOW + timedelta(seconds=4),
+    NOW + timedelta(seconds=5)
+]
+D3_MISSING_PART2 = Dataset({
+    'A': Series([None, None, None], D3_MISSING_PART2_TIME),
+    'B': Series([13, 14, 15], D3_MISSING_PART2_TIME),
+})
+
+D3_MISSING_PART3_TIME = [
+    NOW + timedelta(seconds=6),
+    NOW + timedelta(seconds=7),
+    NOW + timedelta(seconds=8)
+]
+D3_MISSING_PART3 = Dataset({
+    'A': Series([None, None, None], D3_MISSING_PART3_TIME),
+    'B': Series([16, 17, 18], D3_MISSING_PART3_TIME),
+})
+
 class TestComponent(TestCase, ResultAssertions):
     def test_get_required_inputs(self):
         SUT = Component('System Under Test') \
@@ -114,7 +146,7 @@ class TestComponent(TestCase, ResultAssertions):
                           [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
                            NOW + timedelta(seconds=3), NOW + timedelta(seconds=4),
                            NOW + timedelta(seconds=5)]),
-        }), {
+        }), aggregations_for_ui={
             'PlusAvgSum': AddAggregation(None, AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6), 2),    
         })
         self.assertResultEqual(expected_result, result)
@@ -130,8 +162,37 @@ class TestComponent(TestCase, ResultAssertions):
             'Sum': Series([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4],
                           [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
                            NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)]),
-        }), {
+        }), aggregations_for_ui={
             'AvgSum': AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6),    
+        })
+        self.assertResultEqual(expected_result, result)
+
+    def test_aggregation_continue_advanced(self):
+        SUT = Component('System Under Test') \
+            .add('Sum', 'A + B') \
+            .add('AvgSum', '1 + avg(Sum)')
+        result = SUT.run(D1, ['AvgSum', 'Sum'])
+        result = SUT.run(D1_PART_2, ['AvgSum', 'Sum'], previous_result=result)
+
+        expected_result = Result(Dataset({
+            'Sum': Series([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4],
+                          [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2),
+                           NOW + timedelta(seconds=3), NOW + timedelta(seconds=4), NOW + timedelta(seconds=5)]),
+        }), aggregations_for_ui={
+            'AvgSum': AddAggregation(None, Aggregation(None, 1), AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7, 11 + 27, 23 + 38, 9 + 4]) / 6, 6)),    
+        })
+        self.assertResultEqual(expected_result, result)
+
+    def test_aggregation_continue_advanced_with_missing_data(self):
+        SUT = Component('System Under Test') \
+            .add('AvgA', 'avg(B) + avg(A)') \
+            .add('Dink', 'AvgA')
+        result = SUT.run(D3_MISSING_PART1, ['Dink'])
+        result = SUT.run(D3_MISSING_PART2, ['Dink'], previous_result=result)
+        result = SUT.run(D3_MISSING_PART3, ['Dink'], previous_result=result)
+
+        expected_result = Result(aggregations_for_ui={
+            'Dink': AddAggregation(None, AverageAggregation(None, sum([10, 11, 12, 13, 14, 15, 16, 17, 18]) / 9, 9), AverageAggregation(None, sum([1, 2, 3]) / 3, 3)),    
         })
         self.assertResultEqual(expected_result, result)
 
@@ -146,7 +207,7 @@ class TestComponent(TestCase, ResultAssertions):
         self.assertResultEqual(Result(Dataset({
             'Sum': Series([7 + 9, 6 + 8, 5 + 7],
                           [NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=2)]),
-        }), {
+        }), aggregations_for_ui={
             'PlusAvgSum': AddAggregation(None, AverageAggregation(None, sum([7 + 9, 6 + 8, 5 + 7]) / 3, 3), 2),    
         }), result)
 
@@ -183,7 +244,7 @@ class TestComponent(TestCase, ResultAssertions):
             .add('AvgSum', 'avg(Sum)') \
             .add('PlusAvgSum', 'AvgSum + 2')
         result = SUT.run(D1, 'PlusAvgSum')
-        self.assertResultEqual(D1_AVG_DEP_RESULT, result.get_aggregations())
+        self.assertResultEqual(D1_AVG_DEP_RESULT, result.get_aggregations_for_ui())
 
     def test_aggregation_persists_values(self):
         SUT = Component('System Under Test') \
