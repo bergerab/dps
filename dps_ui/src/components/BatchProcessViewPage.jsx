@@ -1,4 +1,5 @@
 import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server'
 
 import {
   Redirect
@@ -205,7 +206,7 @@ export default class BatchProcessViewPage extends React.Component {
     }).map(kpi => {
       return [kpi.name,
       kpi.units,
-      (<div className="system-description" dangerouslySetInnerHTML={{ __html: kpi.description }}></div>),
+      kpi.description,
       kpiResults[kpi.name]];
     });
 
@@ -213,16 +214,21 @@ export default class BatchProcessViewPage extends React.Component {
     let formattedKpiRows = kpiRows.filter(x => x[3] !== undefined).map(row => {
       return [
         row[0],
-        (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[1] }}></div>),
-        row[2],
+        row[1],
+        (<div className="system-description" dangerouslySetInnerHTML={{ __html: row[2] }}></div>),
         (<div style={{ whiteSpace: 'pre' }} >{resultToString(row[3], row[0])}</div>)
       ];
     });
 
     let parameterIdentifiersToNames = {};
     system.parameters.map(p => { parameterIdentifiersToNames[(p.identifier === undefined || p.identifier === null || p.identifier === '') ? p.name : p.identifier] = p.name });
+    let hiddenParameterIdentifiers = {};
+    system.parameters.map(p => { 
+      if (p.hidden === true)
+        hiddenParameterIdentifiers[(p.identifier === undefined || p.identifier === null || p.identifier === '') ? p.name : p.identifier] = true;
+    });
     let parameterMappings = bp.mappings
-      .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key))
+      .filter(x => Object.keys(parameterIdentifiersToNames).includes(x.key) && hiddenParameterIdentifiers[x.key] === undefined)
       .map(x => {
         const name = parameterIdentifiersToNames[x.key];
         const parameter = bp.system.parameters.filter(x => x.name === name)[0];
@@ -252,12 +258,14 @@ export default class BatchProcessViewPage extends React.Component {
         ];
       });
 
+    let chartCount = 0;
     let charts;
     charts =
-      kpiRows.map(([kpiName, kpiDescription, kpiUnits, kpiResults]) => {
+      kpiRows.map(([kpiName, kpiUnits, kpiDescription, kpiResults]) => {
         if (resultDontChart(kpiResults) || kpiResults === undefined) {
           return (<span key={kpiName} />);
         }
+        chartCount++;
 
         if (resultHasObject(kpiResults)) {
           const isTable = Object.values(kpiResults).length > 0 && Array.isArray(Object.values(kpiResults)[0]);
@@ -378,10 +386,23 @@ export default class BatchProcessViewPage extends React.Component {
               </Grid>}
             <Grid item xs={12}>
               <CSVLink
-                data={[kpiHeaders].concat(kpiRows.map(x => [
-                  x[0],
-                  x[1],
-                  x[2] === undefined || x[2] === null ? '' : (x[2].value === undefined ? x[2].object_value : x[2].value)]))}
+                data={[kpiHeaders].concat(kpiRows.map(([kpiName, kpiUnits, kpiDescription, kpiResults]) => {
+
+                  // format object result
+                  let result = null;
+                  if (resultHasObject(kpiResults)) {
+                    result = formatObjectValue(kpiResults.object_value, null, true);
+                  } else {
+                    result = kpiResults === undefined || kpiResults === null ? '' : (kpiResults.value === undefined ? kpiResults.object_value : kpiResults.value);
+                  }
+
+                  return ([
+                  kpiName,
+                  kpiUnits,
+                  kpiDescription,
+                  result
+                ]); 
+                }))}
                 target="_blank"
                 style={{ textDecoration: 'none' }}
                 filename={this.state.result.batch_process.name + " Results.csv"}
@@ -408,7 +429,7 @@ export default class BatchProcessViewPage extends React.Component {
           text="Exporting data..."
           loading={this.state.loadingExport}>
 
-          <Box
+          {chartCount <= 0 ? null : (<Box
             header="KPI Signals">
             <Grid container spacing={2}>
               {charts}
@@ -421,9 +442,10 @@ export default class BatchProcessViewPage extends React.Component {
                     api.rawPost('export_dataset', {
                       'dataset': 'batch_process' + result.batch_process_id,
                       /* Only export signals that are line charts */
-                      'signals': kpiRows.filter(x => !resultHasObject(x[2])).map(x => x[0]),
+                      'signals': kpiRows.filter(x => x[3] !== undefined && !resultHasObject(x[3]) && !resultDontChart(x[3])).map(x => x[0]),
                       'start': bp.interval.start,
                       'end': bp.interval.end,
+                      'infer': !bp.use_date_range,
                     }).then(resp => {
                       resp.blob().then(blob => {
                         download(blob, bp.name + '.csv', 'application/octet-stream');
@@ -435,7 +457,7 @@ export default class BatchProcessViewPage extends React.Component {
                 </Button>
               </Grid>
             </Grid>
-          </Box>
+          </Box>)}
         </Loader>
         <Box
           header="Stats">
@@ -462,7 +484,7 @@ function formatNumber(s) {
   return n.toLocaleString();
 }
 
-function formatObjectValue(s, kpiName) {
+function formatObjectValue(s, kpiName, convertTableToString) {
   const o = JSON.parse(s);
   const keys = Object.keys(o);
   const values = Object.values(o);
@@ -484,7 +506,7 @@ function formatObjectValue(s, kpiName) {
     for (let i=0; i<maxLength; ++i) {
       csvRows.push(keys.map(col => o[col][i]));
     }
-    return (
+    const ret = (
       <div>
         <div>
       <table class="table-kpi">
@@ -513,6 +535,9 @@ function formatObjectValue(s, kpiName) {
       </div>
       </div>
     );
+    if (convertTableToString)
+      return renderToStaticMarkup(ret)
+    return ret;
   } else {
     const lines = [];
     for (const key of Object.keys(o)) {
@@ -527,7 +552,7 @@ function resultToString(x, kpiName) {
   return resultHasObject(x, kpiName) ? formatObjectValue(x.object_value, kpiName) : formatNumber(x.value, kpiName);
 }
 
-function resultHasObject(x, kpiName) {
+function resultHasObject(x) {
   if (x === undefined) return false;
   return x.value === undefined;
 }

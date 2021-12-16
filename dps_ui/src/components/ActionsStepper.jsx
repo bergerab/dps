@@ -43,7 +43,6 @@ export default function HorizontalLabelPositionBelowStepper() {
           if (jo.length > 0) {
 	    setActiveStep(1);
 	    post('get_signal_names', { dataset: '', limit: 1, offset: 0, query: '', }).then(jo => {
-              console.log(jo.values);
 	      if (jo.values.length > 0) {
 	        setActiveStep(2);
 	      }

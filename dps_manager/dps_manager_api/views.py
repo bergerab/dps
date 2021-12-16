@@ -279,8 +279,7 @@ def get_required_mappings(request):
     for name in c.get_required_inputs(kpi_names):
         if name in parameter_names:
             parameter = parameter_id_to_parameter[name]
-            if not parameter['hidden']:
-                parameters.append(parameter['name'])
+            parameters.append(parameter['name'])
         else:
             signals.append(name)
 
@@ -606,6 +605,15 @@ def export_dataset(request):
     end_time   = util.parse_datetime(jo['end'])
     limit      = 50000 # how many samples to query for at once
 
+    infer = jo['infer']
+
+    if infer:
+        resp = dbm_post('get_dataset_range', {
+            'dataset': dataset,
+        }).json()['results'][0]
+        start_time = util.parse_datetime(resp['first'])
+        end_time = util.parse_datetime(resp['last'])
+
     def data():
         nonlocal dataset, signals, start_time, end_time, limit
 
@@ -667,7 +675,7 @@ def export_dataset(request):
         csv_stream = CSVStream()
         return csv_stream.export("myfile", data(), serialize)
     except Exception as e:
-        return JsonResponse({ message: str(e) }, status=500)
+        return JsonResponse({ 'message': str(e) }, status=500)
 
 @require_auth
 def delete_dataset(request):
@@ -776,10 +784,9 @@ def get_chart_data(request):
         # Used if the user doesn't know what time range to look for data.
         # We look for the range in all of the signals, and include all of the data
         # in the range if it is more precise than the specified interval.
-        inferred_start_time = None
-        inferred_end_time = None
+        interval_start = inferred_start_time = None
+        interval_end = inferred_end_time = None
 
-    if infer:
         for s in series:
             signal      = s['signal']
             dataset     = s['dataset']
@@ -802,13 +809,8 @@ def get_chart_data(request):
                 else:
                     inferred_end_time = max(inferred_end_time, util.parse_datetime(last))
 
-        # use inferred start if it is more precise
-        if inferred_start_time != None and interval_start < inferred_start_time: 
-            interval_start = inferred_start_time
-
-        # use inferred end if it is more precise
-        if inferred_end_time != None and inferred_end_time < interval_end: 
-            interval_end = inferred_end_time
+        interval_start = inferred_start_time
+        interval_end = inferred_end_time
 
     intervals = get_sample_ranges(interval_start,
                                   interval_end,

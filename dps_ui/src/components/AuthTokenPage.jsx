@@ -72,7 +72,7 @@ export default class APIKeyPage extends React.Component {
           loading: false,
         });
       }).catch(r => {
-        console.log('asdf', r);
+        console.log('Error', r);
       });
     }
   }

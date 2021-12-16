@@ -74,7 +74,6 @@ export default class BatchProcessPage extends React.Component {
   getParameterIdentifier(name) {
     for (const parameter of this.state.system.parameters) {
       if (parameter.name === name) {
-        // console.log(parameter.name, name, parameter.identifier);
         return typeof parameter.identifier === 'string' &&
           parameter.identifier !== '' ? parameter.identifier : parameter.name;
       }
@@ -158,7 +157,6 @@ export default class BatchProcessPage extends React.Component {
   localLoad() {
     const o = JSON.parse(localStorage.getItem(this.getLocalStorageItemName())) || {};
     if (o.kpis !== undefined) {
-      // console.log(o.kpis);
       const s = new Set();
       // Only add KPIs which exist in the system (for the case where a kpi name has changed since the last load)
       const allKpis = this.state.system.kpis.map(x => x.name);
@@ -216,7 +214,6 @@ export default class BatchProcessPage extends React.Component {
         results[kpi.name] = kpi;
       }
       this.setState({ kpiResults: results });
-      // console.log(results);
     });
   }
 
@@ -439,14 +436,12 @@ export default class BatchProcessPage extends React.Component {
               <InputLabel>Parameters</InputLabel>
               <PrettyTable
                 header={['Name', 'Units', 'Description', 'Value']}
-                rows={this.state.parameters.map((parameter, i) => {
+                rows={this.state.parameters.filter(parameter => this.state.system.parameters.filter(x => x.name === parameter)[0].hidden !== true).map((parameter, i) => {
                   const mappingIndex = i + this.state.signals.length;
-                  
                   const hasError = this.state.mappingErrors !== null &&
                         mappingIndex in this.state.mappingErrors &&
                         !util.objectIsEmpty(this.state.mappingErrors[mappingIndex]);
                   const parameterConfig = this.state.system.parameters.filter(x => x.name === parameter)[0];
-                  console.log(parameterConfig);
                   return [
                     parameter,
                     parameterConfig.units,

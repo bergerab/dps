@@ -111,14 +111,19 @@ class TimescaleDBDataStore(dbm.DataStore):
                     signal_names.append(signal.name)
         signal_ids = list(map(lambda x: dbc.get_cached_signal(x, dataset.dataset_id).signal_id, signal_names))
 
-        firstQ = self.time_filter(session.query(SignalData.time), None, signal_ids).order_by(SignalData.time.asc()).limit(1)
-        first = firstQ.all()[0]
-        if not first: # If there are no records, quit early.
-            return
-        lastQ = session.query(SignalData.time).filter(SignalData.signal_id.in_(signal_ids)).order_by(SignalData.time.desc()).limit(1)
-        last = lastQ.all()[0]
-        result.set_first(first.time)
-        result.set_last(last.time)
+        first = None
+        last = None
+
+        for signal_id in signal_ids:
+            temp_first = session.query(func.min(SignalData.time)).filter(SignalData.signal_id == signal_id).one()
+            if first == None or (temp_first != None and len(temp_first) > 0 and temp_first[0] < first):
+                first = temp_first[0]
+            temp_last = session.query(func.max(SignalData.time)).filter(SignalData.signal_id == signal_id).one()
+            if last == None or (temp_last != None and len(temp_last) > 0 and temp_last[0] < last):
+                last = temp_last[0]
+
+        result.set_first(first)
+        result.set_last(last)
 
     def get_dataset_names(self, result, query, limit, offset):
         with dbc.scope() as session:
@@ -140,6 +145,7 @@ class TimescaleDBDataStore(dbm.DataStore):
             dataset_id = ds.dataset_id
         signal = dbc.get_cached_signal(signal_name, dataset_id)
         if not signal:
+            print('signal did not exist ', signal)
             return
         signal_id = signal.signal_id
 
