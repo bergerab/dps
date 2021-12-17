@@ -119,11 +119,14 @@ class TimescaleDBDataStore(dbm.DataStore):
             if first == None or (temp_first != None and len(temp_first) > 0 and temp_first[0] < first):
                 first = temp_first[0]
             temp_last = session.query(func.max(SignalData.time)).filter(SignalData.signal_id == signal_id).one()
-            if last == None or (temp_last != None and len(temp_last) > 0 and temp_last[0] < last):
+            if last == None or (temp_last != None and len(temp_last) > 0 and temp_last[0] > last):
                 last = temp_last[0]
 
         result.set_first(first)
         result.set_last(last)
+        print('get-dataset-range')
+        print(first)
+        print(last)
 
     def get_dataset_names(self, result, query, limit, offset):
         with dbc.scope() as session:
