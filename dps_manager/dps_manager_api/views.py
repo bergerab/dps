@@ -601,6 +601,7 @@ def export_dataset(request):
 
     dataset    = jo['dataset']
     signals    = jo['signals']
+    signal_display_names    = jo['signalDisplayNames']
     start_time = util.parse_datetime(jo['start'])
     end_time   = util.parse_datetime(jo['end'])
     limit      = 50000 # how many samples to query for at once
@@ -618,7 +619,7 @@ def export_dataset(request):
         nonlocal dataset, signals, start_time, end_time, limit
 
         # yield the header
-        yield ['Time'] + signals
+        yield ['Time'] + signal_display_names
         
         dbm_has_data = True
         samples      = []

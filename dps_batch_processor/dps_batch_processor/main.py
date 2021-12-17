@@ -77,6 +77,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
     batch_process_id = job['batch_process_id']
     system           = batch_process['system']
     kpis             = batch_process['kpis']
+    kpis_display_name_to_name = { x['name']: (x['identifier'] if x.get('identifier', None) else x['name']) for x in batch_process['system']['kpis'] }
     interval         = batch_process['interval']
     dataset          = batch_process['dataset']
     start_time       = ddt.parse_datetime(interval['start'])
@@ -166,7 +167,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         return 
 
     temp_result = await send_result(STATUS_RUNNING, 
-                                    logger, api, session, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
+                                    logger, api, session, kpis_display_name_to_name, batch_process_id, result, inter_results, chartables, None, processed_samples, total_samples)
 
     if temp_result == 404: 
         return
@@ -175,7 +176,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
     if total_samples == 0:
         await send_result(STATUS_COMPLETE, 
-                          logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+                          logger, api, session, kpis_display_name_to_name, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
         logger.log('Ending batch process, as there are no input samples.')
         return
 
@@ -198,8 +199,6 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         results = data['results'][0]
         samples += results['samples']
         times   += [ddt.parse_datetime(time) for time in results['times']]
-        
-        processed_samples += len(results['samples']) * len(signals)
 
         # If there is no more data after this, end the process after this batch completes.
         if len(signals) * len(samples) < max_batch_size or current_start_time == end_time:
@@ -210,8 +209,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
             # could be missing if the limit is not a multiple of the # of signals.
             samples.pop()
             current_start_time = times.pop()
-            processed_samples -= len(signals)
-
+        
         # If the computation contains a window,
         # and if we have not accumulated enough data to fill the largest window,
         # continue collecting data into the `samples` and `times` variables.
@@ -283,7 +281,7 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
 
         chartables = chartables.union(set(inter_results.dataset.keys()))
 
-        ires = await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
+        ires = await flush_inter_results(api, logger, dbc, session, kpis_display_name_to_name, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
         if ires == 404: 
             await send_error(f'Failed to send intermediate results to DPS Database Manager',
                        logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
@@ -292,14 +290,14 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
         inter_results = dp.Dataset()
 
     # Write any remaining intermediate results
-    await flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
+    await flush_inter_results(api, logger, dbc, session, kpis_display_name_to_name, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples)
 
     await send_result(STATUS_COMPLETE, 
-                      logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+                      logger, api, session, kpis_display_name_to_name, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
 
     logger.log('Finished processing job.')
 
-async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples):
+async def flush_inter_results(api, logger, dbc, session, kpis, batch_process_id, inter_results, chartables, result, result_id, processed_samples, total_samples):
     try:
         logger.log('Sending intermediate results.')        
         resp = await dbc.send_data(session, 'batch_process' + str(batch_process_id), inter_results)
@@ -313,7 +311,7 @@ async def flush_inter_results(api, logger, dbc, session, batch_process_id, inter
         return
 
     resp = await send_result(STATUS_RUNNING, 
-                             logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
+                             logger, api, session, kpis, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples)
 
     return resp
 
@@ -339,9 +337,10 @@ async def send_error(message, logger, api, session, batch_process_id, result, in
 
     logger.log(resp)
     
-async def send_result(status, logger, api, session, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples):
+async def send_result(status, logger, api, session, kpis, batch_process_id, result, inter_results, chartables, result_id, processed_samples, total_samples):
     try:
         resp = await api.send_result(session,
+                                     kpis,
                                      batch_process_id,
                                      result.get_aggregations_for_ui() if result is not None else {},
                                      inter_results,

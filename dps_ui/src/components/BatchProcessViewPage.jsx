@@ -198,11 +198,21 @@ export default class BatchProcessViewPage extends React.Component {
       </div>)
     }
 
+    const kpiNameToId = {};
+    system.kpis.map(p => { 
+        kpiNameToId[p.name] = (p.identifier === undefined || p.identifier === null || p.identifier === '') ? p.name : p.identifier;
+    });
+    let hiddenKpiNames = {};
+    system.kpis.map(x => { 
+      if (x.hidden === true)
+        hiddenKpiNames[x.name] = true;
+    });
+
     let kpiHeaders = ['KPI', 'Units', 'Description', 'Value'];
     let kpiResults = {};
     result.results.map(x => { kpiResults[x.key] = x; });
     let kpiRows = system.kpis.filter(kpi => {
-      return bp.kpis.includes(kpi.name);
+      return bp.kpis.includes(kpi.name) && !hiddenKpiNames[kpi.name]; // filter out KPIs that were not in the batch process and that are hidden
     }).map(kpi => {
       return [kpi.name,
       kpi.units,
@@ -262,7 +272,9 @@ export default class BatchProcessViewPage extends React.Component {
     let charts;
     charts =
       kpiRows.map(([kpiName, kpiUnits, kpiDescription, kpiResults]) => {
+        console.log(kpiResults);
         if (resultDontChart(kpiResults) || kpiResults === undefined) {
+          console.log('Skipping chart for ', kpiName);
           return (<span key={kpiName} />);
         }
         chartCount++;
@@ -287,7 +299,7 @@ export default class BatchProcessViewPage extends React.Component {
             <SignalChart
               dataset={bp.dataset}
               signals={[{
-                'signal': kpiName,
+                'signal': kpiNameToId[kpiName],
               }]}
               batch_process_id={result.batch_process_id}
               key={kpiName}
@@ -442,7 +454,8 @@ export default class BatchProcessViewPage extends React.Component {
                     api.rawPost('export_dataset', {
                       'dataset': 'batch_process' + result.batch_process_id,
                       /* Only export signals that are line charts */
-                      'signals': kpiRows.filter(x => x[3] !== undefined && !resultHasObject(x[3]) && !resultDontChart(x[3])).map(x => x[0]),
+                      'signals': kpiRows.filter(x => x[3] !== undefined && !resultHasObject(x[3]) && !resultDontChart(x[3])).map(x => kpiNameToId[x[0]]),
+                      'signalDisplayNames': kpiRows.filter(x => x[3] !== undefined && !resultHasObject(x[3]) && !resultDontChart(x[3])).map(x => x[0]),
                       'start': bp.interval.start,
                       'end': bp.interval.end,
                       'infer': !bp.use_date_range,
@@ -479,6 +492,7 @@ function removeTags(str) {
 }
 
 function formatNumber(s) {
+  if (s === null) return 'Insufficient Data'; // a null value means that an aggregation was run that didn't have enough data to produce a result
   const n = +s
   if (Number.isNaN(n)) return s;
   return n.toLocaleString();

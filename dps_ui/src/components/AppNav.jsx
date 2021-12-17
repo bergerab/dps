@@ -272,12 +272,12 @@ class MiniDrawer extends React.Component {
                           <ListItemText primary="Datasets" />
                         </ListItem>
                       </Link>
-                      <Link to="/admin/schedule" style={linkStyle}>
+                      {/*<Link to="/admin/schedule" style={linkStyle}>
                         <ListItem button>
                           <ListItemIcon><ScheduleIcon/></ListItemIcon>
                           <ListItemText primary="Schedules" />
                         </ListItem>
-                      </Link>
+               </Link> */}
                       <Link to="/admin/user" style={linkStyle}>
                         <ListItem button>
                           <ListItemIcon><PeopleIcon/></ListItemIcon>

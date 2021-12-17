@@ -59,10 +59,10 @@ class DPSManagerAPIClient(APIClient):
     POP_JOB_POSTFIX  = 'api/v1/pop_job'
     RESULT_POSTFIX   = 'api/v1/result'
     
-    async def send_result(self, session, batch_process_id, aggregations, inter_results, chartables, status=0, message=None, result_id=None, processed_samples=None, total_samples=None):
+    async def send_result(self, session, kpis, batch_process_id, aggregations, inter_results, chartables, status=0, message=None, result_id=None, processed_samples=None, total_samples=None):
         if status not in [STATUS_ERROR, STATUS_RUNNING, STATUS_COMPLETE]:
             raise Exception('Invalid result status. Must be either STATUS_ERROR=0, STATUS_RUNNING=1, or STATUS_COMPLETE=2.')
-        results = dict_to_mappings(aggregations, inter_results, chartables)
+        results = dict_to_mappings(aggregations, kpis, inter_results, chartables)
         data = {
             'batch_process_id': batch_process_id,
             'results':          results,
