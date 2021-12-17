@@ -270,6 +270,8 @@ async def process_job(api, logger, session, job, dbc, max_batch_size):
                 aggregations = result.get_aggregations_for_ui()
                 logger.log('Aggregations for this step: ', aggregations)
 
+                processed_samples += sum(df.count()) # count all non-null values in the input data
+
                 for batch in window:
                     frame_counter += len(batch)
                 logger.log('Updated frame counter: ', frame_counter)
