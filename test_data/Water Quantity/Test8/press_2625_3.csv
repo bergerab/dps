@@ -1,3 +1,5 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5d6641d17592c573b2f63c85583609c60245be483f65c42db5d06966e9be1674
-size 328
+Time,pH_c,Coductivity_c,Free_Chlorine,Turbidity_C,Temp,TOC,DOC,UC254,pH,Conductivity,Turbidity,DX-Flow,DP1,DP2,FlowMeter
+0.0,0,0,0,0,0,0,0,0,7.54,4092.8,551.2,0,-0.31,24,0
+0.5,0,0,0,0,0,0,0,0,7.54,4092.8,551.2,0,0.01,24,0
+1.0,0,0,0,0,0,0,0,0,7.54,4092.8,551.2,0,-0.04,24,0
+1.5,0,0,0,0,0,0,0,0,7.54,4092.8,551.2,0,0.22,24,0
